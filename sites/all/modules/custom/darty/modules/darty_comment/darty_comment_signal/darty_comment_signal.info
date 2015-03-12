@@ -1,0 +1,8 @@
+name = Darty comment signal
+description = Module permettant de gérer le signalement de commentaires sur Darty&vous
+core = 7.x
+package = Darty
+version = 7.x-1.0
+project = darty_comment_signal
+dependencies[] = comment
+dependencies[] = darty_comment

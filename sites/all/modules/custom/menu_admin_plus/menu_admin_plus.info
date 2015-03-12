@@ -1,0 +1,7 @@
+name = Menu Admin Plus
+description = "Module displaying a admin menu in top of the page"
+package = Admin
+core = 7.x
+files[] = menu_admin_plus.module
+files[] = menu_admin_plus.install
+configure = admin/config/user-interface/menu_admin_plus

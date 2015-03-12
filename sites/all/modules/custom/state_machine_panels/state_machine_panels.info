@@ -1,0 +1,6 @@
+name = State Machine panels
+description = State machine panel node integratrion
+version = 7.x-1.0
+core = 7.x
+dependencies[] = state_flow
+dependencies[] = panels_node

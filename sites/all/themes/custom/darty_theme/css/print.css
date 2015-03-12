@@ -1,0 +1,25 @@
+#page #header{
+    display: none;
+}
+#cookiealert_container{
+    display: none;
+}
+#page{
+    box-shadow: none;
+    margin: 0;
+}
+#sticky-footer{
+    display: none;
+}
+#footer{
+    display: none;
+}
+#footer_sitemap{
+    display: none;
+}
+#menu-wrapper{
+    display: none;
+}
+#breadcrumb-wrapper{
+    display: none;
+}

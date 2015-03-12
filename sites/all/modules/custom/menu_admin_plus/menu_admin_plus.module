@@ -1,0 +1,187 @@
+<?php
+define('MENU_DEFAULT','menu-administration');
+/**
+ * Implement hook_init().
+ */
+function menu_admin_plus_init() {
+    
+}
+
+/**
+ * @file
+ * Implements the necessary hooks for the file browser to work properly.
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function menu_admin_plus_menu() {
+    $items = array();
+    $access = array('administer menu admin plus');
+    $items['admin/config/user-interface/menu_admin_plus'] = array(
+        'title' => 'Admin Menu Plus',
+        'description' => 'Control how your admin menu plus works.',
+        'page callback' => 'admin_menu_plus_admin',
+        'access arguments' => $access,
+    );
+    return $items;
+}
+
+/**
+ * Implements hook_permission().
+ */
+function menu_admin_plus_permission() {
+    return array(
+        'administer menu admin plus' => array(
+            'title' => t('Administer Menu Admin Plus'),
+            'restrict access' => TRUE,
+        ),
+        'view menu admin plus' => array(
+            'title' => t('View Menu Admin Plus'),
+            'restrict access' => TRUE,
+        )
+    );
+}
+
+/**
+ * Checks if the user is assigned an imce profile.
+ * A more detailed assignment check is performed before imce loads.
+ */
+function menu_admin_plus_access($user = FALSE) {
+    if ($user === FALSE) {
+        global $user;
+    }
+
+    if ($user->uid == 1) {
+        return FALSE;
+    }
+
+    if (user_access('view menu admin plus', $user))
+        return TRUE;
+    return FALSE;
+}
+
+/**
+ * @file
+ * Serves administration pages of MENU ADMIN PLUS.
+ */
+
+/**
+ * Admin main page.
+ */
+function admin_menu_plus_admin() {
+
+    $output['title'] = array(
+        '#markup' => '<h2 class="title">' . t('Configuration MENU ADMIN PLUS') . '</h2>',
+    );
+//  $output['table'] = array(
+//    '#theme' => 'table',
+//    '#header' => $header,
+//    '#rows' => $rows,
+//    '#attributes' => array('id' => 'imce-profiles-list'),
+//  );
+    $output['form'] = drupal_get_form('admin_menu_plus_admin_form');
+    return $output;
+}
+
+/**
+ * Admin form.
+ */
+function admin_menu_plus_admin_form($form, &$form_state) {
+    $listAllMenus[""]="<none>";
+    $listAllMenus = array_merge($listAllMenus, menu_get_menus());
+    
+    $all_roles = user_roles(true);
+    foreach($all_roles as $rid=>$role_name){
+        $form[$rid]=array(
+            '#tree'=>true,
+            "#type"=>"fieldset",
+            "#title"=>"Admin menu for ".$role_name,
+            "#collapsible"=>true,
+            "#collapsed"=>variable_get('menu_admin_plus_menu_choice_for_rid'.$rid, "")==""
+        );
+        $form[$rid]['menu_choice'] = array(
+            '#type' => 'select',
+            '#title' => t('Choice the menu to display in menu admin plus'),
+            '#default_value' => variable_get('menu_admin_plus_menu_choice_for_rid'.$rid, ""),
+            '#options' => $listAllMenus,
+        );
+        $form[$rid]['btn_name'] = array(
+            '#type' => 'checkbox',
+            '#title' => t('Display the name of the user'),
+            '#default_value' => variable_get('menu_admin_plus_btn_name_for_rid'.$rid, '1'),
+        );
+        $form[$rid]['btn_logout'] = array(
+            '#type' => 'checkbox',
+            '#title' => t('Logout button will be displayed'),
+            '#default_value' => variable_get('menu_admin_plus_btn_logout_for_rid'.$rid, '1'),
+        );
+        $form[$rid]['btn_home'] = array(
+            '#type' => 'checkbox',
+            '#title' => t('Home button will be displayed'),
+            '#default_value' => variable_get('menu_admin_plus_btn_home_for_rid'.$rid, '1'),
+        );
+    }
+
+    $form['submit'] = array('#type' => 'submit', '#value' => t('Save configuration'));
+    //$form['#theme'] = 'imce_admin';
+    $form['#submit'][] = 'admin_menu_plus_admin_submit';
+    return $form;
+}
+
+/**
+ * Submit admin form.
+ */
+function admin_menu_plus_admin_submit($form, &$form_state) {
+    foreach($form_state['values'] as $key=>$values){
+        if(!is_int($key))
+            continue;
+        variable_set('menu_admin_plus_menu_choice_for_rid'.$key, $values['menu_choice']);
+        variable_set('menu_admin_plus_btn_logout_for_rid'.$key, $values['btn_logout']);
+        variable_set('menu_admin_plus_btn_name_for_rid'.$key, $values['btn_name']);
+        variable_set('menu_admin_plus_btn_home_for_rid'.$key, $values['btn_home']);
+    }
+    
+    drupal_set_message(t('Changes have been saved.'));
+}
+
+/**
+ * Implement hook_page_alter().
+ *
+ * Output a form to the page and a list of strings used to build the page in
+ * JSON form.
+ */
+function menu_admin_plus_page_alter(&$page) {
+    global $user;
+    if (menu_admin_plus_access()) {
+        drupal_add_css(drupal_get_path('module', 'menu_admin_plus') . '/css/menu_admin_plus.css');
+        drupal_add_js(drupal_get_path('module', 'menu_admin_plus') . '/js/menu_admin_plus.js');
+        foreach($user->roles as $rid=>$role_name){
+            if (variable_get('menu_admin_plus_menu_choice_for_rid'.$rid,"") != "") {
+
+                $menuPlus = menu_tree(variable_get('menu_admin_plus_menu_choice_for_rid'.$rid));
+                foreach ($menuPlus as $key => $firstline) {
+                    if (isset($menuPlus[$key]['#attributes']['class']))
+                        $menuPlus[$key]['#attributes']['class'][] = 'firstlevel';
+                }
+                $logoutBtn = "";
+                if (variable_get('menu_admin_plus_btn_logout_for_rid'.$rid,'1') == 1) {
+                    $logoutBtn = '  ' . l('Se déconnecter', 'user/logout');
+                }
+                $displayName = "";
+                if (variable_get('menu_admin_plus_btn_name_for_rid'.$rid,'1') == 1 && isset($user->name) && trim($user->name) != "") {
+                    $displayName = l($user->name, 'users/'.$user->name);
+                }
+                $homeBtn = "";
+                if (variable_get('menu_admin_plus_btn_home_for_rid'.$rid,'1') == 1) {
+                    $homeBtn = '<a href="'.url('<front>').'" id="home-link"><span class="home" title="'.t("Home").'">'.t("Home").'</span></a>';
+                }
+                $output = drupal_render($menuPlus);
+                $page['page_top']['menu_admin_output'] = array(
+                    '#type' => 'markup',
+                    '#markup' => '<div id="menu_admin_plus">'.$homeBtn.' '. $output . '<span class="logout">' . $displayName . $logoutBtn . '</span></div>',
+                );
+            }
+        }
+    }
+}

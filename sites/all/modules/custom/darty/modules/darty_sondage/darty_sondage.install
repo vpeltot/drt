@@ -1,0 +1,52 @@
+<?php
+
+function darty_sondage_schema() {
+    $schema['sondage'] = array(
+    'description' => 'Stores sondage result',
+    'fields' => array(
+      'nid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => '',
+      ),
+      
+      'uid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => '',
+      ),
+        'sid' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => '',
+      ),
+      'value' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'The value choosen',
+      ),
+      'date' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'The time that the comment was created, as a Unix timestamp.',
+      )
+    ),
+    'primary key' => array('nid','uid','sid')
+    
+  );
+    return $schema;
+}
+
+function darty_sondage_install() {
+    //drupal_install_schema('darty_comment_signal');
+}
+
+function darty_sondage_uninstall() {
+    drupal_uninstall_schema('darty_sondage');
+}

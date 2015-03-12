@@ -1,0 +1,51 @@
+<?php
+
+function darty_comment_signal_schema() {
+    $schema['comment_signal'] = array(
+    'description' => 'Stores comments signal and associated data.',
+    'fields' => array(
+      'cid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'Primary Key: Unique comment ID.',
+      ),
+      
+      'uid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'The {users}.uid who authored the comment. If set to 0, this comment was created by an anonymous user.',
+      ),
+      'subject' => array(
+        'type' => 'varchar',
+        'length' => 64,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The comment title.',
+      ),
+      'created' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'The time that the comment was created, as a Unix timestamp.',
+      ),
+        'status' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 1,
+      ),
+    ),
+    'primary key' => array('cid','uid')
+    
+  );
+    return $schema;
+}
+
+function darty_comment_signal_install() {
+    //drupal_install_schema('darty_comment_signal');
+}
+
+function darty_comment_signal_uninstall() {
+    drupal_uninstall_schema('darty_comment_signal');
+}

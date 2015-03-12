@@ -1,0 +1,63 @@
+diff --git a/ajax_comments.module b/ajax_comments.module
+index 7e7b6f3..50606b1 100644
+--- a/ajax_comments.module
++++ b/ajax_comments.module
+@@ -331,9 +331,15 @@ function ajax_comments_submit_js($form, &$form_state) {
+   elseif (isset($form_state['values']['pid'])) {
+     // Delete the form.
+     $commands[] = ajax_command_invoke('#' . $form['#attributes']['id']['0'] , 'remove');
+-    // Append comment to parent wrapper.
+     $comment_output = drupal_render($comment_build);
+-    $commands[] = ajax_command_append('#comment-wrapper-' . $comment->pid, $notify_text . $comment_output);
++    $mode = variable_get('comment_default_mode_' . $node->type, COMMENT_MODE_THREADED);
++    if (!empty($mode)) {
++      // Append comment to parent wrapper.
++      $commands[] = ajax_command_append('#comment-wrapper-' . $comment->pid, $notify_text . $comment_output);
++    } else {
++      // Append comment to last wrapper.
++      $commands[] = ajax_command_after('div.comment-wrapper > div.ajax-comment-wrapper:last', $notify_text . $comment_output);
++    }
+   }
+ 
+   // If this is being submitted via the views ajax add comment field.
+@@ -398,6 +404,13 @@ function ajax_comments_delete_js($form, &$form_state) {
+     $commands[] = ajax_command_remove('#comment-wrapper-' . $comment->cid);
+   }
+ 
++  // Remove all replies to deleted comment from page
++  if (!empty($form_state['storage']['cids'])) {
++    foreach ($form_state['storage']['cids'] as $cid) {
++      $commands[] = ajax_command_remove('#comment-wrapper-' . $cid);
++    }
++  }
++
+   return array('#type' => 'ajax', '#commands' => $commands);
+ }
+ 
+@@ -618,6 +631,26 @@ function ajax_comments_delete($cid) {
+   // Load this using form_load_include so it's cached properly and works in the
+   // ajax callback.
+   form_load_include($form_state, 'inc', 'comment', 'comment.admin');
++
++  $node = node_load(array('nid' => $comment->nid));
++  $mode = variable_get('comment_default_mode_' . $node->type, COMMENT_MODE_THREADED);
++  if (empty($mode)) {
++    // Get child comments (replies on this comment)
++    $form_state['storage']['cids'] = array();
++    $query = db_select('comment', 'c');
++    $query->addField('c', 'cid');
++    $query->condition('c.nid', $comment->nid)->condition('c.thread', substr($comment->thread, 0, -1) . '.%', 'LIKE')->addTag('node_access');
++    if (!user_access('administer comments')) {
++      $query->condition('c.status', COMMENT_PUBLISHED);
++    }
++    $query->orderBy('c.cid', 'ASC');
++    $cids = $query->execute()->fetchCol();
++    // Save child comments ids if they are exist
++    if (!empty($cids)) {
++      $form_state['storage']['cids'] = $cids;
++    }
++  }
++
+   $form_build = drupal_build_form('comment_confirm_delete', $form_state);
+   $form = drupal_render($form_build);
+ 

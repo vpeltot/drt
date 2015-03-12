@@ -1,0 +1,6 @@
+name = Darty_sso
+description = Module permettant de gérer le sso avec darty.com
+core = 7.x
+package = Darty
+version = 7.x-1.0
+project = darty_sso

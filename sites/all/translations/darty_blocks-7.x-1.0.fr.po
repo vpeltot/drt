@@ -1,0 +1,53 @@
+msgid ""
+msgstr ""
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Block Menu image links"
+msgstr "Bloc menu liens image"
+
+msgid "Create a menu block with image items."
+msgstr "Créé un bloc de menu avec des images."
+
+msgid "Block Image"
+msgstr "Bloc Image"
+
+msgid "Create an image block that can be clickable."
+msgstr "Créé un bloc image pouvant être cliquable."
+
+msgid "Block Text and Image"
+msgstr "Bloc Text et Image"
+
+msgid "Create text and image block with the possibility of adding a button."
+msgstr "Créé un block texte et image avec la possibilité d'ajouter un bouton."
+
+msgid "Block Menu Image"
+msgstr "Bloc Menu Image"
+
+msgid "Create a list of links with one associated image."
+msgstr "Créé une liste de liens avec une image associée."
+
+msgid "Block Promo"
+msgstr "Bloc Promo"
+
+msgid "Create a block promo with an image and a link."
+msgstr "Créé un bloc promo avec une image et un lien"
+
+msgid "Block Gigya"
+msgstr "Bloc Gigya"
+
+msgid "Create a Gigya share block."
+msgstr "Créé un bloc de partage Gigya."
+
+msgid "Edit a block in a published page"
+msgstr "Modifier un block dans une page publiée"
+
+msgid "Allow to edit a block in a published page"
+msgstr "Autorise à editer un bloc dans une page publiée"
+
+msgid "If you edit this block, it will modify in: "
+msgstr "Si vous éditez ce block, il sera modifié dans: "
+
+msgid "You don't have the permission to edit this block. It is already published in: "
+msgstr "Vous n'avez pas la permission d'éditer ce block. Il est déjà publié dans: "

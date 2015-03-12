@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the meta description field feature feature.
+ */
+
+include_once 'meta_description_field_feature.features.inc';

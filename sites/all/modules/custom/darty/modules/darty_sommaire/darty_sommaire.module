@@ -1,0 +1,329 @@
+<?php
+
+function darty_sommaire_menu() {
+    $items['ajax/search/%/%/%/%/%/%'] = array(
+        'title' => 'ajax callback content',
+        'page callback' => 'ajax_content_search',
+        'page arguments' => array(2, 3, 4, 5, 6, 7, 'ajax'),
+        'access callback' => TRUE,
+        'delivery callback' => 'ajax_sommaire_deliver',
+        'type' => MENU_CALLBACK,
+    );
+
+    return $items;
+}
+
+function ajax_sommaire_deliver($page_callback_result) {
+
+    drupal_add_http_header('Cache-Control', 'public, max-age=' . variable_get('page_cache_maximum_age', 0));
+    $content = is_string($page_callback_result) ? $page_callback_result : drupal_render($page_callback_result);
+    print $content;
+    ajax_footer();
+}
+
+function darty_sommaire_theme() {
+    return array(
+        'ajax_content_search' => array(
+        )
+    );
+}
+
+function ajax_content_search($currentTid, $level1, $level2, $format, $page, $uid, $type_output = 'html') {
+//    $type_output = arg(8);
+    if (!empty($type_output))
+        $type_output = 'html';
+
+    $pagename = "www/darty_vous";
+
+
+    if (($currentTid == null || $currentTid == 'null') && ($uid == null || $uid == 'null')) {
+        $type = 'format';
+        $pagename .= "/format";
+    } elseif (($currentTid != null && $currentTid != 'null') && ($uid == null || $uid == 'null')) {
+        $type = 'arbo';
+        $parentsTid = taxonomy_get_parents_all($currentTid);
+        $cpt = 0;
+        foreach (array_reverse($parentsTid) as $elemParent) {
+            $pagename .= "/" . convertForAnalytics($elemParent->name);
+        }
+    } elseif ($uid != null && $uid != 'null') {
+        $type = 'user';
+        $pagename .= "/auteur";
+    }
+    drupal_add_library('system', 'drupal.ajax');
+    $vars = array();
+    $vars['currentTid'] = (!empty($currentTid)) ? $currentTid : 'null';
+    $vars['level1'] = (!empty($level1)) ? $level1 : 'null';
+    $vars['level2'] = (!empty($level2)) ? $level2 : 'null';
+    $vars['format'] = (!empty($format)) ? $format : 'null';
+    $vars['uid'] = (!empty($uid)) ? $uid : 'null';
+    $vars['type'] = $type;
+
+    if ($type == 'arbo') {
+        $term = taxonomy_term_load($currentTid);
+        if (isset($term->field_arbo_mode[LANGUAGE_NONE][0]['value']))
+            $mode = $term->field_arbo_mode[LANGUAGE_NONE][0]['value'];
+        else
+            $mode = 'auto';
+
+        if (isset($term->field_arbo_affichage[LANGUAGE_NONE][0]['value']))
+            $nb_affichage = $term->field_arbo_affichage[LANGUAGE_NONE][0]['value'];
+        else
+            $nb_affichage = 5;
+
+        $tid = $term->tid;
+        $allTids = taxonomy_get_children_all($tid);
+        $tids = array_merge(array($tid), array_keys($allTids));
+        $ids_use = array();
+        $nodesIntro = array();
+        if ($mode == 'auto') {
+            $nodesIntro = getArticlesForSommaire($tids, null, null, 0, $nb_affichage, array());
+            $ids_use = array_keys($nodesIntro);
+        } elseif ($mode == 'manuelle') {
+            if ($nb_affichage == 1) {
+                if (!empty($term->field_arbo_contenu_associe))
+                    foreach ($term->field_arbo_contenu_associe[LANGUAGE_NONE] as $elem) {
+                        if (!isset($elem['entity']))
+                            $nodesIntro[] = node_load($elem['target_id']);
+                        else
+                            $nodesIntro[] = $elem['entity'];
+                        $ids_use[] = $elem['target_id'];
+                    }
+            } else {
+                if (!empty($term->field_arbo_contenu_associes))
+                    foreach ($term->field_arbo_contenu_associes[LANGUAGE_NONE] as $elem) {
+                        if (!isset($elem['entity']))
+                            $nodesIntro[] = node_load($elem['target_id']);
+                        else
+                            $nodesIntro[] = $elem['entity'];
+                        $ids_use[] = $elem['target_id'];
+                    }
+            }
+        }
+    }
+    elseif ($type == 'format') {
+        $ids_use = array();
+        $tids = array();
+    } elseif ($type == 'user') {
+        $ids_use = array();
+        $tids = array();
+    }
+
+    if ($level1 != 'null' && $level1 != null) {
+        if ($level2 == 'null' || $level2 === null) {
+            $allTids = taxonomy_get_children_all($level1);
+            $tids = array_merge(array($level1), array_keys($allTids));
+            //$ids_use = array();
+        }
+    }
+
+    if ($level2 != 'null' && $level2 !== null) {
+        $allTids = taxonomy_get_children_all($level2);
+        $tids = array_merge(array($level2), array_keys($allTids));
+        //$ids_use = array();
+    }
+
+    $vars['page'] = $page;
+    $vars['total'] = getArticlesCountForSommaire($tids, $vars['format'], $uid, $ids_use);
+    // remonter la liste de tous les themes/sousthemes des articles (pour construire les listes) -> pour un user et pour un format donné ou non selon $type == arbo ou $type == format
+    if ($type == 'format')
+        $allArticlesTid = getAllTidsRubriqueWithArticles($format, $uid);
+    else
+        $allArticlesTid = getAllTidsRubriqueWithArticles('null', $uid);
+    $allTids = array();
+    foreach ($allArticlesTid as $tid1) {
+        if (!in_array($tid1, $allTids)) {
+            $parents = taxonomy_get_parents_all($tid1);
+            $allTids[] = $tid1;
+            foreach ($parents as $parent) {
+                if (!in_array($parent->tid, $allTids)) {
+                    $allTids[] = $parent->tid;
+                }
+            }
+        }
+    }
+    //récupération des champs Themes et sous themes
+    $vars['childrenTaxo'] = taxonomy_get_tree(VID_ARBO, ($tid == 'null' || $tid === null) ? 0 : $tid, 1);
+    foreach ($vars['childrenTaxo'] as $key => $elem) {
+        if (!in_array($elem->tid, $allTids))
+            unset($vars['childrenTaxo'][$key]);
+    }
+    if ($level1 != 'null' && $level1 != null) {
+        $vars['children2Taxo'] = taxonomy_get_tree(VID_ARBO, $level1, 1);
+        foreach ($vars['children2Taxo'] as $key => $elem) {
+            if (!in_array($elem->tid, $allTids))
+                unset($vars['children2Taxo'][$key]);
+        }
+    }
+
+    if ($type != 'format')
+        $vars['formatArticle'] = getAllTidsFormatWithArticles($tids, $uid, $ids_use);
+
+    $nodesAll = getArticlesForSommaire($tids, $format, $uid, ($page - 1) * 12, 12, $ids_use);
+
+    $vars['nodesAll'] = (!empty($nodesAll)) ? $nodesAll : array();
+
+    $content = theme('ajax_content_search', $vars);
+    if ($level1 != null && $level1 != 'null') {
+        $itemLevel1 = taxonomy_term_load($level1);
+        $pagename .= "/theme_" . convertForAnalytics($itemLevel1->name);
+    }
+    if ($level2 != null && $level2 != 'null') {
+        $itemLevel2 = taxonomy_term_load($level2);
+        $pagename .= "/ss-theme_" . convertForAnalytics($itemLevel2->name);
+    }
+    $formatAnalytics = "";
+    if ($format != null && $format != 'null') {
+        $itemFormat = taxonomy_term_load($format);
+        $formatAnalytics = deleteAccent($itemFormat->name);
+    }
+    $content .= "<script type='text/javascript'>
+s.pageName = '" . $pagename . "';
+" . (($formatAnalytics != "") ? "s.prop54='" . $formatAnalytics . "';" : "s.prop54='';") . "
+" . getCommonAnalyticsProperties() . "   
+s.t();
+    </script>";
+    if ($type_output == 'html')
+        return $content;
+}
+
+function darty_sommaire_preprocess_page(&$vars) {
+    if (arg(0) == 'taxonomy' && arg(1) == 'term' && is_numeric(arg(2))) {
+        $tid = arg(2);
+        $voc = taxonomy_term_load($tid);
+        if ($voc->vocabulary_machine_name != 'arbo' && $voc->vocabulary_machine_name != 'format')
+            return;
+
+        drupal_add_js(drupal_get_path('module', 'darty_sommaire') . '/sommaire.js', 'file');
+
+        unset($vars['page']['content']['system_main']['pager']);
+        unset($vars['page']['content']['system_main']['nodes']);
+        unset($vars['page']['content']['system_main']['no_content']);
+
+        $vars['theme_hook_suggestions'][] = 'page__vocabulary__arbo';
+    }
+}
+
+function darty_sommaire_process(&$vars, $hook) {
+    if ($hook == 'taxonomy_term') {
+        if (isset($vars['field_meta_title'][0]['value']) && $vars['field_meta_title'][0]['value'] != "") {
+            drupal_set_title($vars['field_meta_title'][0]['value'] . ' - Darty & Vous');
+        }
+        if (isset($vars['field_meta_description'][0]['value']) && $vars['field_meta_description'][0]['value'] != "") {
+            $meta_desc = $vars['field_meta_description'][0]['value'];
+        } elseif (isset($vars['description']) && $vars['description'] != "") {
+            $meta_desc = strip_tags($vars['description']);
+        } else {
+            $meta_desc = "";
+        }
+        $element = array(
+            '#tag' => 'meta',
+            '#attributes' => array(
+                'name' => 'description',
+                'content' => $meta_desc,
+            ),
+        );
+
+        drupal_add_html_head($element, 'metatags_quick_description');
+    }
+}
+
+/**
+ * Implementation of template_preprocess_taxonomy_term
+ */
+function darty_sommaire_preprocess_taxonomy_term(&$vars) {
+    global $base_path;
+
+    if ($vars['vocabulary_machine_name'] != 'arbo' && $vars['vocabulary_machine_name'] != 'format')
+        return;
+
+
+    $type = $vars['vocabulary_machine_name'];
+    $breadcrumb = drupal_get_breadcrumb();
+    if ($type == 'arbo')
+        $breadcrumb[] = $vars['name'];
+    elseif ($type == 'format') {
+        $label_tous = plusde_label($vars['tid'], 'tous');
+        $breadcrumb[] = ($label_tous != '') ? $label_tous : 'Tous les articles de type "' . $vars['name'] . '"';
+    }
+
+    $vars['breadcrumb'] = theme('breadcrumb', array('breadcrumb' => $breadcrumb));
+    if ($type == 'arbo')
+        $vars['theme_hook_suggestions'][] = 'taxonomy_term__arbo';
+    else
+        $vars['theme_hook_suggestions'][] = 'taxonomy_term__format';
+
+
+    if ($type == 'arbo') {
+        if (isset($vars['field_arbo_mode'][0]['value']))
+            $mode = $vars['field_arbo_mode'][0]['value'];
+        else
+            $mode = 'auto';
+
+        if (isset($vars['field_arbo_affichage'][0]['value']))
+            $nb_affichage = $vars['field_arbo_affichage'][0]['value'];
+        else
+            $nb_affichage = 5;
+
+        if ($mode == 'none')
+            $nb_affichage = 0;
+        $tid = $vars['tid'];
+        $allTids = taxonomy_get_children_all($tid);
+        $tids = array_merge(array($tid), array_keys($allTids));
+
+        $ids_use = array();
+        if ($mode == 'auto') {
+            $nodesIntro = getArticlesForSommaire($tids, null, null, 0, $nb_affichage, array());
+            $ids_use = array_keys($nodesIntro);
+        } elseif ($mode == 'manuelle') {
+            if ($nb_affichage == 1) {
+                if (!empty($vars['field_arbo_contenu_associe']))
+                    $nodesIntro = array();
+                foreach ($vars['field_arbo_contenu_associe'] as $elem) {
+                    $nodesIntro[] = $elem['entity'];
+                    $ids_use[] = $elem['target_id'];
+                }
+            } else {
+                if (!empty($vars['field_arbo_contenu_associes']))
+                    $nodesIntro = array();
+                foreach ($vars['field_arbo_contenu_associes'] as $elem) {
+                    $nodesIntro[] = $elem['entity'];
+                    $ids_use[] = $elem['target_id'];
+                }
+            }
+        }
+        $vars['nodesIntro'] = (!empty($nodesIntro)) ? $nodesIntro : array();
+        //$vars['ajax_sommaire_zone'] = ajax_content_search($tid, null, null, null, 1, null);
+
+        $vars['nb_affichage_top'] = $nb_affichage;
+        $format = 'null';
+    } elseif ($type == 'format') {
+        $tid = 'null';
+        $format = $vars['tid'];
+    }
+
+
+    $vars['firstcontent'] = ajax_content_search($tid, 'null', 'null', $format, 1, 'null','html');
+    drupal_add_js(
+            "jQuery(document).ready(function ($) { 
+                $('.zone-header .description').width($('.zone-header').width() - $('.zone-header .titre').width() - $('.zone-header .separation').width() - 30);            
+                reaffectHandler('" . $base_path . "','" . $type . "');
+                //loadAjaxSommaire('" . $base_path . "','ajax/search/" . $tid . "/null/null/" . $format . "/1/null/html','no','" . $type . "');
+                
+            });", array('type' => 'inline', 'scope' => 'footer'));
+}
+
+function taxonomy_get_children_all($tid, $vid = 0, $key = 'tid') {
+    $c = taxonomy_get_children($tid, $vid, $key);
+    $result = array();
+    foreach ($c as $t => $d) {
+        $result[$t] = $d;
+        $below = taxonomy_get_children_all($t, $vid, $key);
+        if (!empty($below)) {
+            foreach ($below as $nt => $nd) {
+                $result[$nt] = $nd;
+            }
+        }
+    }
+    return $result;
+}

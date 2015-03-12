@@ -1,0 +1,483 @@
+#sondages_tls .zone-header {
+    width:100%;
+    background-color: #817571;
+    height: 50px;
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+
+#sondages_tls .zone-header .titre{
+    height: 50px;
+    float: left;
+    background-color: #675f5c;
+    line-height: 50px;
+}
+
+#sondages_tls .zone-header .titre h1{
+    font-weight: normal;
+    color: #FFF;
+    font-family: 'din', sans-serif;
+    font-size:35px;
+    padding-left: 30px;
+    text-transform: uppercase;
+}
+#sondages_tls .zone-header .separation{
+    background: transparent url('../images/separation_titre.png') no-repeat center center;
+    width: 43px;
+    height: 50px;
+    display:inline;
+    float: left;
+}
+#sondages_tls .zone-header .description{
+    height: 50px;
+    float: left;
+    overflow: hidden;
+    line-height: 50px;
+    font-weight: lighter;
+}
+#sondages_tls .zone-header .description p{
+    margin:4px;
+}
+
+#sondages_tls .zone-header .description span{
+    font-size: 17px;
+    color: #FFF;
+    line-height: 23px;
+    display: inline-block;
+    vertical-align: middle;
+    font-family: 'din', sans-serif;
+    overflow: hidden;
+    text-align: center;
+    padding: 0 15px;
+}
+#sondages_tls .zone-contenu{
+    margin: 0px 18px 0 18px;
+}
+#sondages_tls .zone-contenu .titre {
+    font-size: 26px;
+    text-transform: uppercase;
+    line-height: 50px;  
+    font-weight: normal;
+    font-family: 'arial', sans-serif;
+    width: 100%;
+    text-align: center;
+    border-top: 1px solid #333;
+    margin-bottom: 15px;
+    color: #4B403E;
+
+}
+#sondages_tls .zone-contenu .titre.termines {
+    margin-top: 30px;
+}
+.sondages_tls_wrapper .sondage-wrapper{
+    width:300px;
+    background-color: #f0efef;
+    margin-bottom: 20px;
+    margin-right: 25px;
+    float: left;
+}
+.sondages_tls_wrapper .sondage-wrapper .sondage-div.form{
+    background-color: #675F5F;
+}
+#sondages_tls .sondage-wrapper .sondage-div.form .reponses .reponse{
+    color: white;
+}
+/*#sondages_tls .sondage-wrapper .sondage-div.form .question{
+    background-color: #f0efef;
+}
+#sondages_tls .sondage-wrapper .sondage-div.form .question .titre_question{
+    color: #4b403c;
+}*/
+.sondages_tls_wrapper .sondage-wrapper.pos3{
+    margin-right: 0;
+}
+.sondages_tls_wrapper .pagination-wrapper{
+    width:100%;
+    height: 32px;
+    line-height: 32px;
+    text-align: center;
+    margin-top: 40px;
+}
+.sondages_tls_wrapper .pagination-wrapper .pagination span{
+    width: 32px;
+    margin: 0 5px;
+    display: inline-block;
+    background: transparent url('../images/pagination.png') no-repeat center center;
+    font-family: 'din', sans-serif;
+    font-weight: bold;
+    color: #FFF;
+    font-size: 20px;
+    text-decoration: none;
+    cursor: pointer;
+}
+.sondages_tls_wrapper .pagination-wrapper .pagination span.disabled{
+    cursor: default;
+}
+.sondages_tls_wrapper .pagination-wrapper .pagination span.active{
+    background: transparent url('../images/pagination_hover.png') no-repeat center center;
+    cursor: default;
+}
+.sondages_tls_wrapper .pagination-wrapper .pagination span.arrow{
+    background-image: none;
+    cursor: pointer;
+    height: 32px;
+    text-indent: -3000px;
+}
+.sondages_tls_wrapper .pagination-wrapper .pagination span.arrow1.left{
+    background-image: url('../images/arrow1_left.png');
+}
+.sondages_tls_wrapper .pagination-wrapper .pagination span.arrow2.left{
+    background-image: url('../images/arrow2_left.png');
+}
+.sondages_tls_wrapper .pagination-wrapper .pagination span.arrow1.right{
+    background-image: url('../images/arrow1_right.png');
+}
+.sondages_tls_wrapper .pagination-wrapper .pagination span.arrow2.right{
+    background-image: url('../images/arrow2_right.png');
+}
+
+
+/* BLOC SONDAGE SUR ARTICLE */
+
+.page-node .sondage-wrapper{
+    width:100%;
+    background-color: #8f827c;
+    font-weight: normal;
+    font-family: 'arial', sans-serif;
+    font-size: 16px;
+    color: white;
+}
+.page-node .sondage-wrapper label{
+    font-weight: normal;
+}
+.page-node .sondage-wrapper .left-col{
+    float: left;
+    width: 180px;
+    background-color: #675f5c;
+    font-family: 'arial',sans-serif;
+    font-size: 40px;
+    text-transform: uppercase;
+    padding-left: 30px;
+}
+.page-node .sondage-wrapper.home .left-col{
+    padding-left: 50px;
+    width: 220px;
+}
+.page-node .sondage-wrapper .left-col .gras{
+    font-weight: bold;
+}
+.page-node .sondage-wrapper .right-col{
+    width: 390px;
+    float: left;
+}
+.page-node .sondage-wrapper.home .right-col{
+    width: 700px;
+}
+.page-node .sondage-wrapper .right-col .question{
+    padding-left: 20px;
+}
+.page-node .sondage-wrapper .right-col .question .titre_question{
+    margin: 30px 0 20px 0;
+    overflow: hidden;
+    max-height: 65px;
+    font-size: 18px;
+}
+.page-node .sondage-wrapper .right-col .reponses{
+    padding-left: 20px;
+}
+.page-node .sondage-wrapper .btn-wrapper{
+    text-align: center;
+    margin-bottom: 20px;
+}
+.page-node .sondage-wrapper.home .btn-wrapper{
+    text-align: right;
+    margin-bottom: 10px;
+    width: 140px;
+    float:left;
+}
+.page-node .sondage-wrapper .btn-wrapper .btn-vote{
+    width: 88px;
+    height: 40px;
+    line-height: 40px;
+    color: white;
+    font-size: 15px;
+    font-family: 'arial',sans-serif;
+    text-align: center;
+    text-transform: uppercase;
+    padding-left: 49px;
+    cursor: pointer;
+    display: inline-block;
+    background: transparent url('../images/btn_vote.png') no-repeat left center;
+}
+.page-node .sondage-wrapper .btn-tous-wrapper{
+    text-align:center;
+    width: 100%;
+    margin: 20px 0;
+}
+.page-node .sondage-wrapper.home .btn-tous-wrapper{
+    text-align:right;
+    width: 100%;
+    margin: 5px 0;
+}
+.page-node .sondage-wrapper .btn-tous-wrapper .btn-tous{
+    width: 177px;
+    height: 40px;
+    line-height: 40px;
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+    font-family: 'arial',sans-serif;
+    text-align: center;
+    text-transform: uppercase;
+    cursor: pointer;    
+    display: inline-block;
+    text-decoration: none;
+    background: transparent url('../images/tous_sondages.png') no-repeat left center;
+}
+.page-node .sondage-wrapper .reponses .message{
+    line-height: 20px;
+    font-size: 14px;
+    color: #d20729;
+    text-align: left;
+    height: 20px;
+    padding: 0 0 10px 0;
+}
+.page-node .sondage-wrapper.home .reponses .message{
+    padding: 10px 0 5px 0;
+    width: 500px;
+    float:left;
+}
+.page-node .sondage-wrapper .reponses .reponse input{
+    display: inline;
+    margin-left: 0;
+    margin-right: 5px;
+    vertical-align: top;
+    font-size: 20px;
+}
+.page-node .sondage-wrapper .reponses .reponse label{
+    display: inline-block;
+    width: 340px;
+    font-family: 'arial',sans-serif;
+    font-size: 16px;
+    font-weight: normal;
+    max-height: 38px;
+    overflow: hidden;
+    margin-bottom: 5px;
+    cursor: pointer;
+}
+.page-node .sondage-wrapper.home .reponses .reponse label{
+    width: 650px;
+}
+
+.page-node .sondage-wrapper .info-wrapper{
+    background-color: #d5d1d2;
+    text-align: center;
+    padding: 8px 0;
+    color: #d20729;
+    font-family: 'arial',sans-serif;
+    font-size: 16px;
+    line-height: 22px;
+}
+.page-node .sondage-wrapper .info-wrapper .number{
+    /*    font-weight: bold;*/
+    font-size: 22px;
+}
+.page-node .sondage-wrapper .result .reponses .reponse .reponse_label{
+    max-height: 37px;
+    margin-bottom: 4px;
+    overflow: hidden;
+    color: white;
+}
+.page-node .sondage-wrapper.home .result .reponses .reponse .reponse_label{
+    width: 280px;
+    background: url('../images/sondage_puce.png') no-repeat left 4px;
+    float: left;
+    padding-left: 18px;
+}
+.page-node .sondage-wrapper.home .progress_wrapper{
+    width: 350px;
+    margin-left: 20px;
+    float: left;
+}
+.page-node .sondage-wrapper .progress_wrapper{
+    width: 400px;
+    height: 20px;
+    margin-bottom: 7px;
+}
+.page-node .sondage-wrapper .progress_wrapper .progress_real{
+    background-color: #d20729;
+    height: 20px;
+    float: left;
+}
+.page-node .sondage-wrapper .progress_wrapper .pourcent_label{
+    float: left;
+    width: 20px;
+    margin-left: 7px;
+    line-height: 20px;
+    font-size: 12px;
+    color: white;
+}
+.page-node .sondage-wrapper .result .info_sondage{
+    font-size: 14px;
+    color: white;
+    max-height: 48px;
+    overflow: hidden;
+    margin-bottom: 10px;
+}
+.page-node .sondage-wrapper.home .result .info_sondage{
+    margin-top: 10px;
+    margin-bottom: 0;
+}
+.page-node .sondage-wrapper .result .info_sondage a{
+    color: #4b403c;
+}
+.page-node .sondage-wrapper.home .result .info_sondage a{
+    color: white;
+}
+.page-node .sondage-wrapper.bottom_article .result .info_sondage a{
+    color: white;
+}
+.page-node .sondage-wrapper .result .info_sondage p{
+    margin:0;
+}
+/** BLOC SONDAGE SUR TLS */
+
+#sondages_tls .sondage-wrapper.full, 
+.node-type-sondage .sondage-wrapper.full{
+    width:300px;
+    background-color: #f0efef;
+    margin-bottom: 20px;
+    margin-left: 25px;
+    float: left;
+    margin-right: 50px;
+}
+#sondages_tls .sondage-wrapper .question, 
+.node-type-sondage .sondage-wrapper .question{
+    background-color: #413733;
+    padding-bottom:15px;
+}
+#sondages_tls .sondage-wrapper .question .titre_question, 
+.node-type-sondage .sondage-wrapper .question .titre_question{
+    color: white;
+    height: 60px;
+    overflow: hidden;
+    font-family: 'arial',sans-serif;
+    font-size: 16px;
+    line-height: 20px;
+    padding: 15px 5px 0 15px;
+}
+#sondages_tls .sondage-wrapper .reponses, 
+.node-type-sondage .sondage-wrapper .reponses{
+    margin-top: 15px;
+}
+#sondages_tls .sondage-wrapper .form .reponses .reponse, 
+.node-type-sondage .sondage-wrapper .form .reponses .reponse{
+    max-height: 35px;
+    margin-bottom: 10px;
+    overflow: hidden;
+    color: #675f5c;
+}
+#sondages_tls .sondage-wrapper .result .reponses .reponse .reponse_label, 
+.node-type-sondage .sondage-wrapper .result .reponses .reponse .reponse_label{
+    max-height: 37px;
+    margin-bottom: 4px;
+    overflow: hidden;
+    color: #675f5c;
+}
+#sondages_tls .sondage-wrapper .progress_wrapper, 
+.node-type-sondage .sondage-wrapper .progress_wrapper{
+    width: 250px;
+    height: 20px;
+
+}
+#sondages_tls .sondage-wrapper .progress_wrapper .progress_real, 
+.node-type-sondage .sondage-wrapper .progress_wrapper .progress_real{
+    background-color: #d20729;
+    height: 20px;
+    float: left;
+}
+#sondages_tls .sondage-wrapper .progress_wrapper .pourcent_label, 
+.page-node.node-type-sondage .sondage-wrapper .progress_wrapper .pourcent_label{
+    float: left;
+    width: 20px;
+    margin-left: 7px;
+    line-height: 20px;
+    font-size: 13px;
+    color: #4b403c;
+}
+#sondages_tls .sondage-wrapper .result .info_sondage, 
+.node-type-sondage .sondage-wrapper .result .info_sondage{
+    font-size: 12px;
+    color: #4b403c;
+    margin: 10px 10px 0 10px;
+    overflow: hidden;
+}
+#sondages_tls .sondage-wrapper .result .info_sondage a, 
+.node-type-sondage .sondage-wrapper .result .info_sondage a{
+    color: #4b403c;
+}
+#sondages_tls .sondage-wrapper .result .reponses .reponse, 
+.node-type-sondage .sondage-wrapper .result .reponses .reponse{
+    margin: 0 10px 10px 15px;
+}
+#sondages_tls .sondage-wrapper .reponses .reponse input, 
+.node-type-sondage .sondage-wrapper .reponses .reponse input{
+    display: inline;
+    margin-left: 15px;
+    margin-right: 5px;
+    vertical-align: top;
+    font-size: 20px;
+}
+#sondages_tls .sondage-wrapper .reponses .reponse label, 
+.node-type-sondage .sondage-wrapper .reponses .reponse label{
+    display: inline-block;
+    width: 250px;
+    font-family: 'arial',sans-serif;
+    font-size: 16px;
+    font-weight: normal;
+    cursor: pointer;
+}
+#sondages_tls .sondage-wrapper .btn-wrapper, 
+.node-type-sondage .sondage-wrapper .btn-wrapper{
+    text-align:center;
+    width: 100%;
+    margin: 20px 0 0 0;
+}
+#sondages_tls .sondage-wrapper .reponses .message, 
+.node-type-sondage .sondage-wrapper .reponses .message{
+    line-height: 20px;
+    font-size: 12px;
+    color: #d20729;
+    text-align: center;
+    height: 20px;
+}
+#sondages_tls .sondage-wrapper .btn-wrapper .btn-vote, 
+.node-type-sondage .sondage-wrapper .btn-wrapper .btn-vote{
+    width: 88px;
+    height: 40px;
+    line-height: 40px;
+    color: white;
+    font-size: 15px;
+    font-family: 'arial',sans-serif;
+    text-align: center;
+    text-transform: uppercase;
+    padding-left: 49px;
+    cursor: pointer;
+    display: inline-block;
+    background: transparent url('../images/btn_vote.png') no-repeat left center;
+}
+#sondages_tls .sondage-wrapper .info-wrapper, 
+.node-type-sondage .sondage-wrapper .info-wrapper{
+    background-color: #d5d1d2;
+    text-align: center;
+    padding: 8px 0;
+    color: #d20729;
+    font-family: 'arial',sans-serif;
+    font-size: 16px;
+    line-height: 22px;
+}
+#sondages_tls .sondage-wrapper .info-wrapper .number, 
+.node-type-sondage .sondage-wrapper .info-wrapper .number{
+    /*    font-weight: bold;*/
+    font-size: 22px;
+}

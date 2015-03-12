@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the Sondages features feature.
+ */
+
+include_once 'sondages_features.features.inc';

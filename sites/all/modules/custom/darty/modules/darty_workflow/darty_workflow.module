@@ -1,0 +1,150 @@
+<?php
+
+/**
+* Implements hook_permission().
+*/
+function darty_workflow_permission() {
+  return array(
+    'transition content to the approved state' => array(
+      'title' => t('Transition content to the approved state.'),
+      'description' => t('Allows user to transition nodes to the approved state defined in workflow.'),
+    ),
+    'transition content to the published or unpublished state' => array(
+      'title' => t('Transition content to the published or unpublished state.'),
+      'description' => t('Allows user to transition content to the published or unpublished state'),
+    ),
+  );
+}
+
+function darty_workflow_guard_approve($event) {
+  return darty_workflow_guard_permission($event, 'transition content to the approved state');
+}
+
+function darty_workflow_guard_publish($event) {
+  return darty_workflow_guard_permission($event, 'transition content to the published or unpublished state');
+}
+
+/**
+* Helper function for evaluating an access decision with the global permission.
+*/
+function darty_workflow_guard_permission($event, $permission) {
+  // If the user has the global permission, then return TRUE
+  if (user_access($permission)) {
+    return TRUE;
+  }
+  // Otherwise, return FALSE
+  return FALSE;
+}
+
+
+/**
+* Implements hook_state_flow_plugins().
+*/
+function darty_workflow_state_flow_plugins() {
+  $info = array();
+  $path = drupal_get_path('module', 'darty_workflow') . '/plugins';
+  $info['darty_workflow'] = array(
+    'handler' => array(
+      'parent' => 'state_flow',
+      'class' => 'DartyWorkflow',
+      'file' => 'darty_workflow.inc',
+      'path' => $path,
+    ),
+  );
+  return $info;
+}
+
+/**
+* Alters the menu access callback for the node Workflow page.
+*/
+function darty_workflow_state_flow_menu_node_access_alter(&$access, $node, $account) {
+  //Display Workflow tab only on for the panel nodes
+  if ($node->type == 'panel') {
+    $access = node_access('update', $node, $account);
+  } else {
+    $access = FALSE;
+  }
+}
+
+/**
+* darty_workflow_state_flow_machine_type_alter
+*/
+function darty_workflow_state_flow_machine_type_alter(&$machine_type, $node) {
+  if ($node->type == 'panel') {
+    $machine_type = "darty_workflow";
+  }
+}
+
+/**
+ * Implementation of hook_node_presave
+ */
+function darty_workflow_node_presave($node) {
+  // If the node is not new and is not marked to be ignored by
+  // state_flow_promote_node_revision(), then check its current state.
+  if (!empty($node->nid) && empty($node->stateflow_ignore_state)) {
+    $state_flow = state_flow_load_state_machine($node);
+    //Check to see if we should go through workflow for new nodes
+    if (!(state_flow_skip_workflow($node))) {
+      if ((!$state_flow->ignore())) {
+        $state = $state_flow->get_current_state();
+        if ($state == 'published') {
+          // If the node being updated is in the published state, then ensure that
+          // changes are saved to a new revision.
+          $node->revision = TRUE;
+          //When we edit a published node, we create a new revision with its status to 0 and not 1
+          $node->status = 0;
+        }
+        else if ($state != 'draft') {
+          // If the node being updated is not in the draft state, then mark this
+          // node to be reverted to draft state.
+          $node->state_flow_revert_draft = TRUE;
+        }
+      }
+    }
+    else {
+      if ($node->status) {
+        $state_flow->fire_event($state_flow->skip_to_publish(), 1, 'Workflow skipped.');
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_token_info().
+ */
+function darty_workflow_token_info() {
+  $info['tokens']['node']['workflow-log'] = array(
+    'name' => t('Workflow log '),
+    'description' => t('The explanation of the most recent changes made to the node.'),
+  );
+  return $info;
+}
+
+/**
+ * Implements hook_tokens().
+ */
+function darty_workflow_tokens($type, $tokens, $data, $options = array()) {
+  $replacements = array();
+
+  if ($type == 'node' && !empty($data['node'])) {
+    $node = $data['node'];
+
+    foreach ($tokens as $name => $original) {
+      switch ($name) {
+        case 'workflow-log':
+          $result = db_select('node_revision_states_history', 'n')
+                ->fields('n', array('log'))
+                ->condition('nid', $node->nid, '=')
+                ->orderBy('timestamp', 'DESC')
+                ->range(0,1)
+                ->execute()
+                ->fetchCol();
+          
+          if($result)                    
+            $replacements[$original] = $result[0];
+          break;
+      }
+    }
+  }
+  return $replacements;
+}

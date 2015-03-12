@@ -1,0 +1,1139 @@
+<?php
+/**
+ * @file
+ * Code for the Newsletter feature.
+ */
+
+include_once 'darty_newsletter.features.inc';
+
+/**
+ * Implementation of template_preprocess_node
+ */
+function darty_newsletter_preprocess_entity(&$vars) {
+  $type = $vars['elements']['#bundle'];
+  $view_mode = $vars['view_mode'];
+
+  //Define some preprocess functions for the field collection field_menu_items
+  if ($type == "field_menu_items" ||
+      $type == "field_block_newsletter_left" ||
+      $type == "field_block_newsletter_right"
+    ) {
+    $preprocess_type = 'darty_newsletter_preprocess_entity_' . $type;
+    $preprocess_type_view_mode = 'darty_newsletter_preprocess_entity_' . $type . '_' . $view_mode;
+
+    if (function_exists($preprocess_type)) {
+      $preprocess_type($vars);
+    }
+
+    if (function_exists($preprocess_type_view_mode)) {
+      $preprocess_type_view_mode($vars);
+    }
+  }
+}
+
+/**
+ * Preprocess for the field collection field_menu_items
+ */
+function darty_newsletter_preprocess_entity_field_menu_items(&$vars) {
+  $entity = $vars['elements']['#entity'];
+  $wrapper = entity_metadata_wrapper('field_collection_item', $entity);
+
+  if (is_object($wrapper)) {
+    $link = $wrapper->field_link->value();
+    $width = $wrapper->field_width->value();
+    $image = $wrapper->field_image->value();
+    $image = (!empty($image->sid)) ? scald_render($image->sid, 'full') : '';
+
+    if (!empty($image) && !empty($link)) {
+      $image = l( $image,
+                  $link['url'],
+                  array(
+                    'attributes' => $link['attributes'],
+                    'html' => TRUE
+                )
+                );
+    }
+  }
+
+  //Create new variables to display
+  $vars['image'] = !empty($image) ? $image : '';
+  $vars['width'] = !empty($width) ? $width : '';
+}
+
+/**
+ * Preprocess for the field collection field_block_newsletter_left
+ */
+function darty_newsletter_preprocess_entity_field_block_newsletter_left(&$vars) {
+  $entity = $vars['elements']['#entity'];
+  $wrapper = entity_metadata_wrapper('field_collection_item', $entity);
+  $path_theme = drupal_get_path('theme', 'darty_theme');
+
+  if (is_object($wrapper)) {
+    $field_block_title = $wrapper->field_block_title->value();
+    $field_picto = $wrapper->field_picto->value();
+    $field_color = $wrapper->field_color->value();
+    $field_title_content = $wrapper->field_title_content->value();
+    $field_body = $wrapper->field_body->value();
+    $field_image = $wrapper->field_image->value();
+    $field_image = (!empty($field_image->sid)) ? scald_render($field_image->sid, 'darty_context_width_370') : '';
+    $field_link = $wrapper->field_link->value();
+    $field_link_button = $wrapper->field_link3->value();
+    $field_width_button = $wrapper->field_width_button2->value();
+    $field_link_button2 = $wrapper->field_link2->value();
+    $field_width_button2 = $wrapper->field_width_button->value();
+  }
+
+  $picto = theme( 'image',
+                  array(
+                    'path' => $path_theme .  '/images/newsletter/images/' . $field_picto . '.gif',
+                    'width' => 30,
+                    'height' => 30,
+                    'alt' => t('Picto')
+                  )
+                );
+
+  if ($field_link) {
+    $block_image = l( $field_image,
+                      $field_link['url'],
+                      array(
+                        'attributes' => $field_link['attributes'],
+                        'html' => TRUE
+                    )
+                     );
+  } else {
+    $block_image = $field_image;
+  }
+
+  if ($field_link_button) {
+    $field_link_button['attributes']['style'] = 'color:#ffffff;font-size:10px;font-family:\'Trebuchet MS\', Arial, Helvetica, sans-serif;text-decoration:none';
+    $block_link_button = l( '<strong>' . $field_link_button['title'] . '</strong>',
+                            $field_link_button['url'],
+                            array(
+                              'attributes' => $field_link_button['attributes'],
+                              'html' => TRUE
+                         )
+                          );
+  }
+
+  if ($field_link_button2) {
+    $field_link_button2['attributes']['style'] = 'color:#ffffff;font-size:10px;font-family:\'Trebuchet MS\', Arial, Helvetica, sans-serif;text-decoration:none';
+    $block_link_button2 = l('<strong>' . $field_link_button2['title'] . '</strong>',
+                            $field_link_button2['url'],
+                            array(
+                              'attributes' => $field_link_button2['attributes'],
+                              'html' => TRUE
+                         )
+                          );
+  }
+
+  if ($field_width_button == "little") {
+    $block_width_button = 120;
+  } elseif ($field_width_button == "medium") {
+    $block_width_button = 160;
+  } else {
+    $block_width_button = 230;
+  }
+
+  if ($field_width_button2 == "little") {
+    $block_width_button2 = 120;
+  } elseif ($field_width_button2 == "medium") {
+    $block_width_button2 = 160;
+  } else {
+    $block_width_button2 = 230;
+  }
+
+  //Create new variables to display
+  $vars['path_theme'] = !empty($path_theme) ? $path_theme : '';
+  $vars['color'] = ($field_color == "grey") ? '#5f5f5f' : '#930a11';
+  $vars['picto'] = !empty($picto) ? $picto : '';
+  $vars['block_title'] = !empty($field_block_title) ? $field_block_title : '';
+  $vars['block_title_content'] = !empty($field_title_content) ? $field_title_content : '';
+  $vars['block_body'] = !empty($field_body) ? $field_body['value'] : '';
+  $vars['block_image'] = !empty($block_image) ? $block_image : '';
+  $vars['block_link_button'] = !empty($block_link_button) ? $block_link_button : '';
+  $vars['block_width_button'] = !empty($block_width_button) ? $block_width_button : '';
+  $vars['block_link_button2'] = !empty($block_link_button2) ? $block_link_button2 : '';
+  $vars['block_width_button2'] = !empty($block_width_button2) ? $block_width_button2 : '';
+}
+
+/**
+ * Preprocess for the field collection field_block_newsletter_right
+ */
+function darty_newsletter_preprocess_entity_field_block_newsletter_right(&$vars) {
+  $entity = $vars['elements']['#entity'];
+  $wrapper = entity_metadata_wrapper('field_collection_item', $entity);
+  $path_theme = drupal_get_path('theme', 'darty_theme');
+
+  if (is_object($wrapper)) {
+    $field_title_content = $wrapper->field_title_content->value();
+    $field_body = $wrapper->field_body->value();
+    $field_image = $wrapper->field_image->value();
+    $field_image = (!empty($field_image->sid)) ? scald_render($field_image->sid, 'darty_context_width_200') : '';
+    $field_link = $wrapper->field_link->value();
+    $field_link2 = $wrapper->field_link2->value();
+    $field_link3 = $wrapper->field_link3->value();
+    $field_link4 = $wrapper->field_link4->value();
+    $field_link5 = $wrapper->field_link5->value();
+  }
+
+  if ($field_link) {
+    $block_image = l($field_image, $field_link['url'], array('attributes' => $field_link['attributes'], 'html' => TRUE));
+  } else {
+    $block_image = $field_image;
+  }
+
+  if ($field_link2) {
+    $field_link2['attributes']['style'] = 'color:#000001;font-size:10px;font-family:\'Trebuchet MS\', Arial, Helvetica, sans-serif;text-decoration:none';
+    $block_link2 = l( '<strong>' . $field_link2['title'] . '</strong>',
+                      $field_link2['url'],
+                      array(
+                        'attributes' => $field_link2['attributes'],
+                        'html' => TRUE
+                   )
+                    );
+  }
+
+  if ($field_link3) {
+    $field_link3['attributes']['style'] = 'color:#000001;font-size:10px;font-family:\'Trebuchet MS\', Arial, Helvetica, sans-serif;text-decoration:none';
+    $block_link3 = l( '<strong>' . $field_link3['title'] . '</strong>',
+                      $field_link3['url'],
+                      array(
+                        'attributes' => $field_link3['attributes'],
+                        'html' => TRUE
+                   )
+                    );
+  }
+
+  if ($field_link4) {
+    $field_link4['attributes']['style'] = 'color:#000001;font-size:10px;font-family:\'Trebuchet MS\', Arial, Helvetica, sans-serif;text-decoration:none';
+    $block_link4 = l( '<strong>' . $field_link4['title'] . '</strong>',
+                      $field_link4['url'],
+                      array(
+                        'attributes' => $field_link4['attributes'],
+                        'html' => TRUE
+                   )
+                    );
+  }
+
+  if ($field_link5) {
+    $field_link5['attributes']['style'] = 'color:#000001;font-size:10px;font-family:\'Trebuchet MS\', Arial, Helvetica, sans-serif;text-decoration:none';
+    $block_link5 = l( '<strong>' . $field_link5['title'] . '</strong>',
+                      $field_link5['url'],
+                      array(
+                        'attributes' => $field_link5['attributes'],
+                        'html' => TRUE
+                   )
+                    );
+  }
+
+  //Create new variables to display
+  $vars['path_theme'] = !empty($path_theme) ? $path_theme : '';
+  $vars['block_title_content'] = !empty($field_title_content) ? $field_title_content : '';
+  $vars['block_body'] = !empty($field_body) ? $field_body['value'] : '';
+  $vars['block_image'] = !empty($block_image) ? $block_image : '';
+  $vars['block_link2'] = !empty($block_link2) ? $block_link2 : '';
+  $vars['block_link3'] = !empty($block_link3) ? $block_link3 : '';
+  $vars['block_link4'] = !empty($block_link4) ? $block_link4 : '';
+  $vars['block_link5'] = !empty($block_link5) ? $block_link5 : '';
+}
+
+/**
+ * Implementation of template_preprocess_node
+ */
+function darty_newsletter_preprocess_node(&$vars) {
+  $type = $vars['type'];
+  $view_mode = $vars['view_mode'];
+
+  if ($type == "newsletter") {
+    $preprocess_type = 'darty_newsletter_preprocess_node_' . $type;
+    $preprocess_type_view_mode = 'darty_newsletter_preprocess_node_' . $type . '_' . $view_mode;
+    if (function_exists($preprocess_type)) {
+      $preprocess_type($vars);
+    }
+
+    if (function_exists($preprocess_type_view_mode)) {
+      $preprocess_type_view_mode($vars);
+    }
+  }
+}
+
+/**
+ * Preprocess function for the node type Newsletter
+ */
+function darty_newsletter_preprocess_node_newsletter(&$vars) {
+  $wrapper = entity_metadata_wrapper('node', $vars['node']);
+  $path_theme = drupal_get_path('theme', 'darty_theme');
+
+  if (is_object($wrapper)) {
+    $newsletter_menu_value = $wrapper->field_menu_newsletter->value();
+    $entity = entity_load('node', array($wrapper->field_menu_newsletter->value()->nid));
+    $newsletter_menu = entity_view('node', $entity);
+
+    $date = $wrapper->field_date->value();
+    $block_top_title = $wrapper->field_title_block_top->value();
+    $block_top_body = $wrapper->body->value();
+    $field_link_block_top = $wrapper->field_link_block_top->value();
+    $field_image_block_top = $wrapper->field_image_block_top->value();
+    $field_image_block_top = (!empty($field_image_block_top->sid)) ? scald_render($field_image_block_top->sid, 'darty_context_400x250') : '';
+    $field_title_block_bottom = $wrapper->field_title_block_bottom->value();
+    $field_picto = $wrapper->field_picto->value();
+    $field_color = $wrapper->field_color->value();
+    $field_title_content_block_bottom = $wrapper->field_title_content_block_bottom->value();
+    $field_body_block_bottom = $wrapper->field_body_block_bottom->value();
+
+
+    $field_link_block_bottom = $wrapper->field_link->value();
+    $field_width_button = $wrapper->field_width_button->value();
+    $field_link_block_bottom2 = $wrapper->field_link2->value();
+    $field_width_button2 = $wrapper->field_width_button2->value();
+    $field_link_image_block_bottom = $wrapper->field_link_block_bottom->value();
+
+    if (empty($field_title_content_block_bottom) &&
+        empty($field_body_block_bottom) &&
+        empty($field_link_block_bottom) &&
+        empty($field_link_block_bottom2)
+      ) {
+      $field_image_banner = $wrapper->field_image_block_bottom->value();
+      $field_image_banner = (!empty($field_image_banner->sid)) ? scald_render($field_image_banner->sid, 'darty_context_width_590') : '';
+    } else {
+      $field_image_block_bottom = $wrapper->field_image_block_bottom->value();
+      $field_image_block_bottom = (!empty($field_image_block_bottom->sid)) ? scald_render($field_image_block_bottom->sid, 'darty_context_165x165') : '';
+    }
+
+    $field_block_newsletter_left = $wrapper->field_block_newsletter_left->value();
+    $col_left = entity_view('field_collection_item', $field_block_newsletter_left);
+
+    $field_block_newsletter_right = $wrapper->field_block_newsletter_right->value();
+    $col_right = entity_view('field_collection_item', $field_block_newsletter_right);
+  }
+
+  //Labels
+  $labels = array(
+  	t('If this email does not display correctly, you can view it through'),
+    t('this link'),
+    t('Darty and you : the trust relationship e-magazine'),
+    t('Join us on'),
+    t('Hello'),
+    t('Darty invites you to discover the news of the week.'),
+    t('@ 2014 Darty'),
+    t('Follow us on'),
+    t('Establishments Darty et Fils - SAS with a capital of € 23,470,382 - Registered office: 129 Avenue Gallieni - 93140 BONDY - RCS Bobigny B 542 086 616'),
+    t('If you no longer wish to receive emails from Darty.com, you can'),
+    t('unsubscribe')
+  );
+
+  //Images
+  $image_facebook =     theme('image',
+                              array(
+                                'path' => $path_theme . '/images/newsletter/images/header-fb.jpg',
+                                'width' => 30,
+                                'height' => 23,
+                                'alt' => t('Facebook')
+                              )
+                        );
+  $image_twitter =      theme('image',
+                              array(
+                                'path' => $path_theme . '/images/newsletter/images/header-tt.jpg',
+                                'width' => 26,
+                                'height' => 23,
+                                'alt' => t('Twitter')
+                              )
+                        );
+  $image_pinterest =    theme('image',
+                              array(
+                                'path' => $path_theme . '/images/newsletter/images/header-pt.jpg',
+                                'width' => 24,
+                                'height' => 23,
+                                'alt' => t('Pinterest')
+                              )
+                        );
+  $image_google_plus =  theme('image',
+                              array(
+                                'path' => $path_theme . '/images/newsletter/images/header-gg.jpg',
+                                'width' => 24,
+                                'height' => 23,
+                                'alt' => t('Google +')
+                              )
+                        );
+  $image_youtube =      theme('image',
+                              array(
+                                'path' => $path_theme . '/images/newsletter/images/header-yt.jpg',
+                                'width' => 52,
+                                'height' => 23,
+                                'alt' => t('Youtube')
+                              )
+                        );
+  $image_darty =        theme('image',
+                              array(
+                                'path' => $path_theme . '/images/newsletter/images/picto-tel.jpg',
+                                'width' => 32,
+                                'height' => 33,
+                                'alt' => t('Buy 7d/7 by phone')
+                              )
+                        );
+  $image_removal =      theme('image',
+                              array(
+                                'path' => $path_theme . '/images/newsletter/images/picto-cnc.jpg',
+                                'width' => 34,
+                                'height' => 33,
+                                'alt' => t('Removal at shop')
+                              )
+                        );
+  $image_hotline =      theme('image',
+                              array(
+                                'path' => $path_theme . '/images/newsletter/images/picto-10j.jpg',
+                                'width' => 32,
+                                'height' => 33,
+                                'alt' => t('Hotline 7d / 7, 24h/24')
+                              )
+                        );
+  $image_infos =        theme('image',
+                              array(
+                                'path' => $path_theme . '/images/newsletter/images/picto-mag.gif',
+                                'width' => 33,
+                                'height' => 33,
+                                'alt' => t('Practical information for your store')
+                              )
+                        );
+  $image_facebook2 =    theme('image',
+                              array(
+                                'path' => $path_theme . '/images/newsletter/images/footer-fb.jpg',
+                                'width' => 15,
+                                'height' => 15,
+                                'alt' => t('Facebook')
+                              )
+                        );
+  $image_twitter2 =     theme('image',
+                              array(
+                                'path' => $path_theme . '/images/newsletter/images/footer-tt.jpg',
+                                'width' => 15,
+                                'height' => 15,
+                                'alt' => t('Twitter')
+                              )
+                        );
+  $image_pinterest2 =   theme('image',
+                              array(
+                                'path' => $path_theme . '/images/newsletter/images/footer-pt.jpg',
+                                'width' => 15,
+                                'height' => 15,
+                                'alt' => t('Pinterest')
+                              )
+                        );
+  $image_google_plus2 = theme('image',
+                              array(
+                                'path' => $path_theme . '/images/newsletter/images/footer-gg.jpg',
+                                'width' => 15,
+                                'height' => 15,
+                                'alt' => t('Google +')
+                              )
+                        );
+  $image_youtube2 =     theme('image',
+                              array('path' => $path_theme . '/images/newsletter/images/footer-yt.jpg',
+                                'width' => 38,
+                                'height' => 15,
+                                'alt' => t('Youtube')
+                              )
+                        );
+  $image_plus =         theme('image',
+                              array(
+                                'path' => $path_theme . '/images/newsletter/images/plus-red.gif',
+                                'width' => 20,
+                                'height' => 20,
+                                'alt' => t('Plus')
+                              )
+                        );
+  $picto =              theme('image',
+                              array(
+                                'path' => $path_theme . '/images/newsletter/images/' . $field_picto . '.gif',
+                                'width' => 30,
+                                'height' => 30,
+                                'alt' => t('Picto')
+                              )
+                        );
+
+  //Links
+  $links = array(
+    l($image_facebook,
+      'http://www.facebook.com/darty',
+      array(
+        'attributes' => array(
+          'target' => '_blank',
+          'title' => t('Facebook')
+        ),
+      'html' => TRUE
+     )
+    ),
+    l($image_twitter,
+      'http://twitter.com/#!/Darty_Officiel',
+      array(
+        'attributes' => array(
+          'target' => '_blank',
+          'title' => t('Twitter')
+        ),
+      'html' => TRUE
+     )
+    ),
+    l($image_pinterest,
+      'http://pinterest.com/dartyfrance',
+      array(
+        'attributes' => array(
+          'target' => '_blank',
+          'title' => t('Pinterest')
+        ),
+      'html' => TRUE
+     )
+    ),
+    l($image_google_plus,
+      'http://plus.google.com/+darty',
+      array(
+        'attributes' => array(
+          'target' => '_blank',
+          'title' => t('Google +')
+        ),
+        'html' => TRUE
+     )
+    ),
+    l($image_youtube,
+      'http://www.youtube.com/user/darty',
+      array(
+        'attributes' => array(
+          'target' => '_blank',
+          'title' => t('Youtube')
+        ),
+        'html' => TRUE
+     )
+    ),
+    l($image_darty,
+      'http://www.darty.com/achat/services/contrat_de_confiance/index.html',
+      array(
+        'attributes' => array(
+          'target' => '_blank',
+          'title' => t('Buy 7d/7 by phone')
+        ),
+        'html' => TRUE
+      )
+    ),
+    l('<strong>' . t('Buy 7d/7 by phone') . '</strong>',
+      'http://www.darty.com/achat/services/contrat_de_confiance/index.html',
+      array(
+        'attributes' => array(
+          'target' => '_blank',
+          'title' => t('Buy 7d/7 by phone'),
+          'style' => 'color: #000001; font-size: 10px; font-family: \'Trebuchet MS\', Arial, Helvetica, sans-serif; text-decoration: none;'
+        ),
+        'html' => TRUE
+     )
+    ),
+    l(t('0978.970.970 call and say "buy" from 9h to 20h (price of a local call, excluding holidays)'),
+      'http://www.darty.com/achat/services/contrat_de_confiance/index.html',
+      array(
+        'attributes' => array(
+          'target' => '_blank',
+          'title' => t('0978.970.970 call and say "buy" from 9h to 20h (price of a local call, excluding holidays)'),
+          'style' => 'color: #000001; font-size: 10px; font-family: \'Trebuchet MS\', Arial, Helvetica, sans-serif; text-decoration: none;'
+        ),
+        'html' => TRUE
+     )
+    ),
+    l($image_removal,
+      'http://www.darty.com/achat/services/livraison_4.html',
+      array(
+        'attributes' => array(
+          'target' => '_blank',
+          'title' => t('Removal at shop')
+        ),
+        'html' => TRUE
+     )
+    ),
+    l('<strong>' . t('Removal at shop') . '</strong>',
+      'http://www.darty.com/achat/services/livraison_4.html',
+      array(
+        'attributes' => array(
+          'target' => '_blank',
+          'title' => t('Removal at shop'),
+          'style' => 'color: #000001; font-size: 10px; font-family: \'Trebuchet MS\', Arial, Helvetica, sans-serif; text-decoration: none;'
+        ),
+        'html' => TRUE
+     )
+    ),
+    l(t('Buy on the site Darty and remove your order after 1h in your store'),
+      'http://www.darty.com/achat/services/livraison_4.html',
+      array(
+        'attributes' => array(
+          'target' => '_blank',
+          'title' => t('Buy on the site Darty and remove your order after 1h in your store'),
+          'style' => 'color: #000001; font-size: 10px; font-family: \'Trebuchet MS\', Arial, Helvetica, sans-serif; text-decoration: none;'
+        ),
+        'html' => TRUE
+     )
+    ),
+    l($image_hotline,
+      'http://www.darty.com/achat/services/assistance-telephonique_8.html',
+      array(
+        'attributes' => array(
+          'target' => '_blank',
+          'title' => t('Hotline 7d / 7, 24h/24')
+        ),
+        'html' => TRUE
+     )
+    ),
+    l('<strong>' . t('Hotline 7d / 7, 24h/24')  . '</strong>',
+      'http://www.darty.com/achat/services/assistance-telephonique_8.html',
+      array(
+        'attributes' => array(
+          'target' => '_blank',
+          'title' => t('Hotline 7d / 7, 24h/24'),
+          'style' => 'color: #000001; font-size: 10px; font-family: \'Trebuchet MS\', Arial, Helvetica, sans-serif; text-decoration: none;'
+        ),
+        'html' => TRUE)
+    ),
+    l(t('Darty assist you 7/7 and 24/24h at 0978.970.970 (price of a local call, excluding holidays)'),
+      'http://www.darty.com/achat/services/assistance-telephonique_8.html',
+      array(
+        'attributes' => array(
+          'target' => '_blank',
+          'title' => t('Darty assist you 7/7 and 24/24h at 0978.970.970 (price of a local call, excluding holidays)'),
+          'style' => 'color: #000001; font-size: 10px; font-family: \'Trebuchet MS\', Arial, Helvetica, sans-serif; text-decoration: none;'
+        ),
+        'html' => TRUE
+     )
+    ),
+    l($image_infos,
+      'http://magasin.darty.com',
+      array(
+        'attributes' => array(
+          'target' => '_blank',
+          'title' => t('Practical information for your store')
+        ),
+        'html' => TRUE
+     )
+    ),
+    l('<strong>' . t('Practical information for your store') . '</strong>',
+      'http://magasin.darty.com',
+      array(
+        'attributes' => array(
+          'target' => '_blank',
+          'title' => t('Practical information for your store'),
+          'style' => 'color: #000001; font-size: 10px; font-family: \'Trebuchet MS\', Arial, Helvetica, sans-serif; text-decoration: none;'
+        ),
+        'html' => TRUE
+     )
+    ),
+    l(t('Find all the information you store [[NOMDUMAGASIN]]'),
+      'http://magasin.darty.com',
+      array(
+        'attributes' => array(
+          'target' => '_blank',
+          'title' => t('Find all the information you store [[NOMDUMAGASIN]]'),
+          'style' => 'color: #000001; font-size: 10px; font-family: \'Trebuchet MS\', Arial, Helvetica, sans-serif; text-decoration: none;'
+        ),
+        'html' => TRUE
+     )
+    ),
+    l($image_facebook2,
+      'http://www.facebook.com/darty',
+      array(
+        'attributes' => array(
+          'target' => '_blank',
+          'title' => t('Facebook')
+        ),
+        'html' => TRUE
+     )
+    ),
+    l('<strong>' . t('Facebook') . '</strong>',
+      'http://www.facebook.com/darty',
+      array(
+        'attributes' => array(
+          'target' => '_blank',
+          'title' => t('Facebook'),
+          'style' => 'color: #000001; font-size: 11px; font-family: \'Trebuchet MS\', Arial, Helvetica, sans-serif; text-decoration: none;'
+        ),
+        'html' => TRUE
+     )
+    ),
+    l($image_twitter2,
+      'http://twitter.com/#!/Darty_Officiel',
+      array(
+        'attributes' => array(
+          'target' => '_blank',
+          'title' => t('Twitter')
+        ),
+        'html' => TRUE
+     )
+    ),
+    l('<strong>' . t('Twitter') . '</strong>',
+      'http://twitter.com/#!/Darty_Officiel',
+      array(
+        'attributes' => array(
+          'target' => '_blank',
+          'title' => t('Twitter'),
+          'style' => 'color: #000001; font-size: 11px; font-family: \'Trebuchet MS\', Arial, Helvetica, sans-serif; text-decoration: none;'
+        ),
+        'html' => TRUE
+     )
+    ),
+    l($image_pinterest2,
+      'http://pinterest.com/dartyfrance',
+      array(
+        'attributes' => array(
+          'target' => '_blank',
+          'title' => t('Pinterest')
+        ),
+        'html' => TRUE
+     )
+    ),
+    l('<strong>' . t('Pinterest') . '</strong>',
+      'http://pinterest.com/dartyfrance',
+      array(
+        'attributes' => array(
+          'target' => '_blank',
+          'title' => t('Pinterest'),
+          'style' => 'color: #000001; font-size: 11px; font-family: \'Trebuchet MS\', Arial, Helvetica, sans-serif; text-decoration: none;'
+        ),
+        'html' => TRUE
+     )
+    ),
+    l($image_google_plus2,
+      'http://plus.google.com/+darty',
+      array(
+        'attributes' => array(
+          'target' => '_blank',
+          'title' => t('Google +')
+        ),
+        'html' => TRUE
+     )
+    ),
+    l('<strong>' . t('Google +') . '</strong>',
+      'http://plus.google.com/+darty',
+      array(
+        'attributes' => array(
+          'target' => '_blank',
+          'title' => t('Google +'),
+          'style' => 'color: #000001; font-size: 11px; font-family: \'Trebuchet MS\', Arial, Helvetica, sans-serif; text-decoration: none;'
+        ),
+        'html' => TRUE
+     )
+    ),
+    l($image_youtube2,
+      'http://www.youtube.com/user/darty',
+      array(
+        'attributes' => array(
+          'target' => '_blank',
+          'title' => t('Youtube')
+        ),
+        'html' => TRUE
+     )
+    ),
+    l('<strong>' . t('Youtube') . '</strong>',
+      'http://www.youtube.com/user/darty',
+      array(
+        'attributes' => array(
+          'target' => '_blank',
+          'title' => t('Youtube'),
+          'style' => 'color: #000001; font-size: 11px; font-family: \'Trebuchet MS\', Arial, Helvetica, sans-serif; text-decoration: none;'
+        ),
+        'html' => TRUE
+     )
+    ),
+  );
+
+  if ($field_link_block_top) {
+    $field_link_block_top['attributes']['style'] = 'color: #ffffff; font-size: 10px; font-family: \'Trebuchet MS\', Arial, Helvetica, sans-serif; text-decoration: none;';
+    $block_top_link_plus = l( $image_plus,
+                              $field_link_block_top['url'],
+                              array(
+                                'attributes' => $field_link_block_top['attributes'],
+                                'html' => TRUE
+                           )
+                             );
+    $block_top_link = l($field_link_block_top['title'],
+                        $field_link_block_top['url'],
+                        array(
+                          'attributes' => $field_link_block_top['attributes']
+                        )
+                      );
+  }
+
+  if ($field_image_block_top) {
+    $block_top_image = l( $field_image_block_top,
+                          $field_link_block_top['url'],
+                          array(
+                            'attributes' => $field_link_block_top['attributes'],
+                            'html' => TRUE
+                       )
+                        );
+  }
+
+  if ($field_link_block_bottom) {
+    $field_link_block_bottom['attributes']['style'] = 'color:#ffffff;font-size:10px;font-family:\'Trebuchet MS\', Arial, Helvetica, sans-serif;text-decoration:none';
+    $block_bottom_link_button = l('<strong>' . $field_link_block_bottom['title'] . '</strong>',
+                                  $field_link_block_bottom['url'],
+                                  array(
+                                    'attributes' => $field_link_block_bottom['attributes'],
+                                    'html' => TRUE
+                              )
+                                );
+  }
+
+  if ($field_link_block_bottom2) {
+    $field_link_block_bottom2['attributes']['style'] = 'color:#ffffff;font-size:10px;font-family:\'Trebuchet MS\', Arial, Helvetica, sans-serif;text-decoration:none';
+    $block_bottom_link_button2 = l( '<strong>' . $field_link_block_bottom2['title'] . '</strong>',
+                                    $field_link_block_bottom2['url'],
+                                    array(
+                                      'attributes' => $field_link_block_bottom2['attributes'],
+                                      'html' => TRUE
+                                )
+                                  );
+  }
+
+  if ($field_width_button == "little") {
+    $block_bottom_width_button = 120;
+  } elseif ($field_width_button == "medium") {
+    $block_bottom_width_button = 160;
+  } else {
+    $block_bottom_width_button = 230;
+  }
+
+  if ($field_width_button2 == "little") {
+    $block_bottom_width_button2 = 120;
+  } elseif ($field_width_button2 == "medium") {
+    $block_bottom_width_button2 = 160;
+  } else {
+    $block_bottom_width_button2 = 230;
+  }
+
+  if (isset($field_image_banner)) {
+    if (isset($field_link_image_block_bottom)) {
+      $block_bottom_banner = l( $field_image_banner,
+                                $field_link_image_block_bottom['url'],
+                                array(
+                                  'attributes' => $field_link_image_block_bottom['attributes'],
+                                  'html' => TRUE
+                            )
+                              );
+    } else {
+      $block_bottom_banner = $field_image_banner;
+    }
+  }
+
+  //Create new variables to display
+  $vars['path_theme'] = !empty($path_theme) ? $path_theme : '';
+  $vars['newsletter_menu'] = !empty($newsletter_menu) ? render($newsletter_menu) : '';
+  $vars['date'] = !empty($date) ? format_date($date, "darty_complete_date") : '';
+  $vars['block_top_title'] = !empty($block_top_title) ? $block_top_title : '';
+  $vars['block_top_body'] = !empty($block_top_body) ? $block_top_body['value'] : '';
+  $vars['block_top_link_plus'] = !empty($block_top_link_plus) ? $block_top_link_plus : '';
+  $vars['block_top_link'] = !empty($block_top_link) ? $block_top_link : '';
+  $vars['block_top_image'] = !empty($block_top_image) ? $block_top_image : '';
+  $vars['block_bottom_picto'] = !empty($picto) ? $picto : '';
+  $vars['block_bottom_title'] = !empty($field_title_block_bottom) ? $field_title_block_bottom : '';
+  $vars['block_bottom_color'] = ($field_color == "grey") ? '#5f5f5f' : '#930a11';
+  $vars['block_bottom_title_content'] = !empty($field_title_content_block_bottom) ? $field_title_content_block_bottom : '';
+  $vars['block_bottom_body'] = !empty($field_body_block_bottom) ? $field_body_block_bottom['value'] : '';
+  $vars['block_bottom_image'] = !empty($field_image_block_bottom) ? $field_image_block_bottom : '';
+  $vars['block_bottom_link_button'] = !empty($block_bottom_link_button) ? $block_bottom_link_button : '';
+  $vars['block_bottom_width_button'] = !empty($block_bottom_width_button) ? $block_bottom_width_button : '';
+  $vars['block_bottom_link_button2'] = !empty($block_bottom_link_button2) ? $block_bottom_link_button2 : '';
+  $vars['block_bottom_width_button2'] = !empty($block_bottom_width_button2) ? $block_bottom_width_button2 : '';
+  $vars['block_bottom_banner'] = !empty($block_bottom_banner) ? $block_bottom_banner : '';
+  $vars['col_left'] = !empty($col_left) ? $col_left : '';
+  $vars['col_right'] = !empty($col_right) ? $col_right : '';
+
+  foreach($labels as $i=>$label) {
+    $vars['label' . ($i+1)] = $label;
+  }
+  foreach($links as $i=>$link) {
+    $vars['link' . ($i+1)] = $link;
+  }
+}
+
+/**
+ * Implementation of hook_permission
+ */
+function darty_newsletter_permission() {
+  return array(
+    'download newsletter' => array(
+      'title' => t('Download newsletter as ZIP'),
+      'description' => t('Allow to download a newsletter as a ZIP archive'),
+    ),
+  );
+}
+
+/**
+ * Implementation of hook_form_alter
+ */
+function darty_newsletter_form_alter(&$form, &$form_state, $form_id) {
+  //Display a download button for allowed users on the newsletter form
+  if ($form_id == "newsletter_node_form") {
+    if (user_access('download newsletter')) {
+      $form['actions']['archive'] = array(
+      	'#type' => 'submit',
+        '#value' => t('Download as ZIP'),
+        '#weight' => 20,
+        '#submit' =>
+          array('darty_newsletter_download_zip')
+      );
+    }
+
+    //Remove preview button and replace it by a preview link
+    if(isset($form['actions']['preview'])) {
+      unset($form['actions']['preview']);
+    }
+    if(!is_null($form['nid']['#value'])) {
+      $form['actions']['submit']['#suffix'] = l(t('Preview'), 'node/'.$form['nid']['#value'], array('attributes' => array('target' => '_blank', 'class' => array('button'))));
+    }
+  }
+}
+
+function darty_newsletter_download_zip($form, &$form_state) {
+  global $base_url;
+  global $conf;
+
+  $path_theme = drupal_get_path('theme', 'darty_theme');
+  $replacement_array = array();
+
+  //STEP 1 : Create the temp folder of the newsletter
+  $folder_name = 'news_darty_et_vous_' . date('Y-m-d', $form_state['node']->field_date['und'][0]['value']);
+  $newsletter_images_folder = $path_theme . '/images/newsletter/images';
+  if (!file_exists($conf['darty_newsletter_tmp'] . $folder_name)) {
+    mkdir($conf['darty_newsletter_tmp'] . $folder_name);
+    mkdir($conf['darty_newsletter_tmp'] . $folder_name . '/images');
+  }
+
+  //Add replacements paths for static images of the newsletter
+  $replacement_array[$base_url.'/'.$newsletter_images_folder] = 'images';
+  $replacement_array['/'.$newsletter_images_folder] = 'images';
+
+  //STEP 2 : Copy newsletter static images from the theme to the temp folder
+  _darty_newsletter_recurse_copy($newsletter_images_folder, $conf['darty_newsletter_tmp'] . $folder_name . '/images');
+
+  //STEP 3 : Get all images from the newsletter form and save it in the temps folder
+  //Images from the newsletter menu
+  $menu_newsletter = entity_load('node', array($form_state['node']->field_menu_newsletter['und'][0]['target_id']));
+  if (!empty($menu_newsletter)) {
+    foreach($menu_newsletter[$form_state['node']->field_menu_newsletter['und'][0]['target_id']]->field_menu_items['und'] as $item) {
+      //Render image in order to get its path
+      $entity = entity_load('field_collection_item', array($item['value']));
+      if (!empty($entity[$item['value']]->field_image)) {
+        $sid = $entity[$item['value']]->field_image['und'][0]['sid'];
+        $image = scald_render($sid, 'full');
+
+        _darty_newsletter_save_image($image, $conf['darty_newsletter_tmp'] . $folder_name . '/images', $replacement_array);
+      }
+    }
+  }
+
+  //Image from block top
+  if (!empty($form_state['node']->field_image_block_top)) {
+    $sid = $form_state['node']->field_image_block_top['und'][0]['sid'];
+    $image = scald_render($sid, 'darty_context_400x250');
+
+    _darty_newsletter_save_image($image, $conf['darty_newsletter_tmp'] . $folder_name . '/images', $replacement_array);
+  }
+
+  //Images from left column
+  if (!empty($form_state['node']->field_block_newsletter_left)) {
+    foreach($form_state['node']->field_block_newsletter_left['und'] as $item) {
+      //Render image in order to get its path
+      $block = entity_load('field_collection_item', array($item['value']));
+      if (!empty($block[$item['value']]->field_image)) {
+        $sid = $block[$item['value']]->field_image['und'][0]['sid'];
+        $image = scald_render($sid, 'darty_context_width_370');
+
+        _darty_newsletter_save_image($image, $conf['darty_newsletter_tmp'] . $folder_name . '/images', $replacement_array);
+      }
+    }
+  }
+
+  //Images from right column
+  if (!empty($form_state['node']->field_block_newsletter_right)) {
+    foreach($form_state['node']->field_block_newsletter_right['und'] as $item) {
+      //Render image in order to get its path
+      $block = entity_load('field_collection_item', array($item['value']));
+      if (!empty($block[$item['value']]->field_image)) {
+        $sid = $block[$item['value']]->field_image['und'][0]['sid'];
+        $image = scald_render($sid, 'darty_context_width_200');
+
+        _darty_newsletter_save_image($image, $conf['darty_newsletter_tmp'] . $folder_name . '/images', $replacement_array);
+      }
+    }
+  }
+
+  //Image from block bottom
+  if ($form_state['node']->field_image_block_bottom) {
+    $sid = $form_state['node']->field_image_block_bottom['und'][0]['sid'];
+    if (empty($form_state['node']->field_title_content_block_bottom) &&
+        empty($form_state['node']->field_body_block_bottom) &&
+        empty($form_state['node']->field_link) &&
+        empty($form_state['node']->field_link2)
+       ) {
+      $image = scald_render($sid, 'darty_context_width_590');
+    } else {
+      $image = scald_render($sid, 'darty_context_165x165');
+    }
+
+    _darty_newsletter_save_image($image, $conf['darty_newsletter_tmp'] . $folder_name . '/images', $replacement_array);
+  }
+
+  //STEP 4 : Get the HTML of the newsletter and update images paths with the temp folder
+  $node_url = url($form_state['values']['path']['source'], array('absolute' => TRUE));
+  $data = drupal_http_request($node_url);
+
+  if ($data->status_message == "OK") {
+    $html = _darty_newsletter_update_html($data->data, $replacement_array);
+    $html = _darty_newsletter_minify_html($html);
+    $fh = fopen($conf['darty_newsletter_tmp'] . $folder_name . '/newsletter.html', 'w');
+    fwrite($fh, $html);
+    fclose($fh);
+  }
+
+  //STEP 5 : Archive the temp folder and remove the temp files/folders created for the zip creation
+  //If the zip file already exists, delete it
+  if(file_exists($conf['darty_newsletter_tmp'] . $folder_name . '.zip')) {
+    unlink($conf['darty_newsletter_tmp'] . $folder_name . '.zip');
+  }
+  _darty_newsletter_archive($conf['darty_newsletter_tmp'] . $folder_name . '.zip', $conf['darty_newsletter_tmp'] . $folder_name);
+
+  //STEP 6 : Download the zip
+  if (file_exists($conf['darty_newsletter_tmp'] . $folder_name . '.zip')) {
+    _darty_newsletter_download($folder_name . '.zip');
+  }
+}
+
+/**
+ * Recursive copy of all files of a folder
+ * @param string $src => the path of the source folder
+ * @param string $dst => the path of the destination folder
+ */
+function _darty_newsletter_recurse_copy($src, $dst) {
+  $dir = opendir($src);
+  while(false !== ($file = readdir($dir))) {
+    if (($file != '.') && ($file != '..')) {
+      if (is_dir($src . '/' . $file)) {
+        _drupal_newsletter_recurse_copy($src . '/' . $file, $dst . '/' . $file);
+      } else {
+        copy($src . '/' . $file, $dst . '/' . $file);
+      }
+    }
+  }
+  closedir($dir);
+}
+
+/**
+ * Copy an image into the temp folder
+ * @param string $image => the URL of the image to copy
+ * @param string $destination => the path of the destination folder
+ * @param array $replacement_array => array of paths replacement for the html update
+ */
+function _darty_newsletter_save_image($image, $destination, &$replacement_array) {
+  //Get the path from the scald rendering
+  preg_match('/src="([^"]*)"/i', $image, $match);
+  $image_path = $match[1];
+
+  //Remove GET param added by scald
+  $image_path = preg_replace('/\\?.*/', '', $image_path);
+
+  //Filename of the new image
+  $filename = file_create_filename(substr($image_path, strrpos($image_path,'/')), $destination);
+
+  //Save image in the temp folder
+  $img = file_get_contents($image_path);
+  file_put_contents($filename, $img);
+
+  //Add a path replacement for the html update
+  $replacement_array[$match[1]] = 'images' . substr($filename, strrpos($filename,'/'));
+}
+
+/**
+ * Update the HTML of the newsletter
+ * @param HTML $html => the HTML of the newsletter to update
+ * @return HTML $html => the updated html
+ */
+function _darty_newsletter_update_html($html, $replacement_array) {
+  if (empty($replacement_array)) {
+    return $html;
+  }
+
+  foreach($replacement_array as $key => $val) {
+    $html = str_replace($key, $val, $html);
+  }
+
+  //HTML encoding of all texts
+  $html = htmlspecialchars_decode(htmlentities($html, ENT_NOQUOTES, 'UTF-8', false), ENT_NOQUOTES);
+
+  return $html;
+}
+
+/**
+ * Minify HTML
+ * @param HTML $html => the HTML to minify
+ * @return HTML $html => the minified HTML
+ */
+function _darty_newsletter_minify_html($html) {
+  $search = array(
+    '/\>[^\S ]+/s',  // strip whitespaces after tags, except space
+    '/[^\S ]+\</s',  // strip whitespaces before tags, except space
+    '/(\s)+/s'       // shorten multiple whitespace sequences
+  );
+  $replace = array(
+    '>',
+    '<',
+    '\\1'
+  );
+  $html = preg_replace($search, $replace, $html);
+
+  return $html;
+}
+
+/**
+ * Build the zip file and delete temporary files
+ * @param string $archive_path => the path of the archive
+ * @param string $folder_path => the path of the temp folder
+ */
+function _darty_newsletter_archive($archive_path, $folder_path) {
+  $files_to_delete = array();
+
+  //Create a new zip file
+  $zip = new ZipArchive ();
+  $zip->open($archive_path, ZIPARCHIVE::CREATE);
+
+  $zip->addFile($folder_path . '/newsletter.html', 'newsletter.html');
+  $files_to_delete[] = $folder_path . '/newsletter.html';
+
+  //Put all images from temp directory to archive
+  if (is_dir($folder_path . '/images/')) {
+    if ($dh = opendir($folder_path . '/images/')) {
+      while(($file = readdir($dh)) !== false) {
+        // If it's a folder, run the function again!
+        if (is_file($folder_path . '/images/' . $file)) {
+          $zip->addFile($folder_path . '/images/' . $file, 'images/' . $file);
+          $files_to_delete[] = $folder_path . '/images/' . $file;
+        }
+      }
+    }
+  }
+
+  $zip->close();
+
+  //Delete temp folder
+  foreach ($files_to_delete as $file) {
+    unlink($file);
+  }
+  rmdir($folder_path . '/images');
+  rmdir($folder_path);
+}
+
+/**
+ * Download the archive
+ * @param string $filename => name of the archive
+ */
+function _darty_newsletter_download($filename) {
+  global $conf;
+
+  $output = file_get_contents($conf['darty_newsletter_tmp'] . $filename);
+  ob_end_clean();
+  header('Content-type: application/zip');
+  header('Content-Disposition: attachment; filename="' . $filename . '"');
+  echo $output;
+  exit;
+}

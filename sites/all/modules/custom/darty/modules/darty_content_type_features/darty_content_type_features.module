@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the Darty Type de contenu feature.
+ */
+
+include_once 'darty_content_type_features.features.inc';

@@ -1,0 +1,566 @@
+<?php
+/**
+ * @file
+ * Code for the Darty Blocs feature.
+ */
+
+include_once 'darty_blocks.features.inc';
+
+/**
+ * Implements hook_bean_types_api_info().
+ */
+function darty_blocks_bean_types_api_info() {
+  return array('api' => 4);
+}
+
+/**
+ * Implements hook_bean_types().
+ */
+function darty_blocks_bean_types() {
+  $plugins = array();
+  $plugin_path = drupal_get_path('module', 'darty_blocks') . '/plugins/bean';
+
+  $plugins['darty_block_menu_image_links'] = array(
+    'label' => t('Block Menu image links'),
+    'description' => t('Create a menu block with image items.'),
+    'handler' => array(
+      'class' => 'DartyBean',
+      'parent' => 'bean',
+    ),
+    'path' => $plugin_path,
+    'file' => 'darty_blocks.inc',
+  );
+
+  $plugins['darty_block_image'] = array(
+    'label' => t('Block Image'),
+    'description' => t('Create an image block that can be clickable.'),
+    'handler' => array(
+      'class' => 'DartyBean',
+      'parent' => 'bean',
+    ),
+    'path' => $plugin_path,
+    'file' => 'darty_blocks.inc',
+  );
+
+  $plugins['darty_block_text_image'] = array(
+    'label' => t('Block Text and Image'),
+    'description' => t('Create text and image block with the possibility of adding a button.'),
+    'handler' => array(
+      'class' => 'DartyBean',
+      'parent' => 'bean',
+    ),
+    'path' => $plugin_path,
+    'file' => 'darty_blocks.inc',
+  );
+
+  $plugins['darty_block_menu_image'] = array(
+    'label' => t('Block Menu Image'),
+    'description' => t('Create a list of links with one associated image.'),
+    'handler' => array(
+      'class' => 'DartyBean',
+      'parent' => 'bean',
+    ),
+    'path' => $plugin_path,
+    'file' => 'darty_blocks.inc',
+  );
+
+  $plugins['darty_block_text_link'] = array(
+    'label' => t('Block Promo'),
+    'description' => t('Create a block promo with an image and a link.'),
+    'handler' => array(
+      'class' => 'DartyBean',
+      'parent' => 'bean',
+    ),
+    'path' => $plugin_path,
+    'file' => 'darty_blocks.inc',
+  );
+
+  $plugins['darty_block_gigya'] = array(
+    'label' => t('Block Gigya'),
+    'description' => t('Create a Gigya share block.'),
+    'handler' => array(
+      'class' => 'DartyBean',
+      'parent' => 'bean',
+    ),
+    'path' => $plugin_path,
+    'file' => 'darty_blocks.inc',
+  );
+
+  return $plugins;
+}
+
+/**
+ * Implementation of template_preprocess_entity
+ */
+function darty_blocks_preprocess_entity(&$vars) {
+  $entity_type = $vars['elements']['#entity_type'];
+  $type = $vars['elements']['#bundle'];
+  $view_mode = $vars['view_mode'];
+
+  //Define some preprocess functions for the field collection field_menu_items
+  if ($type == "darty_block_menu_image_links" ||
+     $type == "darty_block_image" ||
+     $type == "darty_block_text_image" ||
+     $type == "darty_block_menu_image" ||
+     $type == "darty_block_text_link" ||
+     $type == "darty_block_gigya"
+    ) {
+    $preprocess_type = 'darty_blocks_preprocess_' . $entity_type . '_' . $type;
+    $preprocess_type_view_mode = 'darty_blocks_preprocess_' . $entity_type . '_' . $type . '_' . $view_mode;
+
+    if (function_exists($preprocess_type)) {
+      $preprocess_type($vars);
+    }
+
+    if (function_exists($preprocess_type_view_mode)) {
+      $preprocess_type_view_mode($vars);
+    }
+  }
+}
+
+/**
+ * Implements darty_blocks_preprocess_bean_darty_block_menu_image_links().
+ */
+function darty_blocks_preprocess_bean_darty_block_menu_image_links(&$vars) {
+  $entity = $vars['elements']['#entity'];
+  $wrapper = entity_metadata_wrapper('bean', $entity);
+
+  if (is_object($wrapper)) {
+    $field_link = $wrapper->field_link->value();
+    $field_image = $wrapper->field_image->value();
+    $field_image = (!empty($field_image->sid)) ? scald_render($field_image->sid, 'full') : '';
+    $field_image_hover = $wrapper->field_image_hover->value();
+    $field_image_hover = (!empty($field_image_hover->sid)) ? scald_render($field_image_hover->sid, 'full') : '';
+    $field_link2 = $wrapper->field_link2->value();
+    $field_image2 = $wrapper->field_image2->value();
+    $field_image2 = (!empty($field_image2->sid)) ? scald_render($field_image2->sid, 'full') : '';
+    $field_image_hover2 = $wrapper->field_image_hover2->value();
+    $field_image_hover2 = (!empty($field_image_hover2->sid)) ? scald_render($field_image_hover2->sid, 'full') : '';
+    $field_link3 = $wrapper->field_link3->value();
+    $field_image3 = $wrapper->field_image3->value();
+    $field_image3 = (!empty($field_image3->sid)) ? scald_render($field_image3->sid, 'full') : '';
+    $field_image_hover3 = $wrapper->field_image_hover3->value();
+    $field_image_hover3 = (!empty($field_image_hover3->sid)) ? scald_render($field_image_hover3->sid, 'full') : '';
+    $field_link4 = $wrapper->field_link4->value();
+    $field_image4 = $wrapper->field_image4->value();
+    $field_image4 = (!empty($field_image4->sid)) ? scald_render($field_image4->sid, 'full') : '';
+    $field_image_hover4 = $wrapper->field_image_hover4->value();
+    $field_image_hover4 = (!empty($field_image_hover4->sid)) ? scald_render($field_image_hover4->sid, 'full') : '';
+  }
+
+  $link1 = l( '<div>'.$field_image.'</div><div class="hide">'.$field_image_hover.'</div>',
+              $field_link['url'],
+              array(
+                'attributes' => $field_link['attributes'],
+                'html' => TRUE
+            )
+           );
+  $link2 = l( '<div>'.$field_image2.'</div><div class="hide">'.$field_image_hover2.'</div>',
+              $field_link2['url'],
+              array(
+                'attributes' => $field_link2['attributes'],
+                'html' => TRUE
+            )
+           );
+  $link3 = l( '<div>'.$field_image3.'</div><div class="hide">'.$field_image_hover3.'</div>',
+              $field_link3['url'],
+              array(
+                'attributes' => $field_link3['attributes'],
+                'html' => TRUE
+            )
+           );
+  $link4 = l( '<div>'.$field_image4.'</div><div class="hide">'.$field_image_hover4.'</div>',
+              $field_link4['url'],
+              array(
+                'attributes' => $field_link4['attributes'],
+                'html' => TRUE
+            )
+           );
+
+  $vars['link1'] = !empty($link1) ? $link1 : '';
+  $vars['link2'] = !empty($link2) ? $link2 : '';
+  $vars['link3'] = !empty($link3) ? $link3 : '';
+  $vars['link4'] = !empty($link4) ? $link4 : '';
+}
+
+/**
+ * Implements darty_blocks_preprocess_bean_darty_block_image().
+ */
+function darty_blocks_preprocess_bean_darty_block_image(&$vars) {
+  $entity = $vars['elements']['#entity'];
+  $wrapper = entity_metadata_wrapper('bean', $entity);
+
+  if (is_object($wrapper)) {
+    $field_image = $wrapper->field_image->value();
+    $field_link = $wrapper->field_link->value();
+    $field_image_width = $wrapper->field_image_width->value();
+
+    if ($field_image_width == 'little') {
+      $field_image = (!empty($field_image->sid)) ? scald_render($field_image->sid, 'darty_context_width_245') : '';
+      $custom_classes = 'block_image_little';
+    } else {
+      $field_image = (!empty($field_image->sid)) ? scald_render($field_image->sid, 'darty_context_width_990') : '';
+    }
+  }
+
+  if ($field_link) {
+    $block_image = l( $field_image,
+                      $field_link['url'],
+                      array(
+                        'attributes' => $field_link['attributes'],
+                        'html' => TRUE
+                   )
+                   );
+  } else {
+    $block_image = $field_image;
+  }
+
+  //Create new variables to display
+  $vars['block_image'] = !empty($block_image) ? $block_image : '';
+  $vars['custom_classes'] = !empty($custom_classes) ? $custom_classes : '';
+}
+
+/**
+ * Implements darty_blocks_preprocess_bean_darty_block_text_image().
+ */
+function darty_blocks_preprocess_bean_darty_block_text_image(&$vars) {
+  $entity = $vars['elements']['#entity'];
+  $wrapper = entity_metadata_wrapper('bean', $entity);
+
+  if (is_object($wrapper)) {
+    $field_image = $wrapper->field_image->value();
+    $title = $wrapper->title->value();
+    $field_body = $wrapper->field_body->value();
+    $field_link = $wrapper->field_link->value();
+    $field_display = $wrapper->field_display->value();
+    $field_display = $wrapper->field_display->value();
+  }
+
+  if ($field_link && $field_display == 1) {
+    $field_link['attributes']['class'] = 'gradient shadow_link';
+    $link = l($field_link['title'],
+              $field_link['url'],
+              array(
+                'attributes' => $field_link['attributes']
+              )
+            );
+  }
+  if ($field_display == 1) {
+    $field_image = (!empty($field_image->sid)) ? scald_render($field_image->sid, 'darty_context_width_206') : '';
+    $body = $field_body['value'];
+  } else {
+    $field_image = (!empty($field_image->sid)) ? scald_render($field_image->sid, 'darty_context_150x142') : '';
+    $body = views_trim_text(array('max_length' => 220, 'word_boundary' => TRUE, 'ellipsis' => '...', 'html' => TRUE), $field_body['value']);
+  }
+
+  $vars['image'] = !empty($field_image) ? $field_image : '';
+  $vars['block_title'] = !empty($title) ? $title : '';
+  $vars['text'] = !empty($field_body) ? $body : '';
+  $vars['link'] = !empty($link) ? $link : '';
+  $vars['display'] = !empty($field_display) ? $field_display : '';
+}
+
+/**
+ * Implements darty_blocks_preprocess_bean_darty_block_menu_image().
+ */
+function darty_blocks_preprocess_bean_darty_block_menu_image(&$vars) {
+  $entity = $vars['elements']['#entity'];
+  $wrapper = entity_metadata_wrapper('bean', $entity);
+
+  if (is_object($wrapper)) {
+    $title = $wrapper->title->value();
+    $field_link1 = $wrapper->field_link->value();
+    $field_image1 = $wrapper->field_image->value();
+    $field_image1 = (!empty($field_image1->sid)) ? scald_render($field_image1->sid, 'darty_context_width_80') : '';
+    $field_link2 = $wrapper->field_link2->value();
+    $field_image2 = $wrapper->field_image2->value();
+    $field_image2 = (!empty($field_image2->sid)) ? scald_render($field_image2->sid, 'darty_context_width_80') : '';
+    $field_link3 = $wrapper->field_link3->value();
+    $field_image3 = $wrapper->field_image3->value();
+    $field_image3 = (!empty($field_image3->sid)) ? scald_render($field_image3->sid, 'darty_context_width_80') : '';
+    $field_link4 = $wrapper->field_link4->value();
+    $field_image4 = $wrapper->field_image4->value();
+    $field_image4 = (!empty($field_image4->sid)) ? scald_render($field_image4->sid, 'darty_context_width_80') : '';
+  }
+
+  for ($i = 1; $i <= 4; $i++) {
+    if (${"field_link" . $i}) {
+      ${"link" . $i} = l( ${"field_link" . $i}['title'],
+                          ${"field_link" . $i}['url'],
+                          array(
+                            'attributes' => ${"field_link" . $i}['attributes'],
+                            'html' => TRUE
+                       )
+                        );
+      if (${"field_image" . $i}) {
+        ${"image" . $i} = l(${"field_image" . $i},
+                            ${"field_link" . $i}['url'],
+                            array(
+                              'attributes' => ${"field_link" . $i}['attributes'],
+                              'html' => TRUE
+                         )
+                           );
+      }
+    }
+
+    //Specific class for a display without image
+    if (empty(${"field_image" . $i})) {
+      ${"item_class" . $i} = 'no_left';
+    } else {
+      ${"item_class" . $i} = '';
+    }
+  }
+
+  $vars['block_title'] = !empty($title) ? $title : '';
+  $vars['item_class1'] = !empty($item_class1) ? $item_class1 : '';
+  $vars['item_class2'] = !empty($item_class2) ? $item_class2 : '';
+  $vars['item_class3'] = !empty($item_class3) ? $item_class3 : '';
+  $vars['item_class4'] = !empty($item_class4) ? $item_class4 : '';
+  $vars['link1'] = !empty($link1) ? $link1 : '';
+  $vars['link2'] = !empty($link2) ? $link2 : '';
+  $vars['link3'] = !empty($link3) ? $link3 : '';
+  $vars['link4'] = !empty($link4) ? $link4 : '';
+  $vars['image1'] = !empty($image1) ? $image1 : '';
+  $vars['image2'] = !empty($image2) ? $image2 : '';
+  $vars['image3'] = !empty($image3) ? $image3 : '';
+  $vars['image4'] = !empty($image4) ? $image4 : '';
+}
+
+/**
+ * Implements darty_blocks_preprocess_bean_darty_block_text_link().
+ */
+function darty_blocks_preprocess_bean_darty_block_text_link(&$vars) {
+  $entity = $vars['elements']['#entity'];
+  $wrapper = entity_metadata_wrapper('bean', $entity);
+
+  if (is_object($wrapper)) {
+    $field_block_title = $wrapper->label;
+    $field_image = $wrapper->field_image->value();
+    $field_image = (!empty($field_image->sid)) ? scald_render($field_image->sid, 'darty_context_100x100') : '';
+    $field_link = $wrapper->field_link->value();
+    $field_block_color = $wrapper->field_block_color->value();
+    $field_title_color = $wrapper->field_title_color->value();
+    $delta = $wrapper->delta->value();
+  }
+
+  if ($field_title_color){
+    $field_link['attributes']['style'] = 'color:#' . $field_title_color;
+  }
+
+  if ($field_block_color){
+    drupal_add_css(
+        '#page-wrapper .' . $delta . '{background-color: #' . $field_block_color . ';}',
+        array(
+           'type' => 'inline',
+       )
+    );
+  }
+
+  if ($field_link) {
+    $field_link['title'] = views_trim_text(array(
+                                             'max_length' => 100,
+                                             'word_boundary' => TRUE,
+                                             'ellipsis' => '',
+                                             'html' => TRUE
+                                      ),
+                                           $field_link['title']
+                           );
+    $field_link['attributes']['title'] = $field_link['title'];
+    $field_link = l($field_link['title'],
+                    $field_link['url'],
+                    array(
+                      'attributes' => $field_link['attributes'],
+                      'html' => TRUE
+                  )
+                  );
+  } else {
+    $block_link = $field_link;
+  }
+
+  //Create new variables to display
+  $vars['block_title'] = !empty($field_block_title) ? $field_block_title : '';
+  $vars['image'] = !empty($field_image) ? $field_image : '';
+  $vars['title'] = !empty($field_link) ? $field_link : '';
+  $vars['delta'] = !empty($delta) ? $delta : '';
+}
+
+/**
+ * Implements darty_blocks_preprocess_bean_darty_block_gigya().
+ */
+function darty_blocks_preprocess_bean_darty_block_gigya(&$vars) {
+  global $conf;
+  $entity = $vars['elements']['#entity'];
+  $wrapper = entity_metadata_wrapper('bean', $entity);
+
+  if (is_object($wrapper)) {
+    $field_message_share = $wrapper->field_message_share->value();
+    $field_message_mail = $wrapper->field_message_mail->value();
+  }
+
+  drupal_add_html_head(
+    array(
+        '#tag' => 'meta',
+        '#attributes' => array(
+          'property' => 'og:url',
+          'centent' => url(current_path(), array('absolute' => TRUE))
+          )
+    ), 'og:url');
+
+  drupal_add_html_head(
+    array(
+        '#tag' => 'meta',
+        '#attributes' => array(
+          'property' => 'og:title',
+          'centent' => drupal_get_title()
+          )
+    ), 'og:title');
+
+  drupal_add_js('http://cdn.gigya.com/js/socialize.js?apiKey=' . $conf['darty_gigya_apikey'] . '&lang=fr-fr',
+    array(
+        'type' => 'external',
+        'scope' => 'footer'
+        )
+    );
+
+  drupal_add_js(
+   'var ua = new gigya.socialize.UserAction();
+    ua.setLinkBack("'.url(current_path(), array('absolute' => TRUE)).'");
+    ua.setTitle("'.$field_message_share.'");
+
+    var shareButtonsList =
+    [
+      {
+        provider:"facebook-like",
+        tooltip:"Recommander ce produit sur Facebook",
+        action:"like",
+        font:"arial",
+      },
+      {
+        provider:"google-plusone",
+        tooltip:"Recommander ce produit sur Google",
+        userMessage:"'.drupal_get_title().'",
+      },
+      {
+        provider:"share",
+        tooltip:"Partager ce produit",
+        userMessage:"'.drupal_get_title().'",
+        enableCount:false
+      },
+      {
+        provider:"facebook",
+        tooltip:"Partager ce produit par Facebook",
+        userMessage:"'.drupal_get_title().'",
+        enableCount:false,
+        iconOnly:"true"
+      },
+      {
+        provider:"twitter",
+        tooltip:"Partager ce produit par Twitter",
+        userMessage:"'.drupal_get_title().'",
+        enableCount:false,
+        iconOnly:"true"
+      },
+      {
+        provider: "pinterest",
+        tooltip:"Partager ce produit par Pinterest",
+        userMessage:"'.drupal_get_title().'",
+        enableCount:false,
+        iconOnly:"true"
+      },
+      {
+        provider:"email",
+        tooltip:"Partager ce produit par email",
+        iconOnly:"true",
+      },
+    ]
+    var shareBarParams = {
+      userAction:ua,
+      emailBody:"'.$field_message_mail.'",
+      shareButtons: shareButtonsList,
+      containerID: "darty_share_bar"
+    }
+    gigya.socialize.showShareBarUI(shareBarParams);', array('type' => 'inline', 'scope' => 'footer')
+  );
+}
+
+/**
+ * Implementation of hook_permission
+ */
+function darty_blocks_permission() {
+  return array(
+    'edit block in published page' => array(
+      'title' => t('Edit a block in a published page'),
+      'description' => t('Allow to edit a block in a published page'),
+    ),
+  );
+}
+
+/**
+ * Implementation of hook_form_alter
+ */
+function darty_blocks_form_alter(&$form, &$form_state, $form_id) {
+  if(isset($form['bean']['#value']) && (
+      $form['bean']['#value']->type == 'darty_block_text_link' ||
+      $form['bean']['#value']->type == 'darty_block_menu_image_links' ||
+      $form['bean']['#value']->type == 'darty_block_image'
+    )) {
+    //Hide the title field
+    $form['title']['#access'] = FALSE;
+  }
+
+  //Allow submit or not a block in published page
+  if(($form_id == 'bean_form' || $form_id == 'block_admin_configure') && $form_state['submitted'] == FALSE) {
+
+    if ($form_id == 'bean_form'){
+      $value = $form['bean']['#value'];
+      $block_delta = 'bean-' . $value->delta;
+
+      if($value->type == 'darty_block_text_image'){
+        $form['title']['#required'] = TRUE;
+      }
+
+      if($value->type == 'darty_block_menu_image'){
+        $form['title']['#required'] = TRUE;
+      }
+      $form['view_mode']['#type'] = 'hidden';
+    }
+
+    if ($form_id == 'block_admin_configure'){
+      $block_delta = 'block-' . $form['delta']['#value'];
+    }
+
+    $query = db_select('node', 'n');
+    $query->join('panels_node', 'pn', 'n.nid = pn.nid');
+    $query->join('panels_pane', 'pp', 'pn.did = pp.did');
+    $result = $query->distinct()
+            ->fields('n', array('title', 'nid'))
+            ->condition('pp.subtype',  $block_delta)
+            ->condition('n.status', 1)
+            ->execute()
+            ->fetchAll();
+
+    if ($result) {
+      foreach ($result as $row) {
+        $panels[] = l($row->title,
+                      url('node/' . $row->nid,
+                          array(
+                            'absolute' => TRUE
+                       )
+                      ),
+                      array(
+                        'attributes' => array('target' => '_blank')
+                      )
+                    );
+      }
+      if (user_access('edit block in published page')) {
+        $message = t('If you edit this block, it will modify in: ');
+        $form['#prefix'] = '<div class="messages warning">' . $message . implode(', ', $panels) . '</div>';
+      }
+      else {
+        $form['actions']['submit']['#disabled'] = TRUE;
+        $message = t('You don\'t have the permission to edit this block. It is already published in: ');
+        $form['#prefix'] = '<div class="messages error">' . $message . implode(', ', $panels) . '</div>';
+      }
+    }
+  }
+}

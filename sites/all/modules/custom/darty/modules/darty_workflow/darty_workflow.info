@@ -1,0 +1,16 @@
+name = Darty Workflow
+description = Defines the workflow for content.
+core = 7.x
+package = Darty
+version = 7.x-1.0
+project = darty_workflow
+dependencies[] = entity
+dependencies[] = rules
+dependencies[] = state_flow
+features[features_api][] = api:2
+features[rules_config][] = rules_darty_workflow_state_approved
+features[rules_config][] = rules_darty_workflow_state_draft
+features[rules_config][] = rules_darty_workflow_state_publish
+project path = sites/all/modules/custom/darty/modules
+
+files[] = plugins/darty_workflow.inc

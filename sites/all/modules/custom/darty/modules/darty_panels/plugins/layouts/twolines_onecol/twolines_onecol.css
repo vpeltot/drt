@@ -1,0 +1,15 @@
+/*Panel 2 lines 1 col - begin */
+.darty_content_drupal .panel-2lines-1col{
+  padding: 5px;
+}
+.darty_content_drupal .panel-2lines-1col .panel-line-first,
+.darty_content_drupal .panel-2lines-1col .panel-line-second,
+.darty_content_drupal .panel-2lines-1col .panel-col-right{
+  margin: 10px 0;
+}
+.darty_content_drupal .panel-2lines-1col .panel-col-right{
+  width: 600px;
+  float: right;
+  margin-right: 10px;
+}
+/*Panel 2 lines 1 col - end */

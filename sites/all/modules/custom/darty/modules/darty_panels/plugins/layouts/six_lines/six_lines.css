@@ -1,0 +1,42 @@
+/*Panel 6 lines - begin */
+.darty_content_drupal .panel-6lines {
+  padding:10px 10px 16px 10px;
+}
+.darty_content_drupal .panel-6lines .panel-panel {
+  width:100%;
+  float:left;
+}
+.darty_content_drupal .panel-6lines .panel-line-first {
+  margin:0 0 10px 0;
+}
+.darty_content_drupal .panel-6lines .panel-line-second {
+  margin:0 0 45px 0;
+}
+.darty_content_drupal .panel-6lines .panel-line-third {
+  margin:0 0 32px 0;
+}
+.darty_content_drupal .panel-6lines .panel-line-fourth {
+  margin:0 0 65px 0;
+}
+.darty_content_drupal .panel-6lines .panel-line-fifth {
+  margin:0 0 37px 0;
+}
+.darty_content_drupal .panel-6lines .panel-line-sixth {
+  margin:0 0 30px 0;
+}
+
+.darty_content_drupal .panel-6lines .block_image_little,
+.darty_content_drupal .panel-6lines .block_menu_image {
+	float:left;
+}
+.darty_content_drupal .panel-6lines .block_text_image {
+	float:left;
+	margin:0 0 0 17px;
+}
+.darty_content_drupal .panel-6lines .panel-pane:first-child .block_text_image {
+  margin-left:0;
+}
+.darty_content_drupal .panel-6lines .panel-pane:first-child .block_text_image_large {
+  margin-right:17px;
+}
+/*Panel 6 lines - end */

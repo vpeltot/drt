@@ -1,0 +1,30 @@
+<?php
+
+/**
+ * Implements hook_install().
+ * Add version id column on panels node
+ */
+function state_machine_panels_install() {
+  //we create a new display for each new revision, so PK "did" is not adapted 
+  //to this behavior. Let's drop it
+  db_drop_primary_key('panels_node');
+  
+  //add a vid column to store revision id
+  $field = array(
+    'type' => 'int',
+    'unsigned' => TRUE,
+    'not null' => TRUE,
+    'default' => 0,
+    'description' => 'The revision id of did'
+  );
+  db_add_field('panels_node', 'vid', $field);
+}
+
+/**
+ * Implements hook_uninstall().
+ * Remove version id column from panels node
+ */
+function state_machine_panels_uninstall() {
+  //TODO keep just display attached to last node published version, 
+  //clean the rest
+}

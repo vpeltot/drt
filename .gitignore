@@ -1,0 +1,15 @@
+.buildpath
+.idea
+.project
+.idea
+sites.php
+privates/
+nbproject/
+layoutftv/
+staticftv/
+appftv/
+.DS_Store
+public/sites/default/settings.local.php
+*.sublime-*
+vendor/*
+sites/default/files/

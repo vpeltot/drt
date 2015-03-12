@@ -1,0 +1,105 @@
+<?php
+/**
+ * @file
+ * Code for the Darty panels feature.
+ */
+
+include_once 'darty_panels.features.inc';
+
+/**
+ * Implementation of hook_ctools_plugin_directory
+ */
+function darty_panels_ctools_plugin_directory($module, $plugin) {
+  return 'plugins/' . $plugin;
+}
+
+/**
+ * Implementation of template_preprocess_node
+ */
+function darty_panels_preprocess_node(&$vars) {
+  $type = $vars['type'];
+  $view_mode = $vars['elements']['#view_mode'];
+
+  if ($type == "panel") {
+    $preprocess_type = 'darty_panels_preprocess_node_' . $type;
+    $preprocess_type_view_mode = 'darty_panels_preprocess_node_' . $type . '_' . $view_mode;
+
+    if (function_exists($preprocess_type)) {
+      $preprocess_type($vars);
+    }
+
+    if (function_exists($preprocess_type_view_mode)) {
+      $preprocess_type_view_mode($vars);
+    }
+  }
+}
+
+/**
+ * Preprocess for the node panel
+ */
+function darty_panels_preprocess_node_panel(&$vars) {
+  $field_gradient = field_get_items('node', $vars['node'], 'field_gradient');
+  $field_background_color = field_get_items('node', $vars['node'], 'field_background_color');
+  $field_background_image = field_get_items('node', $vars['node'], 'field_background_image');
+
+  if (!empty($field_gradient)) {
+    $vars['classes_array'][] = $vars['field_gradient']['und'][0]['value'];
+  }
+
+  $vars['background'] = '';
+  if (!empty($field_background_color) || !empty($field_background_image)) {
+    $vars['background'] .= 'style="background:';
+
+    if (!empty($field_background_color)) {
+      $vars['background'] .= '#' . $field_background_color[0]['value'];
+    } else {
+      $vars['background'] .= '#F5F6F7';
+    }
+
+    if (!empty($field_background_image)) {
+      $atom = scald_atom_load($field_background_image[0]['sid']);
+      $vars['background'] .= ' url(' . file_create_url($atom->base_entity->uri) . ') no-repeat left top';
+    }
+
+    $vars['background'] .= '"';
+  }
+}
+
+/**
+ * Implementation of hook_form_alter
+ */
+function darty_panels_form_alter(&$form, &$form_state, $form_id) {
+  //Display a download button for allowed users on the panel node form
+  if ($form_id == "panel_node_form") {
+    //Remove preview button
+    if(isset($form['actions']['preview'])) {
+      unset($form['actions']['preview']);
+    }
+
+    if(isset($form_state['node']->nid)) {
+      $original_node = node_load($form_state['node']->nid);
+      //Preview link to the published page
+      if($form_state['node']->status == 1 || $original_node->status == 0) {
+        $form['actions']['submit']['#suffix'] = l(t('Preview'), 'node/'.$form_state['node']->nid, array('attributes' => array('target' => '_blank', 'class' => array('button'))));
+      } else { //Else, Preview link to the revision view
+        $form['actions']['submit']['#suffix'] = l(t('Preview'), 'node/'.$form_state['node']->nid.'/revisions/'.$form_state['node']->vid.'/view', array('attributes' => array('target' => '_blank', 'class' => array('button'))));
+      }
+    }
+  }
+
+  if($form_id == 'panels_edit_display_form') {
+    //Remove preview button
+    if(!empty($form['preview'])) {
+      unset($form['preview']['button']);
+    }
+    if(isset($form_state['display']->context['panel-node']->data->nid)) {
+      $original_node = node_load($form_state['display']->context['panel-node']->data->nid);
+      //Preview link to the published page
+      if($form_state['display']->context['panel-node']->data->status == 1 || $original_node->status == 0) {
+        $form['actions']['submit']['#suffix'] = l(t('Preview'), 'node/'.$form_state['display']->context['panel-node']->data->nid, array('attributes' => array('target' => '_blank', 'class' => array('button'))));
+      } else { //Else, Preview link to the revision view
+        $form['actions']['submit']['#suffix'] = l(t('Preview'), 'node/'.$form_state['display']->context['panel-node']->data->nid.'/revisions/'.$form_state['display']->context['panel-node']->data->vid.'/view', array('attributes' => array('target' => '_blank', 'class' => array('button'))));
+      }
+    }
+  }
+}

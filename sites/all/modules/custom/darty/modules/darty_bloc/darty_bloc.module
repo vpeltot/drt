@@ -1,0 +1,289 @@
+<?php
+
+function darty_bloc_inline_entity_form_entity_form_submit($entity_form, &$form_state) {
+    $ief_id = $entity_form['#ief_id'];
+    $instance = $form_state['inline_entity_form'][$ief_id]['instance'];
+    // Instantiate the controller and validate the form.
+    $controller = inline_entity_form_get_controller($instance);
+    $controller->entityFormSubmit($entity_form, $form_state);
+
+    inline_entity_form_cleanup_entity_form_state($entity_form, $form_state);
+
+    if ($entity_form['#op'] == 'add') {
+        // Determine the correct weight of the new element.
+        $weight = 0;
+        if (!empty($form_state['inline_entity_form'][$ief_id]['entities'])) {
+            $weight = max(array_keys($form_state['inline_entity_form'][$ief_id]['entities'])) + 1;
+        }
+        // Add the entity to form state, mark it for saving, and close the form.
+        $form_state['inline_entity_form'][$ief_id]['entities'][] = array(
+            'entity' => $entity_form['#entity'],
+            'weight' => $weight,
+            'form' => NULL,
+            'needs_save' => TRUE,
+        );
+    } else {
+        $delta = $entity_form['#ief_row_delta'];
+        $form_state['inline_entity_form'][$ief_id]['entities'][$delta]['entity'] = $entity_form['#entity'];
+        $form_state['inline_entity_form'][$ief_id]['entities'][$delta]['needs_save'] = TRUE;
+    }
+
+    if ($entity_form['#entity']->label != '')
+        $entity_form['#entity']->title = $entity_form['#entity']->label;
+}
+
+/**
+ * Implementation of hook_inline_entity_form_entity_form_alter
+ * permet d'alterer la liste de selection du choix de rubrique pour le bloc de droite "lien rubrique"
+ * 
+ */
+function darty_bloc_inline_entity_form_entity_form_alter(&$entity_form, &$form_state) {
+
+    if ($entity_form['#entity_type'] == 'bean' && in_array($entity_form['#bundle'], array('bloc_plus_moins', 'bloc_bio_express', 'bloc_edito', 'bloc_forum', 'bloc_lien_rubrique',
+                'bloc_remonte_produit', 'bloc_services_darty', 'bloc_sondage', 'chapitre_article', 'item_diapo',
+                'contenu', 'forum', 'mise_en_avant'))) {
+        $entity_form['revision']['#access'] = false;
+        $entity_form['default_revision']['#access'] = false;
+
+        if ($entity_form['#bundle'] != 'bloc_services_darty') {
+            $entity_form['title']['#access'] = false;
+            $entity_form['label']['#title'] = 'Titre';
+        } else {
+            $entity_form['label']['#title'] = 'Titre du bloc (affiché)';
+            $entity_form['title']['#title'] = 'Nom d\'administration du bloc';
+        }
+        $entity_form['actions']['ief_add_save']['#value'] = 'Créer le bloc';
+        $entity_form['actions']['ief_edit_save']['#value'] = 'Modifier le bloc';
+        unset($entity_form['#ief_element_submit']);
+        $entity_form['#ief_element_submit'][] = 'darty_bloc_inline_entity_form_entity_form_submit';
+    }
+}
+
+/**
+ * @file
+ * Code for the Darty_bloc feature.
+ */
+include_once 'darty_bloc.features.inc';
+
+/**
+ * Implementation of template_preprocess_entity
+ */
+function darty_bloc_preprocess_entity(&$vars) {
+    $entity_type = $vars['elements']['#entity_type'];
+    $type = $vars['elements']['#bundle'];
+    $view_mode = $vars['view_mode'];
+
+//Define some preprocess functions for the field collection field_menu_items
+    if ($type == "bloc_bio_express" ||
+            $type == "bloc_edito" ||
+            $type == "bloc_forum" ||
+            $type == "bloc_lien_rubrique" ||
+            $type == "bloc_plus_moins" ||
+            $type == "bloc_remonte_produit" ||
+            $type == "bloc_services_darty" ||
+            $type == "bloc_sondage" ||
+            $type == 'chapitre_article'
+    ) {
+        $preprocess_type = 'darty_bloc_preprocess_' . $entity_type . '_' . $type;
+        $preprocess_type_view_mode = 'darty_bloc_preprocess_' . $entity_type . '_' . $type . '_' . $view_mode;
+        if (function_exists($preprocess_type)) {
+            $preprocess_type($vars);
+        }
+
+        if (function_exists($preprocess_type_view_mode)) {
+            $preprocess_type_view_mode($vars);
+        }
+    }
+}
+
+/**
+ * Implements darty_bloc_preprocess_bean_bloc_lien_rubrique().
+ */
+function darty_bloc_preprocess_bean_bloc_lien_rubrique(&$vars) {
+    global $conf;
+    $entity = $vars['elements']['#entity'];
+    $wrapper = entity_metadata_wrapper('bean', $entity);
+
+    $vars['rubrique_info'] = array();
+    if (is_object($wrapper)) {
+
+
+        $rub_avance = $wrapper->field_bloc_choix_rub_avance->value();
+        $rub_url = $wrapper->field_bloc_choix_rub_url->value();
+        $title = $wrapper->field_bloc_choix_rub_title->value();
+        $rub_avance2 = $wrapper->field_bloc_choix_rub2_avance->value();
+        $rub2_url = $wrapper->field_bloc_choix_rub2_url->value();
+        $title2 = $wrapper->field_bloc_choix_rub2_title->value();
+        $rub_ids[] = array('rub' => $rub_avance, 'title' => $title, 'url' => $rub_url);
+        if (!empty($rub_avance2))
+            $rub_ids[] = array('rub' => $rub_avance2, 'title' => $title2, 'url' => $rub2_url);
+
+        foreach ($rub_ids as $item) {
+            $rub = array();
+
+            $rub['title'] = $item['title'];
+            $url_avance = pathinfo($item['rub']);
+            preg_match('/.*[?](.*)/', $url_avance['basename'], $matches);
+            if (isset($conf['darty_header_htaccess']) && !empty($conf['darty_header_htaccess']))
+                $url_tmp = $conf['darty_header_protocol'] . $conf['darty_header_htaccess'] . '@' . $conf['darty_api_url'];
+            else
+                $url_tmp = $conf['darty_header_protocol'] . $conf['darty_api_url'];
+
+            $navUrl = $url_tmp . '/nav?query=' . $matches[1];
+            $navUrl_code = $url_tmp . '/nav?query=' . str_replace('&', '%26', $matches[1]);
+            if (isset($item['url']) && !empty($item['url']))
+                $rub['url'] = $item['url'];
+            else
+                $rub['url'] = $item['rub'];
+            $options = array('method' => 'GET');
+            $result_more = drupal_http_request($navUrl_code, $options);
+
+            $json_more = json_decode($result_more->data);
+            if (empty($json_more)) {
+                $result_more = drupal_http_request($navUrl, $options);
+                $json_more = json_decode($result_more->data);
+            }
+            $rub['count'] = $json_more->resultCount;
+            $rub['minPrice'] = $json_more->minPrice;
+            $rub['maxPrice'] = $json_more->maxPrice;
+
+            $vars['rubrique_info'][] = $rub;
+        }
+    }
+}
+
+/**
+ * Implements darty_bloc_preprocess_bean_bloc_remonte_produit().
+ */
+function darty_bloc_preprocess_bean_bloc_remonte_produit(&$vars) {
+    $entity = $vars['elements']['#entity'];
+    $wrapper = entity_metadata_wrapper('bean', $entity);
+
+    if (is_object($wrapper)) {
+        $codics = $wrapper->field_bloc_codics->value();
+
+        $vars['products'] = get_info_produits($codics);
+    }
+}
+
+function _wrapper_debug($w) {
+    $values = array();
+    foreach ($w->getPropertyInfo() as $key => $val) {
+        $values[$key] = $w->$key->value();
+    }
+    return $values;
+}
+
+/**
+ * Implements darty_bloc_preprocess_bean_bloc_services_darty().
+ */
+function darty_bloc_preprocess_bean_bloc_services_darty(&$vars) {
+    $entity = $vars['elements']['#entity'];
+    $wrapper = entity_metadata_wrapper('bean', $entity);
+
+    if (is_object($wrapper)) {
+        $vars['titre'] = $entity->label;
+        $arrayTexte = $wrapper->field_bloc_texte->value();
+        $vars['texte'] = (isset($arrayTexte) && is_array($arrayTexte)) ? $arrayTexte['safe_value'] : $arrayTexte;
+
+        $objPortrait = $wrapper->field_bloc_image->value();
+        $vars['image'] = (!empty($objPortrait)) ? scald_render($objPortrait->sid, 'darty_context_90_x_90') : '';
+
+        if (isset($wrapper->field_bloc_bool_titre)) {
+            $bool_titre = $wrapper->field_bloc_bool_titre->value();
+            $vars['bool_titre'] = $bool_titre;
+        }
+
+        $lien = $wrapper->field_bloc_lien->value();
+        $vars['lien'] = !empty($lien) ? l($lien['title'], $lien['url'], array('attributes' => $lien['attributes'])) : '';
+    }
+}
+
+/**
+ * Implements darty_bloc_preprocess_bean_bloc_bio_express().
+ */
+function darty_bloc_preprocess_bean_bloc_edito(&$vars) {
+    $entity = $vars['elements']['#entity'];
+    $wrapper = entity_metadata_wrapper('bean', $entity);
+
+    if (is_object($wrapper)) {
+
+        $vars['titre'] = $wrapper->label->value();
+        $arrayTexte = $wrapper->field_bloc_texte->value();
+        if (isset($arrayTexte) && is_array($arrayTexte))
+            $vars['texte'] = $arrayTexte['safe_value'];
+    }
+}
+
+/**
+ * Implements darty_bloc_preprocess_bean_bloc_bio_express().
+ */
+function darty_bloc_preprocess_bean_bloc_bio_express(&$vars) {
+    $entity = $vars['elements']['#entity'];
+    $wrapper = entity_metadata_wrapper('bean', $entity);
+
+    if (is_object($wrapper)) {
+        $vars['titre'] = $wrapper->label->value();
+        $objPortrait = $wrapper->field_bloc_image->value();
+        $vars['portrait'] = scald_render($objPortrait->sid, 'portrait_160_160');
+        $arrayTexte = $wrapper->field_bloc_texte->value();
+        if (isset($arrayTexte) && is_array($arrayTexte))
+            $vars['texte'] = $arrayTexte['safe_value'];
+    }
+}
+
+/**
+ * Implements darty_bloc_preprocess_bean_bloc_plus_moins().
+ */
+function darty_bloc_preprocess_bean_bloc_plus_moins(&$vars) {
+    $entity = $vars['elements']['#entity'];
+    $wrapper = entity_metadata_wrapper('bean', $entity);
+
+    if (is_object($wrapper)) {
+        $vars['title_plus'] = $wrapper->field_titre_les_plus->value();
+        $vars['title_moins'] = $wrapper->field_titre_les_moins->value();
+        $vars['liste_plus'] = $wrapper->field_liste_elem_plus->value();
+        $vars['liste_moins'] = $wrapper->field_liste_elem_moins->value();
+    }
+//bean-bloc-plus-moins
+//
+//plus-wrapper
+//moins-wrapper
+
+    drupal_add_js(
+            "jQuery(document).ready(function () { 
+var hPlus = jQuery('.bean-bloc-plus-moins .plus-wrapper').first().height();
+var hMoins = jQuery('.bean-bloc-plus-moins .moins-wrapper').first().height();
+if (hPlus > hMoins) jQuery('.bean-bloc-plus-moins .moins-wrapper').first().height(hPlus);
+else jQuery('.bean-bloc-plus-moins .plus-wrapper').first().height(hMoins);
+});", array('type' => 'inline', 'scope' => 'footer')
+    );
+}
+
+/**
+ * Implements darty_bloc_preprocess_bean_chapitre_article().
+ */
+function darty_bloc_preprocess_bean_chapitre_article(&$vars) {
+    $entity = $vars['elements']['#entity'];
+    $wrapper = entity_metadata_wrapper('bean', $entity);
+
+    $id = $vars['view_mode'];
+    preg_match('/sommaire_([0-9]*)_([0-9]*)/', $id, $matches);
+    $pos = $matches[1];
+    $total = $matches[2];
+
+    if (is_object($wrapper)) {
+        $vars['titre'] = $wrapper->label->value();
+        $arrayTexte = $wrapper->field_contenu_chapitre->value();
+        if (isset($arrayTexte) && is_array($arrayTexte))
+            $texte = $arrayTexte['safe_value'];
+        else
+            $texte = $arrayTexte;
+        $vars['texte'] = $texte;
+        $vars['id'] = $vars['view_mode'];
+        $vars['pos'] = $pos;
+        $vars['total'] = $total;
+
+        drupal_add_js(drupal_get_path('module', 'darty_bloc') . "/js/sommaire.js", array('type' => 'file', 'scope' => 'footer'));
+    }
+}

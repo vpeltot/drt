@@ -1,0 +1,92 @@
+msgid ""
+msgstr ""
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "If this email does not display correctly, you can view it through"
+msgstr "Si cet email ne s'affiche pas correctement, vous pouvez le visualiser grâce"
+
+msgid "this link"
+msgstr "à ce lien"
+
+msgid "Darty and you : the trust relationship e-magazine"
+msgstr "Darty & vous : le e-magazine de la relation de confiance"
+
+msgid "Join us on"
+msgstr "Rejoignez-nous su"
+
+msgid "Hello"
+msgstr "Bonjour"
+
+msgid "Darty invites you to discover the news of the week."
+msgstr "Darty vous propose de découvrir l'actualité de la semaine."
+
+msgid "@ 2014 Darty"
+msgstr "@ 2014 Darty"
+
+msgid "Follow us on"
+msgstr "Suivez-nous sur "
+
+msgid "Establishments Darty et Fils - SAS with a capital of € 23,470,382 - Registered office: 129 Avenue Gallieni - 93140 BONDY - RCS Bobigny B 542 086 616"
+msgstr "Etablissements Darty et Fils - SAS au capital de 23 470 382 € - Siège social : 129 avenue Gallieni - 93140 BONDY - RCS BOBIGNY B 542 086 616"
+
+msgid "If you no longer wish to receive emails from Darty.com, you can"
+msgstr "Si vous ne souhaitez plus recevoir d'emails de la part de Darty.com, vous pouvez vous"
+
+msgid "unsubscribe"
+msgstr "désinscrire"
+
+msgid "Facebook"
+msgstr "Facebook"
+
+msgid "Twitter"
+msgstr "Twitter"
+
+msgid "Pinterest"
+msgstr "Pinterest"
+
+msgid "Google +"
+msgstr "Google +"
+
+msgid "Youtube"
+msgstr "Youtube"
+
+msgid "Buy 7d/7 by phone"
+msgstr "Achat 7j/7 par téléphone"
+
+msgid "Removal at shop"
+msgstr "Retrait en magasin"
+
+msgid "Hotline 7d / 7, 24h/24"
+msgstr "Assistance téléphonique 7j/7, 24h/24"
+
+msgid "Practical information for your store"
+msgstr "Infos pratiques de votre magasin"
+
+msgid "Plus"
+msgstr "Plus"
+
+msgid "Picto"
+msgstr "Picto"
+
+msgid "0978.970.970 call and say \"buy\" from 9h to 20h (price of a local call, excluding holidays)"
+msgstr "Appelez le 0978.970.970 et dites \"achat\" de 9h à 20h (prix d'un appel local, hors jours fériés)"
+
+msgid "Buy on the site Darty and remove your order after 1h in your store"
+msgstr "Achetez sur le site de Darty et retirez votre commande 1h après dans votre magasin"
+
+msgid "Darty assist you 7/7 and 24/24h at 0978.970.970 (price of a local call, excluding holidays)"
+msgstr "Darty vous assiste 7j/7 et 24h/24 au 0978.970.970 (prix d'un appel local, hors jours fériés)"
+
+msgid "Find all the information you store [[NOMDUMAGASIN]]"
+msgstr "Trouvez toutes les informations de votre magasin [[NOMDUMAGASIN]]"
+
+msgid "Download newsletter as ZIP"
+msgstr "Télécharger la newsletter au format ZIP"
+
+msgid "Allow to download a newsletter as a ZIP archive"
+msgstr "Autorise le téléchargement de la newsletter en tant qu'archive ZIP"
+
+msgid "Download as ZIP"
+msgstr "Télécharger en ZIP"

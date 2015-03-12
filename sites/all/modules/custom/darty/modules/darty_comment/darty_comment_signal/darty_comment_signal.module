@@ -1,0 +1,226 @@
+<?php
+
+function darty_comment_signal_menu() {
+
+    $items['ajax/comment_signal/%'] = array(
+        'title' => 'ajax callback signal',
+        'page callback' => 'ajax_comment_signal',
+        'page arguments' => array(2),
+        'access callback' => TRUE,
+        'type' => MENU_CALLBACK,
+    );
+    $items['admin/comment_signal'] = array(
+        'title' => 'Liste des signalements des commentaires',
+        'page callback' => 'admin_comment_signal',
+        'page arguments' => array('1'),
+        'access callback' => 'user_access_signal',
+        'type' => MENU_CALLBACK,
+    );
+    $items['admin/comment_signal/archive'] = array(
+        'title' => 'Liste des signalements archivés des commentaires',
+        'page callback' => 'admin_comment_signal',
+        'page arguments' => array('0'),
+        'access callback' => 'user_access_signal',
+        'type' => MENU_CALLBACK,
+    );
+    $items['admin/comment_signal/%/%/delete'] = array(
+        'title' => 'Liste des signalement des commentaires',
+        'page callback' => 'admin_comment_signal_delete',
+        'page arguments' => array(2, 3),
+        'access callback' => 'user_access_signal',
+        'type' => MENU_CALLBACK,
+    );
+    $items['ajax/comment_signal/form'] = array(
+        'title'=>'callback form',
+        'page callback' =>'ajax_comment_signal_callback',
+        'page arguments' => array(),
+        'access callback' => TRUE,
+        'type' => MENU_CALLBACK,
+    );
+    return $items;
+}
+
+function admin_comment_signal_delete($cid, $uid) {
+    db_update('comment_signal') // Table name no longer needs {}
+            ->fields(array(
+                'status' => 0,
+            ))
+            ->condition('cid', $cid, '=')
+            ->condition('uid', $uid, '=')
+            ->execute();
+    drupal_set_message('Le signalement a été archivé.');
+    drupal_goto('admin/comment_signal');
+}
+
+function user_access_signal() {
+    return user_access('editor comment');
+}
+
+function admin_comment_signal($archive) {
+    $header = array(
+        array('data' => t('Signalement'), 'field' => 's.subject'), // sort
+        array('data' => t('Mail (signal)'), 'field' => 'us.mail'),
+        array('data' => t('Commentaire'), 'field' => 'subject'),
+        array('data' => t('Mail (commentaire)'), 'field' => 'uc.mail'),
+        array('data' => t('Date'), 'field' => 's.created', 'sort' => 'desc'),
+        array('data' => t('Actions'))
+    );
+    $query = db_select('comment_signal', 's');
+    $query->join('comment', 'c', 'c.cid = s.cid');
+    $query->join('users', 'uc', 'uc.uid=c.uid');
+    $query->join('users', 'us', 'us.uid=s.uid');
+    $query->fields('c', array('subject', 'cid', 'nid'));
+    $query->fields('s', array('subject', 'created'));
+    $query->fields('uc', array('mail', 'uid'));
+    $query->fields('us', array('mail', 'uid'));
+    $query->condition('s.status', $archive, '=');
+
+    $table_sort = $query->extend('TableSort') // Add table sort extender.
+            ->orderByHeader($header); // Add order by headers.
+
+    $pager = $table_sort->extend('PagerDefault')
+            ->limit(15); // 5 rows per page.
+
+    $result = $pager->execute();
+    $rows = array();
+
+    foreach ($result as $res) {
+        $rows[] = array($res->s_subject, l($res->us_mail, 'user/' . $res->us_uid . '/edit'),
+            l($res->subject, "node/$res->nid", array("fragment" => "comment-$res->cid")),
+            l($res->mail, 'user/' . $res->uid . '/edit'), date('d/m/Y h:i:s', $res->created),
+            ($archive == 1) ? l('Archiver', 'admin/comment_signal/' . $res->cid . '/' . $res->us_uid . '/delete') : '',
+        );
+    }
+    $output = theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('id' => 'sort-table')));
+    $output .= theme('pager');
+    if ($archive == 1)
+        $output .="<br/<br/>" . l('Voir les signalements archivés', 'admin/comment_signal/archive');
+    else
+        $output .="<br/<br/>" . l('Voir les signalements en cours', 'admin/comment_signal');
+    return $output;
+}
+
+function ajax_comment_signal($cid) {
+    print '<div class="titre">Signaler un problème avec ce commentaire</div>';
+    print render(drupal_get_form('ajax_comment_signal_form', $cid));
+    print "<script>
+        $('#ajax-comment-signal-form').submit(function() {
+     var theForm = $(this);
+
+     // send xhr request
+     $.ajax({
+         type: theForm.attr('method'),
+         url: theForm.attr('action'),
+         data: theForm.serialize(),
+         success: function(data) {
+             $('#ajax-comment-signal-form').html(data);
+         }
+     });
+
+     // prevent submitting again
+     return false;
+});
+        </script>";
+    drupal_exit();
+}
+
+function ajax_comment_signal_form($form, &$form_state, $cid) {
+    global $user;
+    $uid = $user->uid;
+
+    $comment = comment_load($cid);
+
+    $result = db_select('comment_signal', 'cs')
+            ->fields('cs')
+            ->condition('cid', $cid, '=')
+            ->condition('uid', $uid, '=')
+            ->execute()
+            ->fetchAssoc();
+
+    if (is_object($comment) && isset($comment->cid) && (!isset($result) || empty($result))) {
+        $view_comment = comment_view($comment);
+        unset($view_comment['links']);
+
+        $form['#action'] = url('ajax/comment_signal/form');
+        $form['comment'] = array('#markup' => drupal_render($view_comment));
+        $form['signal']['#prefix'] = '<div id="signal-wrapper">';
+        $form['signal']['#suffix'] = '</div>';
+        $form['signal']['message'] = array(
+            '#title' => t('Votre message'),
+            '#type' => 'textarea',
+            '#default_value' => '',
+        );
+        $form['cid'] = array('#type' => 'hidden', '#value' => $cid);
+        $form['signal']['button'] = array(
+            '#type' => 'submit',
+            '#value' => t('Envoyer'),
+//            '#ajax' => array(
+//                'callback' => 'ajax_comment_signal_callback',
+//                'effect' => 'fade',
+//                'wrapper' => 'signal-wrapper',
+//                'event' => 'click',
+//            ),
+        );
+
+        return $form;
+    }
+
+    if (is_object($comment) && isset($comment->cid) && isset($result) && count($result) > 0) {
+        $view_comment = comment_view($comment);
+        unset($view_comment['links']);
+
+        $form['comment'] = array('#markup' => drupal_render($view_comment));
+        $form['signal']['#prefix'] = '<div id="signal-wrapper">';
+        $form['signal']['#suffix'] = '</div>';
+        $form['signal']['message'] = array('#markup' => '<div class="message">Vous avez déjà signalé ce commentaire.</div>');
+        return $form;
+    }
+    $form['signal']['#prefix'] = '<div id="signal-wrapper">';
+    $form['signal']['#suffix'] = '</div>';
+    $form['signal']['message'] = array('#markup' => 'Une erreur est survenue.');
+    return $form;
+}
+
+function ajax_comment_signal_callback() {
+    global $user;
+
+    $cid = isset($_POST['cid'])?$_POST['cid']:'';
+    $uid = $user->uid;
+    $message = isset($_POST['message'])?$_POST['message']:'';
+    
+    if ($cid != '' && $message != ''){
+        try {
+            $result = db_insert('comment_signal')
+                    ->fields(array(
+                        'cid' => $cid,
+                        'uid' => $uid,
+                        'subject' => $message,
+                        'created' => time(),
+                    ))
+                    ->execute();
+            $author_signal = user_load($uid);
+            $comment = comment_load($cid);
+            $node = node_load($comment->nid);
+            $user_author_node = user_load($node->uid);
+            $to = $user_author_node->mail;
+            $name_from = 'sylvain';
+            $email_from = 'sylvainmichel@live.fr';
+            $params = array(
+                'body' => "Bonjour,<br/><br/>Un message a été déposé par " . $author_signal->mail . " pour signaler un commentaire sur le contenu \"" . l($node->title, "node/$comment->nid", array("absolute" => true, "fragment" => "comment-$comment->cid")) . "\"<br/><br/>" .
+                "Message du signalement : " . $message . "<br/><br/>" .
+                "Message du commentaire : " . ((!empty($comment->comment_body)) ? $comment->comment_body[LANGUAGE_NONE][0]['value'] : ""),
+                'subject' => t("Darty&Vous - Un commentaire a été signalé"),
+            );
+            send_email($to, $params['subject'], $params['body'], strip_tags($params['body']), $name_from, $email_from);
+
+            print '<div class="message">Votre message a bien été envoyé.<br/>Merci.</div>';
+            drupal_exit();
+        } catch (PDOException $e) {
+            print '<div class="message">Vous avez déjà signalé ce commentaire.</div>';
+            drupal_exit();
+        }
+    }else{
+        print '<div class="message">Une erreur est survenue.</div>';
+        drupal_exit();
+    }
+}

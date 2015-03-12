@@ -1,0 +1,153 @@
+<?php
+
+/**
+ * @file
+ * State machine panels module entry point.
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function state_machine_panels_menu() {
+  $items['node/%node/revisions/%/edit/state_machine_panels'] = array(
+    'title' => 'Edit',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => -10,
+  );
+
+  $items['node/%node/revisions/%/edit/view'] = array(
+    'title' => 'View',
+    'load arguments' => array(3),
+    'page callback' => 'node_show',
+    'page arguments' => array(1, TRUE),
+    'access callback' => '_node_revision_access',
+    'access arguments' => array(1),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => -15,
+  );
+
+  $items['node/%node/revisions/%/edit/panel_content'] = array(
+    'title' => 'Panel content',
+    'page callback' => 'state_machine_panels_node_edit_content',
+    'page arguments' => array(1),
+    'access callback' => 'panels_node_edit_node',
+    'access arguments' => array(1),
+    'type' => MENU_LOCAL_TASK
+  );
+
+  $items['node/%node/revisions/%/edit/workflow'] = array(
+    'title' => 'Workflow',
+    'page callback' => 'state_machine_panels_tab_workflow',
+    'page arguments' => array(1),
+    'access callback' => 'state_flow_menu_node_access',
+    'access arguments' => array(1),
+    'type' => MENU_LOCAL_TASK
+  );
+
+  return $items;
+}
+
+/**
+ * Function to redirect the Workflow tab
+ */
+function state_machine_panels_tab_workflow($node) {
+  drupal_goto("node/$node->nid/workflow");
+}
+
+/**
+ * Pass through to the panels content editor.
+ */
+function state_machine_panels_node_edit_content($node) {
+  ctools_include('context');
+  $display = panels_load_display($node->panels_node['did']);
+  $display->context = panels_node_get_context($node);
+  ctools_include('common', 'panels');
+  $content_types = panels_common_get_allowed_types('panels_node', $display->context);
+
+  return panels_edit($display, "node/$node->nid/revisions/$node->vid/edit/panel_content", $content_types);
+}
+
+/**
+ * Implements hook_admin_paths().
+ */
+function state_machine_panels_admin_paths() {
+  if (variable_get('node_admin_theme')) {
+    $paths = array(
+      'node/*/revisions/*/edit/panel_content' => TRUE
+    );
+    return $paths;
+  }
+}
+
+/**
+ * Implements hook_node_load().
+ * Load corresponding display to current node revision
+ */
+function state_machine_panels_node_load($nodes, $types) {
+  foreach ($nodes as $node) {
+    if ($node->type === 'panel') {
+      $result = db_query("SELECT * FROM {panels_node} WHERE nid IN (:nid) AND vid = :vid",
+              array(':nid' => $node->nid, ':vid' => $node->vid));
+      $record = $result->fetch();
+      if ($record !== FALSE) {
+        $nodes[$record->nid]->panels_node = (array) $record;
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_node_insert().
+ * Track vid during new panel node creation.
+ */
+function state_machine_panels_node_insert($node) {
+  if ($node->type === 'panel') {
+    db_update('panels_node')
+      ->fields(array(
+        'vid' => $node->vid
+      ))
+      ->condition('nid', $node->nid)
+      ->execute();
+  }
+}
+
+/**
+ * Implements hook_node_update().
+ */
+function state_machine_panels_node_update($node) {
+  if($node->type === 'panel' && $node->revision) {
+    $state_flow = state_flow_load_state_machine($node);
+    $options = $state_flow->get_states_options();
+    if(empty($node->stateflow_ignore_state)) {
+      if(!($state_flow->ignore())) {
+        
+        //Clone current display to avoid edit published one
+        $display = panels_load_display($node->original->panels_node['did']);
+        $code = panels_export_display($display);
+        eval($code); // :-\ ... way provided by panels module to clone display
+        
+        panels_save_display($display);
+        
+        $node->panels_node['did'] = $display->did;
+
+        db_insert('panels_node')
+          ->fields(array(
+            'nid' => $node->nid,
+            'did' => $display->did,
+            'css_id' => $node->panels_node['css_id'],
+            'pipeline' => $node->panels_node['pipeline'],
+            'vid' => $node->vid
+          ))
+          ->execute();
+      }
+    } else {
+      db_update('panels_node')
+        ->fields(array(
+          'vid' => $node->vid
+        ))
+        ->condition('vid', $node->old_vid)
+        ->condition('nid', $node->nid)
+        ->execute();
+    }
+  }
+}

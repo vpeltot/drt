@@ -1,0 +1,11 @@
+<?php
+
+function darty_api_menu() {
+    $items['api/last_articles'] =
+            array('title' => 'json articles',
+                'page callback' => 'get_api_last_articles',
+                'page arguments' => array('3'),
+                'access callback' => TRUE,
+                'type' => MENU_CALLBACK);
+    return $items;
+}

@@ -1,0 +1,7 @@
+name = Darty comment
+description = Module permettant de gérer les commentaires sur Darty&vous
+core = 7.x
+package = Darty
+version = 7.x-1.0
+project = darty_comment
+dependencies[] = comment

@@ -1,0 +1,13 @@
+name = Thème Darty
+description = ''
+core = 7.x
+
+stylesheets[all][] = css/reset.css
+stylesheets[all][] = css/stylesheet.css
+stylesheets[print][] = css/print.css
+
+regions[header] = Header
+regions[content] = Content
+regions[footer] = Footer
+
+features[] = favicon

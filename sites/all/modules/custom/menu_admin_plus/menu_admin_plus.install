@@ -1,0 +1,18 @@
+<?php
+
+/**
+ * @file
+ * Install and uninstall all required databases. Also do incremental database updates.
+ */
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function menu_admin_plus_uninstall() {
+}
+
+/**
+ * Implementation of hook_install().
+ */
+function menu_admin_plus_install() {
+}

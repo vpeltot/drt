@@ -1,0 +1,261 @@
+<?php
+
+function darty_comment_menu() {
+    $items['ajax/comment/%'] = array(
+        'title' => 'ajax callback comment',
+        'page callback' => 'ajax_comment',
+        'page arguments' => array(2),
+        'access callback' => TRUE,
+        'delivery callback' => 'ajax_comment_deliver',
+        'type' => MENU_CALLBACK,
+    );
+    $items['ajax/nbcomment/%'] = array(
+        'title' => 'ajax callback comment',
+        'page callback' => 'ajax_nbcomment',
+        'page arguments' => array(2),
+        'access callback' => TRUE,
+        'delivery callback' => 'ajax_comment_deliver',
+        'type' => MENU_CALLBACK,
+    );
+    $items['ajax/charte'] = array(
+        'title' => 'ajax callback comment',
+        'page callback' => 'ajax_charte',
+        'page arguments' => array(),
+        'access callback' => TRUE,
+        'delivery callback' => 'ajax_comment_deliver_cache',
+        'type' => MENU_CALLBACK,
+    );
+
+    return $items;
+}
+
+function ajax_nbcomment($nid){
+    $node = node_load($nid);
+    return $node->comment_count;
+}
+function ajax_charte() {
+    $query = db_select('node', 'n');
+
+    $query->fields('n', array('nid'))
+            ->condition('type', 'charte_moderation', '=')
+            ->condition('status', 1, '=')
+            ->orderBy('created', 'DESC')
+            ->range(0, 1);
+    $result = $query->execute();
+    while (
+    $record = $result->fetchAssoc()) {
+        $node = node_load($record['nid']);
+        $title = $node->title;
+        $contenu = (isset($node->body[LANGUAGE_NONE][0]['safe_value'])) ? $node->body[LANGUAGE_NONE][0]['safe_value'] : '';
+        $charte = array('title' => $title, 'contenu' => $contenu);
+    }
+    if (!isset($charte))
+        $charte = array("title" => 'Charte de modération', 'contenu' => '');
+    return '<div class="charte-wrapper"><div id="data-charte"><div class="title">' . $charte['title'] . '</div><div class="contenu">' . $charte['contenu'] . '</div></div></div>';
+}
+
+function ajax_comment($nid) {
+    global $user;
+    $message_nonlog = "";
+    if ($user->uid == 0){
+        $message_nonlog = "<div id='comment-form' class='message-nonlog'><div class='subtitle'>Publier votre commentaire</div><div class='message'>Vous souhaitez commenter ?<br/> Connectez-vous à votre espace client ou <a href='https://secure.darty.com/webapp/wcs/stores/controller/UserLogonDisplayView?storeId=10001&espaceclient=0&org=head'>inscrivez-vous</a>.</div></div>";
+    }
+    $node = node_load($nid);
+    $node_view = node_view($node);
+
+    $node_view['comments'] = comment_node_page_additions($node);
+    return $message_nonlog.drupal_render($node_view['comments']);
+}
+
+function ajax_comment_deliver_cache($page_callback_result) {
+    drupal_add_http_header('Cache-Control', 'public, max-age=' . variable_get('page_cache_maximum_age', 0));
+    $content = is_string($page_callback_result) ? $page_callback_result : drupal_render($page_callback_result);
+    print $content;
+    ajax_footer();
+}
+
+function ajax_comment_deliver($page_callback_result) {
+    drupal_add_http_header('Cache-Control', 'public, max-age=0');
+    $content = is_string($page_callback_result) ? $page_callback_result : drupal_render($page_callback_result);
+    print $content;
+    ajax_footer();
+}
+
+function darty_comment_preprocess_node(&$vars) {
+    global $base_path;
+
+    $view_mode = $vars['elements']['#view_mode'];
+    $type = $vars['type'];
+    $node = $vars['node'];
+
+    if (($type == "article_sans_sommaire" ||
+            $type == "article_avec_sommaire" ||
+            $type == "dossier" ||
+            $type == 'diaporama') && $view_mode == 'full') {
+        drupal_add_js(drupal_get_path('module', 'darty_comment') . '/comment.js', 'file');
+        drupal_add_js(
+                "jQuery(document).ready(function ($) { 
+                loadAjaxComment('" . $base_path . "','ajax/comment/" . $node->nid . "');
+                
+            });", array('type' => 'inline', 'scope' => 'footer'));
+    }
+}
+
+function darty_comment_permission() {
+    return array(
+        'answer comment' => array(
+            'title' => t('Autoriser la réponse à un commentaire')
+        ),
+        'editor comment' => array(
+            'title' => t('Commentaire d\'un éditeur')
+        ),
+    );
+}
+
+/**
+ * Implementation of template_preprocess_node
+ */
+function darty_comment_preprocess_comment(&$vars) {
+    global $user;
+
+    $comment = $vars['comment'];
+
+    $vars['pseudo'] = $comment->name;
+    $auteur = user_load($comment->uid);
+    if (!empty($auteur->field_account_prenom))
+        $vars['pseudo'] = $auteur->field_account_prenom[LANGUAGE_NONE][0]['safe_value'];
+    if (!empty($comment->field_comment_pseudo))
+        $vars['pseudo'] = $comment->field_comment_pseudo[LANGUAGE_NONE][0]['safe_value'];
+    $vars['comment_created'] = $comment->created;
+    $vars['comment_texte'] = (!empty($comment->comment_body)) ? $comment->comment_body[LANGUAGE_NONE][0]['safe_value'] : "";
+
+    if (user_access('editor comment', $auteur)) {
+        $vars['comment']->class_editor = "editor";
+    } else {
+        $vars['comment']->class_editor = "";
+    }
+    if (!user_access('answer comment', $user)) {
+        unset($vars['content']['links']['comment']['#links']['comment-delete']);
+        unset($vars['content']['links']['comment']['#links']['comment-edit']);
+        unset($vars['content']['links']['comment']['#links']['comment-reply']);
+    }
+    unset($vars['content']['links']['comment']['#links']['comment_forbidden']);
+    if (!user_access('editor comment', $auteur)) {
+        $vars['content']['links']['comment']['#links']['comment-signal'] = array('title' => 'Signaler', 'href' => 'ajax/comment_signal/' . $comment->cid, 'html' => 1);
+    }
+    if ($user->uid == 0) {
+        unset($vars['content']['links']['comment']['#links']['comment-signal']);
+    }
+}
+
+function darty_comment_form_alter(&$form, &$form_state, &$form_id) {
+    global $user;
+    if (!in_array($form_id, array('comment_node_article_sans_sommaire_form',
+                'comment_node_article_avec_sommaire_form', 'comment_node_dossier_form', 'comment_node_diaporama_form')
+            ))
+        return;
+//    unset($form['#node']);
+//    echo '<pre>', print_r($form_state, true), '</pre>';
+    $form['#submit'][] = 'darty_comment_form_submit';
+    $comment = $form['#entity'];
+    if ($comment->uid !== 0)
+        $user_comment = user_load($comment->uid);
+    else
+        $user_comment = user_load($user->uid);
+    if (arg(2) == 'edit')
+        $form['subtitle'] = array('#markup' => '<div class="subtitle">Modifier ce commentaire</div>', '#weight' => -15);
+    elseif (arg(1) == 'reply')
+        $form['subtitle'] = array('#markup' => '<div class="subtitle">Répondre à ce commentaire</div>', '#weight' => -15);
+    else
+        $form['subtitle'] = array('#markup' => '<div class="subtitle">Publier votre commentaire</div>', '#weight' => -15);
+//    $form['author']['mail']['#access'] = TRUE;
+//    $form['author']['mail']['#title'] = "Votre email";
+//    $form['author']['mail']['#description'] = "";
+    $form['author']['#weight'] = -10;
+    $form['author']['_author']['#access'] = false;
+    if (!isset($form['field_comment_pseudo'][LANGUAGE_NONE][0]['value']['#default_value']) || empty($form['field_comment_pseudo'][LANGUAGE_NONE][0]['value']['#default_value'])) {
+        if (isset($user_comment->field_account_pseudo[LANGUAGE_NONE][0]['value']) &&
+                !empty($user_comment->field_account_pseudo[LANGUAGE_NONE][0]['value']))
+            $form['field_comment_pseudo'][LANGUAGE_NONE][0]['value']['#default_value'] = $user_comment->field_account_pseudo[LANGUAGE_NONE][0]['value'];
+        elseif (isset($user_comment->field_account_prenom[LANGUAGE_NONE][0]['value']) &&
+                !empty($user_comment->field_account_prenom[LANGUAGE_NONE][0]['value']))
+            $form['field_comment_pseudo'][LANGUAGE_NONE][0]['value']['#default_value'] = $user_comment->field_account_prenom[LANGUAGE_NONE][0]['value'];
+    }
+    //echo '<pre>', print_r($form, true), '</pre>';
+    $form['field_comment_pseudo'][LANGUAGE_NONE][0]['#title'] = "Votre pseudo";
+    $form['field_comment_pseudo']['#weight'] = -12;
+    $form['comment_body'][LANGUAGE_NONE][0]['value']['#title'] = "Rédigez votre commentaire ici";
+    $form['comment_body'][LANGUAGE_NONE][0]['value']['#resizable'] = false;
+    $form['actions']['#weight'] = 50;
+    $form['actions']['submit']['#value'] = "Publier";
+    if (arg(2) != 'edit' && arg(1) != 'reply') {
+        $form['charte'] = array('#markup' => '<div class="charte"><a href="#data-charte">Voir la charte de modération</a></div>', '#weight' => 55);
+        $form['data-charte'] = array('#markup' => ajax_charte(), '#weight' => 56);
+    }
+}
+
+function darty_comment_preprocess_comment_wrapper(&$vars) {
+    $node_article = $vars['node'];
+    $nid = $node_article->nid;
+    $vars['num_comments'] = $node_article->comment_count;
+}
+
+function darty_comment_mail($key, &$message, $params) {
+    // note: l'utilisation d'une clé va nous permettre de distinguer plusieurs templates d'emails pouvant être envoyés par un même module.
+    switch ($key) {
+        case 'envoi_email_new_comment':
+            // note: Ici nous récupérons les informations passées dans le tableau $params
+            $message['subject'] = $params['subject'];
+            $message['body'] = $params['body'];
+            break;
+    }
+}
+
+/**
+ * Validate comment form submissions.
+ */
+function darty_comment_form_submit($form, &$form_state) {
+    global $user;
+    $comment = $form['#entity'];
+    if ($user->uid === $comment->uid && !user_access('editor comment', $user)) {
+        //envoi mail
+        $node = node_load($comment->nid);
+        $user_author_node = user_load($node->uid);
+        $to = $user_author_node->mail;
+        $name_from = 'sylvain';
+        $email_from = 'sylvainmichel@live.fr';
+        $params = array(
+            'body' => "Bonjour,<br/><br/>Un nouveau commentaire a été posté sur le contenu \"".l($node->title,"node/$comment->nid", array("absolute"=>true,"fragment" => "comment-$comment->cid"))."\"<br/><br/>".
+                      "Message: ".((!empty($comment->comment_body)) ? $comment->comment_body[LANGUAGE_NONE][0]['value'] : ""),
+            'subject' => t("Darty&Vous - nouveau commentaire"),
+        );
+        if (send_email($to, $params['subject'], $params['body'], strip_tags($params['body']), $name_from, $email_from)) {
+            drupal_set_message("Votre email à été envoyé à " . $to);
+        } else {
+            drupal_set_message("Une erreur s'est produite lors de l'envoi de votre email");
+        }
+    }
+    if (isset($form['field_comment_pseudo'][LANGUAGE_NONE][0]['value']['#value']) && !empty($form['field_comment_pseudo'][LANGUAGE_NONE][0]['value']['#value'])) {
+        if ($comment->uid !== 0)
+            $user_comment = user_load($comment->uid);
+        else
+            $user_comment = user_load($user->uid);
+
+        $user_comment->field_account_pseudo = array(
+            LANGUAGE_NONE => array(
+                0 => array(
+                    'value' => $form['field_comment_pseudo'][LANGUAGE_NONE][0]['value']['#value'],
+                ),
+            )
+        );
+        user_save($user_comment);
+    }
+//    $form_state['redirect'] = "/cms";
+//    $form_state['#redirect'] = "/cms";
+//    $form_state['rebuild'] = TRUE;
+}
+
+//function getNbComments($nid){
+//    $nb = db_query("SELECT COUNT(cid) AS count FROM {comment} WHERE nid =:nid",array(":nid"=>$nid))->fetchField();
+//    return $nb;
+//}

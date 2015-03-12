@@ -1,0 +1,320 @@
+<?php
+
+/**
+ * @file
+ * Code for the Darty feature.
+ */
+include_once 'darty.features.inc';
+
+/**
+ * Implements hook_scald_contexts().
+ */
+function darty_scald_contexts() {
+    return array(
+        'darty_context_400x250' => array(
+            'title' => t('Darty - 400x250'),
+            'description' => t('Scaling and cropping 400x250'),
+            'render_language' => 'XHTML',
+            'parseable' => FALSE,
+            'formats' => array(
+                'image' => array('jpeg', 'png', 'gif', 'passthrough'),
+            ),
+        ),
+        'darty_context_590x180' => array(
+            'title' => t('Darty - 590x180'),
+            'description' => t('Scaling and cropping 590x180'),
+            'render_language' => 'XHTML',
+            'parseable' => FALSE,
+            'formats' => array(
+                'image' => array('jpeg', 'png', 'gif', 'passthrough'),
+            ),
+        ),
+        'darty_context_165x165' => array(
+            'title' => t('Darty - 165x165'),
+            'description' => t('Scaling and cropping 165x165'),
+            'render_language' => 'XHTML',
+            'parseable' => FALSE,
+            'formats' => array(
+                'image' => array('jpeg', 'png', 'gif', 'passthrough'),
+            ),
+        ),
+        'darty_context_150x142' => array(
+            'title' => t('Darty - 150x142'),
+            'description' => t('Scaling and cropping 150x142'),
+            'render_language' => 'XHTML',
+            'parseable' => FALSE,
+            'formats' => array(
+                'image' => array('jpeg', 'png', 'gif', 'passthrough'),
+            ),
+        ),
+        'darty_context_width_370' => array(
+            'title' => t('Darty - Width 370'),
+            'description' => t('Scaling with a width of 370px'),
+            'render_language' => 'XHTML',
+            'parseable' => FALSE,
+            'formats' => array(
+                'image' => array('jpeg', 'png', 'gif', 'passthrough'),
+            ),
+        ),
+        'darty_context_width_200' => array(
+            'title' => t('Darty - Width 200'),
+            'description' => t('Scaling with a width of 200px'),
+            'render_language' => 'XHTML',
+            'parseable' => FALSE,
+            'formats' => array(
+                'image' => array('jpeg', 'png', 'gif', 'passthrough'),
+            ),
+        ),
+        'darty_context_width_990' => array(
+            'title' => t('Darty - Width 990'),
+            'description' => t('Scaling with a width of 900px'),
+            'render_language' => 'XHTML',
+            'parseable' => FALSE,
+            'formats' => array(
+                'image' => array('jpeg', 'png', 'gif', 'passthrough'),
+            ),
+        ),
+        'darty_context_100x100' => array(
+            'title' => t('Darty - 100x100'),
+            'description' => t('Scaling and cropping 100x100'),
+            'render_language' => 'XHTML',
+            'parseable' => FALSE,
+            'formats' => array(
+                'image' => array('jpeg', 'png', 'gif', 'passthrough'),
+            ),
+        ),
+        'darty_context_width_206' => array(
+            'title' => t('Darty - Width 206'),
+            'description' => t('Scaling with a width of 206px'),
+            'render_language' => 'XHTML',
+            'parseable' => FALSE,
+            'formats' => array(
+                'image' => array('jpeg', 'png', 'gif', 'passthrough'),
+            ),
+        ),
+        'darty_context_width_80' => array(
+            'title' => t('Darty - Width 80'),
+            'description' => t('Scaling with a width of 80px'),
+            'render_language' => 'XHTML',
+            'parseable' => FALSE,
+            'formats' => array(
+                'image' => array('jpeg', 'png', 'gif', 'passthrough'),
+            ),
+        ),
+        'darty_context_width_245' => array(
+            'title' => t('Darty - Width 245'),
+            'description' => t('Scaling with a width of 245px'),
+            'render_language' => 'XHTML',
+            'parseable' => FALSE,
+            'formats' => array(
+                'image' => array('jpeg', 'png', 'gif', 'passthrough'),
+            ),
+        ),
+        'darty_context_width_590' => array(
+            'title' => t('Darty - Width 590'),
+            'description' => t('Scaling with a width of 590px'),
+            'render_language' => 'XHTML',
+            'parseable' => FALSE,
+            'formats' => array(
+                'image' => array('jpeg', 'png', 'gif', 'passthrough'),
+            ),
+        ),
+    );
+}
+
+/**
+ * Implementation of hook_scald_render()
+ *
+ * It is used by Scald and other modules to provide markup for contexts created
+ * in code.
+ */
+function darty_scald_render($sid, $context, $options = array(), $rebuild = FALSE) {
+    if (!is_numeric($sid)) {
+        if (!empty($sid->sid)) {
+            $atom = $sid;
+            $sid = $atom->sid;
+        } else {
+            return FALSE;
+        }
+    }
+
+    scald_image_scald_prerender($atom, $context, $options, 'atom');
+
+    return $atom->rendered->player;
+}
+
+/**
+ * Implementation of hook_admin_paths
+ * Define the use of administration theme for paths
+ */
+function darty_admin_paths() {
+    $paths = array(
+        'node/*/*' => TRUE,
+        'node/*/revision/*/view' => FALSE,
+        'node/*/revisions/*/view' => FALSE,
+        'atom/*/edit/nojs' => TRUE,
+    );
+    return $paths;
+}
+
+/**
+ * Implementation of hook_admin_paths_alter
+ * Define the use of administration theme for paths
+ */
+function darty_admin_paths_alter(&$paths) {
+    $paths['user'] = TRUE;
+}
+
+/**
+ * Implementation of hook_menu_alter
+ *
+ * Only users with the acess 'administer users' can edit profiles
+ */
+function darty_menu_alter(&$items) {
+    $items['user/%user/edit']['access callback'] = 'darty_user_edit_access';
+
+    //remove completely path /node
+    unset($items['node']);
+}
+
+/**
+ * function darty_user_edit_access
+ *
+ * Check if user have the permission to administer users
+ */
+function darty_user_edit_access() {
+    return user_access('administer users');
+}
+
+/**
+ * Implementation of hook_form_alter
+ */
+function darty_form_alter(&$form, &$form_state, $form_id) {
+    //On nodes list page, open title links in new tab
+    if ($form_id == 'node_admin_content') {
+        if (!empty($form['admin']['nodes']['#options'])) {
+            foreach ($form['admin']['nodes']['#options'] as $nid => $item) {
+                $form['admin']['nodes']['#options'][$nid]['title']['data']['#attributes']['target'] = '_blank';
+            }
+        }
+        if (!empty($form['admin']['nodes']['#rows'])) {
+            foreach ($form['admin']['nodes']['#rows'] as $nid => $item) {
+                $form['admin']['nodes']['#rows'][$nid]['title']['data']['#attributes']['target'] = '_blank';
+            }
+        }
+    }
+}
+
+function lists_session($key, $value = NULL) {
+    static $storage;
+
+    if ($value !== null && $value != array()) {
+        $storage[$key] = $value;
+        $_SESSION['lists'][$key] = $value;
+    } else if ($value === array()) {
+        unset($storage[$key]);
+        unset($_SESSION['lists'][$key]);
+    } else if (empty($storage[$key]) && isset($_SESSION['lists'][$key])) {
+        $storage[$key] = $_SESSION['lists'][$key];
+    }
+    return $storage[$key];
+}
+
+function convertForAnalytics($sString) {
+    $string = deleteAccent($sString);
+    $string = preg_replace("/([^a-z0-9]+)/", "_", strtolower($string));
+    return $string;
+}
+function ConvertForAnalyticsLink($sString) {
+    $string = deleteAccent($sString);
+    $string = preg_replace("/([^a-z0-9]+)/", "-", strtolower($string));
+    $tabWord = explode('-', $string);
+    $tabWord = array_map('cutWord4',$tabWord);
+    $string = implode('-', $tabWord);
+    return $string;
+}
+function cutWord4($item){
+    return substr($item, 0, 4);
+}
+function deleteAccent($str) {
+    $a = array('À', 'Á', 'Â', 'Ã', 'Ä', 'Å', 'Æ', 'Ç', 'È', 'É', 'Ê', 'Ë', 'Ì', 'Í', 'Î', 'Ï', 'Ð', 'Ñ', 'Ò', 'Ó', 'Ô', 'Õ', 'Ö', 'Ø', 'Ù', 'Ú', 'Û', 'Ü', 'Ý', 'ß', 'à', 'á', 'â', 'ã', 'ä', 'å', 'æ', 'ç', 'è', 'é', 'ê', 'ë', 'ì', 'í', 'î', 'ï', 'ñ', 'ò', 'ó', 'ô', 'õ', 'ö', 'ø', 'ù', 'ú', 'û', 'ü', 'ý', 'ÿ', 'Ā', 'ā', 'Ă', 'ă', 'Ą', 'ą', 'Ć', 'ć', 'Ĉ', 'ĉ', 'Ċ', 'ċ', 'Č', 'č', 'Ď', 'ď', 'Đ', 'đ', 'Ē', 'ē', 'Ĕ', 'ĕ', 'Ė', 'ė', 'Ę', 'ę', 'Ě', 'ě', 'Ĝ', 'ĝ', 'Ğ', 'ğ', 'Ġ', 'ġ', 'Ģ', 'ģ', 'Ĥ', 'ĥ', 'Ħ', 'ħ', 'Ĩ', 'ĩ', 'Ī', 'ī', 'Ĭ', 'ĭ', 'Į', 'į', 'İ', 'ı', 'Ĳ', 'ĳ', 'Ĵ', 'ĵ', 'Ķ', 'ķ', 'Ĺ', 'ĺ', 'Ļ', 'ļ', 'Ľ', 'ľ', 'Ŀ', 'ŀ', 'Ł', 'ł', 'Ń', 'ń', 'Ņ', 'ņ', 'Ň', 'ň', 'ŉ', 'Ō', 'ō', 'Ŏ', 'ŏ', 'Ő', 'ő', 'Œ', 'œ', 'Ŕ', 'ŕ', 'Ŗ', 'ŗ', 'Ř', 'ř', 'Ś', 'ś', 'Ŝ', 'ŝ', 'Ş', 'ş', 'Š', 'š', 'Ţ', 'ţ', 'Ť', 'ť', 'Ŧ', 'ŧ', 'Ũ', 'ũ', 'Ū', 'ū', 'Ŭ', 'ŭ', 'Ů', 'ů', 'Ű', 'ű', 'Ų', 'ų', 'Ŵ', 'ŵ', 'Ŷ', 'ŷ', 'Ÿ', 'Ź', 'ź', 'Ż', 'ż', 'Ž', 'ž', 'ſ', 'ƒ', 'Ơ', 'ơ', 'Ư', 'ư', 'Ǎ', 'ǎ', 'Ǐ', 'ǐ', 'Ǒ', 'ǒ', 'Ǔ', 'ǔ', 'Ǖ', 'ǖ', 'Ǘ', 'ǘ', 'Ǚ', 'ǚ', 'Ǜ', 'ǜ', 'Ǻ', 'ǻ', 'Ǽ', 'ǽ', 'Ǿ', 'ǿ');
+  $b = array('A', 'A', 'A', 'A', 'A', 'A', 'AE', 'C', 'E', 'E', 'E', 'E', 'I', 'I', 'I', 'I', 'D', 'N', 'O', 'O', 'O', 'O', 'O', 'O', 'U', 'U', 'U', 'U', 'Y', 's', 'a', 'a', 'a', 'a', 'a', 'a', 'ae', 'c', 'e', 'e', 'e', 'e', 'i', 'i', 'i', 'i', 'n', 'o', 'o', 'o', 'o', 'o', 'o', 'u', 'u', 'u', 'u', 'y', 'y', 'A', 'a', 'A', 'a', 'A', 'a', 'C', 'c', 'C', 'c', 'C', 'c', 'C', 'c', 'D', 'd', 'D', 'd', 'E', 'e', 'E', 'e', 'E', 'e', 'E', 'e', 'E', 'e', 'G', 'g', 'G', 'g', 'G', 'g', 'G', 'g', 'H', 'h', 'H', 'h', 'I', 'i', 'I', 'i', 'I', 'i', 'I', 'i', 'I', 'i', 'IJ', 'ij', 'J', 'j', 'K', 'k', 'L', 'l', 'L', 'l', 'L', 'l', 'L', 'l', 'l', 'l', 'N', 'n', 'N', 'n', 'N', 'n', 'n', 'O', 'o', 'O', 'o', 'O', 'o', 'OE', 'oe', 'R', 'r', 'R', 'r', 'R', 'r', 'S', 's', 'S', 's', 'S', 's', 'S', 's', 'T', 't', 'T', 't', 'T', 't', 'U', 'u', 'U', 'u', 'U', 'u', 'U', 'u', 'U', 'u', 'U', 'u', 'W', 'w', 'Y', 'y', 'Y', 'Z', 'z', 'Z', 'z', 'Z', 'z', 's', 'f', 'O', 'o', 'U', 'u', 'A', 'a', 'I', 'i', 'O', 'o', 'U', 'u', 'U', 'u', 'U', 'u', 'U', 'u', 'U', 'u', 'A', 'a', 'AE', 'ae', 'O', 'o');
+  return str_replace($a, $b, $str);
+}
+
+function getCommonAnalyticsProperties() {
+    
+    $output = "";
+    $output .= "if(readCookie('PCKFIRSTNAME')){\n";
+    $output .= "s.prop1='1';\n";
+    $output .= "}\n";
+    $output .= "else{\n";
+    $output .= "s.prop1='0';\n";
+    $output .= "}\n";
+    
+    $output .= "if(readCookie('segm')){\n";
+    $output .= "var val_segm = readCookie('segm');\n";
+    $output .= "if (val_segm < 10)val_segm = '0'+val_segm;\n";
+    $output .= "s.prop5=val_segm;\n";
+    $output .= "}\n";
+    $output .= "else{\n";
+    $output .= "var randomnumber=Math.ceil(Math.random()*100);\n";
+    $output .= "if (randomnumber < 10)randomnumber = '0'+randomnumber;\n";
+    $output .= "createCookie('segm',randomnumber,365);\n";
+    $output .= "s.prop5=randomnumber;\n";
+    $output .= "}\n";
+
+    $output .= "var basket = readCookie('DARTY_BASKET_CONTENT');\n";
+    $output .= "if(basket){\n";
+        $output .= "if (basket.match(/codic/)){\n";
+        $output .= "s.eVar46='1';\n";
+        $output .= "}else{\n";
+        $output .= "s.eVar46='0';\n";
+        $output .= "}\n";
+    $output .= "}\n";
+    $output .= "else{\n";
+     $output .= "s.eVar46='0';\n";
+    $output .= "}\n";
+    
+    if (isset($_COOKIE['DARTY_BASKET_CONTENT'])) {
+        if (preg_match('/codic/', $_COOKIE['DARTY_BASKET_CONTENT']))
+            $evar46 = "s.eVar46='1';";
+        else
+            $evar46 = "s.eVar46='0';";
+    }else {
+        $evar46 = "s.eVar46='0';";
+    }
+
+    return $output;
+}
+
+function generateLinkForAnalytics($type,$localisation,$position,$titre){
+    return "#darvousclic=" . $type . "_" . $localisation . "_" . $position. "_" . ConvertForAnalyticsLink($titre);
+}
+
+function send_email($email, $subject, $message_html, $message_txt, $name_from, $email_from) {
+    $passage_ligne = "\n";
+    $boundary = "-----=" . md5(rand());
+
+    $header = "From: \"" . $name_from . "\"<" . $email_from . ">" . $passage_ligne;
+    $header.= "Reply-to: \"" . $email_from . "\" <" . $email_from . ">" . $passage_ligne;
+    $header.= "MIME-Version: 1.0" . $passage_ligne;
+    $header.= "Content-Type: multipart/alternative;" . $passage_ligne . " boundary=\"$boundary\"" . $passage_ligne;
+
+    $message = $passage_ligne . "--" . $boundary . $passage_ligne;
+
+    $message.= "Content-Type: text/plain; charset=\"UTF-8\"" . $passage_ligne;
+    $message.= "Content-Transfer-Encoding: 8bit" . $passage_ligne;
+    $message.= $passage_ligne . $message_txt . $passage_ligne;
+
+    $message.= $passage_ligne . "--" . $boundary . $passage_ligne;
+
+    $message.= "Content-Type: text/html; charset=\"UTF-8\"" . $passage_ligne;
+    $message.= "Content-Transfer-Encoding: 8bit" . $passage_ligne;
+    $message.= $passage_ligne . $message_html . $passage_ligne;
+
+    $message.= $passage_ligne . "--" . $boundary . "--" . $passage_ligne;
+    $message.= $passage_ligne . "--" . $boundary . "--" . $passage_ligne;
+
+    return mail($email, $subject, $message, $header);
+}

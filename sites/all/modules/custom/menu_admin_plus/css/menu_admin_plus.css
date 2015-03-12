@@ -1,0 +1,145 @@
+body.html {
+    background-position: center 32px;
+    padding-top: 32px;
+}
+#menu_admin_plus{
+    position: fixed;
+    top:0;
+	*left:0;
+    width: 100%;
+    z-index: 100000; 
+    height: 32px;
+    background: url(../images/topnav_bg.gif) repeat-x; 
+    font-size: 11px;
+    font-family: Arial,Helvetica,sans-serif;
+}
+#menu_admin_plus ul{
+	display:none;
+}
+#menu_admin_plus span.logout{
+float:right;
+color: #fff;
+font-size: 100%;
+ text-decoration: none; 
+ padding: 10px 5px;
+}
+#menu_admin_plus span.logout a {
+  color: #fff;
+ text-decoration: none; 
+     -moz-border-radius: 10px;
+    -webkit-border-radius: 10px;
+    border-radius: 10px;
+        padding: 4px 10px;  
+    margin-top: 5px;
+}
+#menu_admin_plus span.logout a:hover{
+    background:none repeat scroll 0 0 #444444;
+}
+#menu_admin_plus ul.topnav {  
+    list-style: none;  
+    padding: 0 20px;  
+    margin: 0;  
+    float: left;           
+}  
+#menu_admin_plus ul.topnav li {
+    vertical-align: middle;
+    float: left;  
+    margin: 0;  
+    padding: 0px 15px 0 0;
+    list-style: none;
+    position: relative; /*--Declare X and Y axis base for sub navigation--*/  
+}  
+#menu_admin_plus ul.topnav li a{  
+    padding: 4px 10px;
+    line-height:15px; 
+    margin-top: 5px;
+    color: #fff;  
+    display: block;  
+    text-decoration: none;  
+    float: left;  
+    -moz-border-radius: 10px;
+    -webkit-border-radius: 10px;
+    border-radius: 10px;
+}  
+#menu_admin_plus ul.topnav li a:hover{  
+    /*background: url(../images/topnav_hover.gif) no-repeat center top;*/  
+     background:none repeat scroll 0 0 #444444;
+}  
+#menu_admin_plus ul.topnav li span { /*--Drop down trigger styles--*/  
+    /*width: 17px;  
+    height: 30px;  
+    float: left;  
+    background: url(../images/subnav_btn.gif) no-repeat center top;  */
+}  
+#menu_admin_plus ul.topnav li span.subhover {background-position: center bottom; cursor: pointer;} /*--Hover effect for trigger--*/  
+#menu_admin_plus ul.topnav li ul.subnav {  
+    list-style: none;  
+    position: absolute; /*--Important - Keeps subnav from affecting main navigation flow--*/  
+    left: 0; top: 25px;  
+    background: #333;  
+    margin: 0; padding: 0;  
+    display: none;  
+    float: left;  
+    width: 170px;  
+    border: 1px solid #111;  
+    -moz-border-radius: 0 0 15px 15px;
+    -webkit-border-radius: 0 0 15px 15px;
+    border-radius: 0 0 15px 15px;
+}  
+#menu_admin_plus ul.topnav li ul.subnav li{ 
+    font-size: 0.9em; 
+    margin: 0; padding: 0;  
+    border-top: 1px solid #252525; /*--Create bevel effect--*/  
+    border-bottom: 1px solid #444; /*--Create bevel effect--*/  
+    clear: both;  
+    width: 170px;  
+    list-style:none;
+}  
+#menu_admin_plus ul.topnav li ul.subnav li a {  
+    border-radius: 0;
+    padding: 10px 5px 10px 20px;
+    float: left;  
+    width: 145px;  
+    background: #333 url(../images/dropdown_linkbg.gif) no-repeat 10px center;
+    margin-top: 0;  
+    
+}  
+#menu_admin_plus ul.topnav li ul.subnav li.last{ 
+border-bottom:none;
+}
+#menu_admin_plus ul.topnav li ul.subnav li.last a,
+#menu_admin_plus ul.topnav li ul.subnav li.last a:hover{  
+    -moz-border-radius: 0 0 15px 15px;
+    -webkit-border-radius: 0 0 15px 15px;
+    border-radius: 0 0 15px 15px;
+}
+#menu_admin_plus ul.topnav li ul.subnav li a:hover { /*--Hover effect for subnav links--*/  
+    background: #222 url(../images/dropdown_linkbg.gif) no-repeat 10px center;  
+} 
+#overlay-container, .overlay-modal-background, .overlay-element{
+    top:10px;
+}
+#menu_admin_plus span.home {
+    background: url(../images/home-bg.png) no-repeat center;
+    height: 100%;
+    display: block;
+    text-indent: -9999px;
+    width: 100%;
+    text-decoration: none;
+}
+#menu_admin_plus a#home-link{
+    float:left;
+    height: 25px;
+    margin-top: 5px;
+    width: 30px;
+    margin-left: 10px;
+    line-height: 25px;
+    vertical-align: middle;
+    text-align: center;
+    -moz-border-radius: 10px;
+    -webkit-border-radius: 10px;
+    border-radius: 10px;
+}
+#menu_admin_plus a#home-link:hover{
+    background:none repeat scroll 0 0 #444444;
+}

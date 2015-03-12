@@ -1,0 +1,126 @@
+<?php
+
+define('VID_ARBO', 4);
+
+function darty_arbo_init() {
+    
+}
+function darty_arbo_menu_alter(&$items) {
+  // Example - disable the page at node/add
+  $items['admin/structure/taxonomy/%taxonomy_vocabulary_machine_name/edit']['access callback'] = 'access_callback_superadmin';
+  $items['admin/structure/taxonomy/%taxonomy_vocabulary_machine_name/fields']['access callback'] = 'access_callback_superadmin';
+  $items['admin/structure/taxonomy/%taxonomy_vocabulary_machine_name/display']['access callback'] = 'access_callback_superadmin';
+}
+function access_callback_superadmin(){
+    global $user;
+    if (!in_array('Administrateur global', $user->roles))
+            return false;
+    return true;
+}
+function darty_arbo_form_alter(&$form, &$form_state, $form_id) {
+    global $user;
+    if (!in_array('Administrateur global', $user->roles)) {
+        if (in_array($form_id, array('taxonomy_overview_terms'))) {
+            $form['actions']['reset_alphabetical']['#access'] = false;
+        }
+    }
+}
+/**
+ * Implementation of template_preprocess_page
+ */
+function darty_arbo_preprocess_page(&$vars) {
+    $vars['arbo_footer'] = theme('footer_arbo');
+    drupal_add_js(theme('header_arbo'),array('type' => 'inline', 'scope' => 'header'));
+}
+
+function darty_arbo_theme() {
+    return array(
+        'footer_arbo' => array(
+            'variables' => array('arbo_footer' => get_arbo_full()),
+            'template' => 'footer_arbo',
+            'path' => drupal_get_path('module', 'darty_arbo')
+        ),
+        'header_arbo' => array(
+            'variables' => array('arbo_header' => get_arbo_full()),
+            'template' => 'header_arbo',
+            'path' => drupal_get_path('module', 'darty_arbo')
+        ),
+    );
+}
+
+function get_arbo_full() {
+
+    $cache = cache_get('arbo_full');
+    if ( $cache && $cache->expire > time()) {
+        $arbo = $cache->data;
+    } else {
+        $taxo = taxonomy_get_tree(VID_ARBO, 0);
+        $arbo = array();
+        foreach ($taxo as $elem) {
+            $new = array('tid' => $elem->tid, 'name' => $elem->name, 'children' => array());
+            $tidParent = $elem->parents[0];
+
+            if ($tidParent != 0) {
+                foreach ($arbo as $k => $a) {
+                    if ($a['tid'] == $tidParent) {
+                        $arbo[$k]['children'][] = $new;
+                    } else {
+                        foreach ($a['children'] as $ke => $ae) {
+                            if ($ae['tid'] == $tidParent)
+                                $arbo[$k]['children'][$ke]['children'][] = $new;
+                        }
+                    }
+                }
+            }
+            else
+                $arbo[] = $new;
+        }
+        cache_set('arbo_full', $arbo, 'cache', time() + 360);
+    }
+
+
+    return $arbo;
+}
+
+function get_arbo_dartycom_full() {
+    global $conf;
+
+    $cache = cache_get('arbo_dartycom_full');
+    if ($cache && $cache->expire > time()) {
+        $arbo = $cache->data;
+    } else {
+        //drupal_set_message('regeneration arbo dartycom');
+        if (isset($conf['darty_header_htaccess']) && !empty($conf['darty_header_htaccess']))
+            $url_tmp = $conf['darty_header_protocol'] . $conf['darty_header_htaccess'] . '@' . $conf['darty_api_url'];
+        else
+            $url_tmp = $conf['darty_header_protocol'] . $conf['darty_api_url'];
+        $url = url($url_tmp . '/category');
+        $options = array('method' => 'GET');
+        $result = drupal_http_request($url, $options);
+        $json = json_decode($result->data);
+        $arbo = array();
+        foreach ($json->children as $item) {
+            $children1 = array();
+
+            $options = array('method' => 'GET');
+            $result1 = drupal_http_request($item->url, $options);
+            $json1 = json_decode($result1->data);
+            foreach ($json1->children as $item1) {
+                $children2 = array();
+
+                $options = array('method' => 'GET');
+                $result2 = drupal_http_request($item1->url, $options);
+                $json2 = json_decode($result2->data);
+                foreach ($json2->children as $item2) {
+                    $children2[] = array('id' => $item2->id, 'name' => $item2->name);
+                }
+                $children1[] = array('id' => $item1->id, 'name' => $item1->name, 'children' => $children2);
+            }
+            $arbo[] = array('id' => $item->id, 'name' => $item->name, 'children' => $children1);
+        }
+        cache_set('arbo_dartycom_full', $arbo, 'cache', time() + 86400);
+    }
+
+
+    return $arbo;
+}

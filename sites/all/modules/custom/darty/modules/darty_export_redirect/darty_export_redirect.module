@@ -1,0 +1,215 @@
+<?php
+
+function darty_export_redirect_menu() {
+    $items['export/redirections'] = array(
+        'title' => 'Export',
+        'page callback' => 'export_redirection_callback',
+        'access callback' => TRUE,
+        'type' => MENU_CALLBACK,
+    );
+    $items['export/generate'] = array(
+        'title' => 'Export',
+        'page callback' => 'export_generate_callback',
+        'access callback' => TRUE,
+        'type' => MENU_CALLBACK,
+    );
+    $items['export/reinitialise'] = array(
+        'title' => 'Export',
+        'page callback' => 'export_reinitialise_callback',
+        'access callback' => TRUE,
+        'type' => MENU_CALLBACK,
+    );
+    return $items;
+}
+
+function export_reinitialise_callback() {
+
+    variable_set('export_redirections', '');
+    drupal_goto('export/redirections');
+}
+
+function export_generate_callback() {
+    $curTime = time();
+    $export = variable_get('export_redirections', '');
+    $boolExport = variable_get('bool_export_redirections', 0);
+
+    if ($boolExport === 0) {
+        variable_set('bool_export_redirections', 1);
+        variable_set('export_redirections', '');
+    }
+
+    $allRedirections = getExportRedirections();
+
+    //récupérer tous les changmeents ici
+    $newRedirections = array();
+    foreach ($export as $key => $elem) {
+        if (isset($export[$key]['all']))
+            $anciennesRedirections = $export[$key]['all'];
+    }
+    if (isset($anciennesRedirections)) {
+        $arrayDelete = array_diff_key($anciennesRedirections, $allRedirections);
+
+        $arrayNew = array_diff_key($allRedirections, $anciennesRedirections);
+
+        $arrayUpdate = array_intersect_key($allRedirections, $anciennesRedirections);
+        foreach ($arrayUpdate as $key => $elem) {
+            if ($anciennesRedirections[$key] == $allRedirections[$key])
+                unset($arrayUpdate[$key]);
+        }
+        $arrayChange = array('new' => $arrayNew, 'update' => $arrayUpdate, 'delete' => $arrayDelete);
+    }else {
+        $arrayChange = array('new' => $allRedirections, 'update' => array(), 'delete' => array());
+    }
+
+    foreach ($export as $key => $elem) {
+        unset($export[$key]['all']);
+    }
+    $export[$curTime] = array('all' => $allRedirections, 'change' => $arrayChange);
+    variable_set('export_redirections', $export);
+
+    drupal_goto('export/redirections');
+}
+
+function export_redirection_callback() {
+
+
+    print '<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /></head><title>Export des redirections</title></head><body>';
+//variable_del('export_redirections');
+    $export = variable_get('export_redirections', '');
+
+//    echo '<pre>', print_r($export, true), '</pre>';
+    print '<div style="float:left;width:300px">';
+    print '<h2>Liste de tous les changements</h2>';
+    print '<center><form action="' . url("export/generate") . '" method="POST"><input type="submit" value="Générer les changements"/></form></center>';
+    print '<table border=1 cellpadding=10 >';
+    $LastKey = 0;
+    foreach ($export as $elemTime => $elem) {
+        $LastKey = $elemTime;
+        print '<tr><td>Le ' . date('d/m/y à H:i:s', $elemTime) . '</td><td><form action="' . $_SERVER['REQUEST_URI'] . '" method="POST"><input type="hidden" name="all" value="0"/><input type="hidden" name="display" value="' . $elemTime . '" /><input type="submit" value="Afficher les changements"/></form></td></tr>';
+    }
+    print '</table>';
+    print '</div>';
+    print '<div style="margin-left:30px;float:left;width:800px">';
+
+    if (!isset($_POST['display']) && $LastKey != 0) {
+        $timeToDisplay = $LastKey;
+    } elseif (isset($_POST['display'])) {
+        $timeToDisplay = $_POST['display'];
+    }
+    if (isset($timeToDisplay)) {
+        $tabToDisplay = $export[$timeToDisplay];
+        print '<center><h1>Changements du ' . date('d/m/y à H:i:s', $timeToDisplay) . '</h1></center>';
+        $tabTmp = array();
+        $countDarty = 0;
+        $count36 = 0;
+        $countDartyetvous = 0;
+        foreach ($tabToDisplay['change'] as $type => $tab) {
+            foreach ($tab as $from => $to) {
+                if (isDomainOf($from, 'darty.com')) {
+                    $tabTmp['darty'][$type][$from] = $to;
+                    $countDarty++;
+                }
+                if (isDomainOf($from, 'darty-et-vous.com')) {
+                    $tabTmp['dartyetvous'][$type][$from] = $to;
+                    $countDartyetvous++;
+                }
+                if (isDomainOf($from, '36000solutions.com')) {
+                    $tabTmp['36000'][$type][$from] = $to;
+                    $count36++;
+                }
+            }
+        }
+        if ($countDarty == 0 && $countDartyetvous == 0 && $count36 == 0) {
+            print '<h2>Aucun changement depuis la dernière génération</h2>';
+        } else {
+            foreach ($tabTmp as $key => $elem) {
+                if ($key == 'darty' && $countDarty > 0) {
+                    print '<h2>Redirections pour Darty.com</h2>';
+                    echo '<table border=1 cellpadding=5>';
+                    print '<tr><th>Statut</th><th>Url d\'origine</th><th>Url de destination</th></tr>';
+                    foreach ($elem as $type => $elem1) {
+                        foreach ($elem1 as $key2 => $elem2)
+                            print '<tr><td>' . labelStatus($type) . '</td><td>' . $key2 . '</td><td>' . $elem2 . '</td></tr>';
+                    }
+                    echo '</table>';
+                } elseif ($key == 'dartyetvous' && $countDartyetvous > 0) {
+                    print '<h2>Redirections pour Darty-et-vous.com</h2>';
+                    echo '<table border=1 cellpadding=5>';
+                    print '<tr><th>Statut</th><th>Url d\'origine</th><th>Url de destination</th></tr>';
+                    foreach ($elem as $type => $elem1) {
+                        foreach ($elem1 as $key2 => $elem2)
+                            print '<tr><td>' . labelStatus($type) . '</td><td>' . $key2 . '</td><td>' . $elem2 . '</td></tr>';
+                    }
+                    echo '</table>';
+                } elseif ($key == '36000' && $count36 > 0) {
+                    print '<h2>Redirections pour 36 0000 solutions</h2>';
+                    echo '<table border=1  cellpadding=5>';
+                    print '<tr><td>Statut</td><td>Url d\'origine</td><td>Url de destination</td></tr>';
+                    foreach ($elem as $type => $elem1) {
+                        foreach ($elem1 as $key2 => $elem2)
+                            print '<tr><td>' . labelStatus($type) . '</td><td>' . $key2 . '</td><td>' . $elem2 . '</td></tr>';
+                    }
+                    echo '</table>';
+                }
+            }
+        }
+    }
+    print '</div></body></html>';
+    exit;
+}
+
+function labelStatus($value) {
+    switch ($value) {
+        case 'new': return 'Nouveau';
+            break;
+        case 'update': return 'Mis à jour';
+            break;
+        case 'delete' : return 'Supprimé';
+            break;
+    }
+    return '';
+}
+
+function getExportRedirections() {
+    $query = db_select('node', 'n');
+
+    $query->join('field_data_field_contenu_origin_links', 'r', 'n.nid = r.entity_id');
+
+    $query->fields('n', array('nid'))
+            ->fields('r', array('field_contenu_origin_links_value'));
+
+    $result = $query->execute();
+    $idsNode = array();
+    while (
+    $record = $result->fetchAssoc()) {
+        $url_from = addhttp($record['field_contenu_origin_links_value']);
+        if (filter_var($url_from, FILTER_VALIDATE_URL)) {
+            $idsNode[$url_from] = 'http://darty.com' . url('node/' . $record['nid']);
+
+//
+//            if (isDomainOf($url_from, 'darty.com'))
+//                $idsNode['darty'][$url_from] = url('node/' . $record['nid'], array('absolute' => true));
+//            if (isDomainOf($url_from, '36000solutions.com'))
+//                $idsNode['36000'][$url_from] = url('node/' . $record['nid'], array('absolute' => true));
+        }
+    }
+    return $idsNode;
+}
+
+//test si domaine est darty.com ou 36000solutions.com
+function isDomainOf($url, $domain) {
+
+    $host = parse_url($url, PHP_URL_HOST);
+    if (false === $host) {
+        return false;
+    }
+
+    return (boolean) preg_match('#^(?:[^\.]*\.){0,}' . $domain . '$#', $host);
+}
+
+function addhttp($url) {
+    if (!preg_match("~^(?:f|ht)tps?://~i", $url)) {
+        $url = "http://" . $url;
+    }
+    return $url;
+}

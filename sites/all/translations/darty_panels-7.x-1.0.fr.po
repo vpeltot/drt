@@ -1,0 +1,23 @@
+msgid ""
+msgstr ""
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Six lines"
+msgstr "Six lignes"
+
+msgid "Menu"
+msgstr "Menu"
+
+msgid "Products (line with shadow)"
+msgstr "Produits (ligne avec ombre)"
+
+msgid "Informations"
+msgstr "Informations"
+
+msgid "Two lines - One column"
+msgstr "Deux lignes - Une colonne"
+
+msgid "Promotions"
+msgstr "Promotions"
