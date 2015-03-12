@@ -1,0 +1,19 @@
+<?php
+
+/**
+ * @file
+ * Darty module installation file.
+ */
+
+/**
+ * Implements hook_update_N().
+ *
+ * Enable Redis module.
+ */
+function darty_update_7001() {
+    $t = get_t();
+
+    module_enable(array('redis'));
+
+    return $t('Redis module enabled.');
+}

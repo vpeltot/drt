@@ -5,6 +5,9 @@
  * Local settings
  */
 
+/**
+ * Database configuration
+ */
 $databases = array (
     'default' => array (
         'default' => array (
@@ -18,6 +21,22 @@ $databases = array (
         ),
     ),
 );
+
+/**
+ * Redis Configuration
+ */
+$conf['redis_client_host'] = '127.0.0.1';
+$conf['redis_client_port'] = '6379';
+$conf['redis_client_interface'] = 'PhpRedis';
+
+$conf['lock_inc'] = 'sites/all/modules/contrib/redis/redis.lock.inc';
+
+$conf['cache_backends'][] = 'sites/all/modules/contrib/redis/redis.autoload.inc';
+$conf['cache_default_class'] = 'Redis_Cache';
+$conf['cache_class_cache_form'] = 'DrupalDatabaseCache';
+$conf['cache_class_cache_update'] = 'DrupalDatabaseCache';
+
+$conf['cache_prefix']['default'] = 'darty_et_vous';
 
 /**
 * Variables for the header/footer integration
