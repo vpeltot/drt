@@ -1,0 +1,6 @@
+name = Darty alert
+description = Module permettant d alerter sur les produits ou les rubriques indispo/epuise
+core = 7.x
+package = Darty
+version = 7.x-1.0
+project = darty_alert

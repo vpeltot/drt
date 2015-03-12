@@ -1,0 +1,260 @@
+<?php
+
+include_once 'darty_quizz.inc';
+
+function darty_quizz_menu() {
+
+    $items['ajax/quizz/%node'] = array(
+        'title' => 'Quizz',
+        'page callback' => 'ajax_quizz_view',
+        'page arguments' => array(2),
+        'access callback' => TRUE,
+        'delivery callback' => 'darty_quizz_deliver',
+        'type' => MENU_CALLBACK,
+    );
+    return $items;
+}
+
+function ajax_quizz_view($node) {
+    global $user;
+
+    $list_all_bids = getBidsQuestions($node);
+    if (isset($_POST['val']) && isset($_POST['bid']) && in_array($_POST['bid'], $list_all_bids) && is_integer(intval($val))) {
+        $sid = '0';
+        if ($user->uid == 0 && isset($_COOKIE['sid_dv']))
+            $sid = $_COOKIE['sid_dv'];
+
+        $result = db_insert('quizz_result')
+                ->fields(array(
+                    'nid' => $node->nid,
+                    'uid' => $user->uid,
+                    'sid' => $sid,
+                    'value' => $_POST['val'],
+                    'bid' => $_POST['bid'],
+                    'date' => time()
+                ))
+                ->execute();
+    }
+//recuperer question pour ce quizz en fonction du uid ou du sid
+    $list_user_bids = getStepForUser($node->nid, $user->uid);
+    $list_bids_notanswer = array_diff($list_all_bids, $list_user_bids);
+    $current_bid = array_shift($list_bids_notanswer);
+
+    if (!empty($current_bid)) {
+//afficher la question
+
+        $info = getInfoQuizzQuestionByBid($node->nid, $current_bid, $list_all_bids);
+
+        return theme('quizz_question', $info);
+    } else {
+//afficher les réponses
+        $infos = array();
+        foreach ($list_all_bids as $bid) {
+            $infos['questions'][$bid] = getInfoQuizzQuestionByBid($node->nid, $bid, $list_all_bids);
+        }
+        $infos['answers'] = getValueForUser($node->nid, $user->uid);
+
+        $nb_good_answer = 0;
+        foreach ($infos['questions'] as $elem) {
+            if ($infos['answers'][$elem['bid']] == $elem['answer'])
+                $nb_good_answer++;
+        }
+        $infos['nb_good_answer'] = $nb_good_answer;
+        $infos['result'] = getInfoResultQuizz($node, $nb_good_answer);
+
+        return theme('quizz_result', $infos);
+    }
+}
+
+function getInfoResultQuizz($node, $nbGoodAnswer) {
+    if (isset($node->field_quizz_resultats) && !empty($node->field_quizz_resultats)) {
+        $tab_ids = array();
+        foreach ($node->field_quizz_resultats[LANGUAGE_NONE] as $results) {
+            $tab_ids[] = $results['value'];
+        }
+        $entity_result = entity_load('field_collection_item', $tab_ids);
+        $good_borne = -1;
+        foreach ($entity_result as $item) {
+            $borne_tmp = '';
+            if (isset($item->field_quizz_resultat_borne) && !empty($item->field_quizz_resultat_borne)) {
+                $borne_tmp = $item->field_quizz_resultat_borne[LANGUAGE_NONE][0]['value'];
+            }
+            $titre_tmp = '';
+            if (isset($item->field_quizz_resultat_titre) && !empty($item->field_quizz_resultat_titre)) {
+                $titre_tmp = $item->field_quizz_resultat_titre[LANGUAGE_NONE][0]['value'];
+            }
+            $text_tmp = '';
+            if (isset($item->field_quizz_resultat_explication) && !empty($item->field_quizz_resultat_explication)) {
+                $text_tmp = $item->field_quizz_resultat_explication[LANGUAGE_NONE][0]['safe_value'];
+            }
+            $tab_results[$borne_tmp] = array('titre' => $titre_tmp, 'text' => $text_tmp);
+            if ($nbGoodAnswer < $borne_tmp && ($borne_tmp < $good_borne || $good_borne == -1))
+                $good_borne = $borne_tmp;
+        }
+        if ($good_borne != -1)
+            return $tab_results[$good_borne];
+    }
+    $titre_default = '';
+    if (isset($node->field_resultat_defaut_titre) && !empty($node->field_resultat_defaut_titre))
+        $titre_default = $node->field_resultat_defaut_titre[LANGUAGE_NONE][0]['value'];
+    $text_default = '';
+    if (isset($node->field_resultat_defaut_expli) && !empty($node->field_resultat_defaut_expli))
+        $text_default = $node->field_resultat_defaut_expli[LANGUAGE_NONE][0]['safe_value'];
+
+    return array('titre' => $titre_default, 'text' => $text_default);
+}
+
+function getInfoQuizzQuestionByBid($nid, $current_bid, $list_all_bids) {
+    $entity = bean_load($current_bid);
+    $wrapper = entity_metadata_wrapper('bean', $entity);
+    $info['question'] = $wrapper->label();
+    $info['position'] = array_search($current_bid, $list_all_bids);
+    $info['total'] = count($list_all_bids);
+    $info['type'] = $wrapper->field_quizz_type->value();
+    $info['answer'] = $wrapper->field_quizz_good_answer->value();
+    $imageObj = $wrapper->field_quizz_image->value();
+    $obj_atom = scald_atom_load($imageObj->sid);
+    if (isset($obj_atom) && isset($obj_atom->scald_thumbnail[LANGUAGE_NONE][0])) {
+        $info['image']['uri'] = file_create_url($obj_atom->scald_thumbnail[LANGUAGE_NONE][0]['uri']);
+        $info['image']['alt'] = $obj_atom->scald_thumbnail[LANGUAGE_NONE][0]['alt'];
+    }
+    $info['nid'] = $nid;
+    $info['bid'] = $current_bid;
+    $info['explication'] = $wrapper->field_quizz_question_explication->value();
+
+    $imagereponse1 = $wrapper->field_quizz_image_reponse1->value();
+    $obj_reponse1 = scald_atom_load($imagereponse1->sid);
+    if (isset($obj_reponse1) && isset($obj_reponse1->scald_thumbnail[LANGUAGE_NONE][0])) {
+        $img_reponse1['uri'] = file_create_url($obj_reponse1->scald_thumbnail[LANGUAGE_NONE][0]['uri']);
+        $img_reponse1['alt'] = $obj_reponse1->scald_thumbnail[LANGUAGE_NONE][0]['alt'];
+    }
+    $info['reponses'][0] = array('image' => $img_reponse1, 'texte' => $wrapper->field_quizz_reponse1->value());
+
+    $imagereponse2 = $wrapper->field_quizz_image_reponse2->value();
+    $obj_reponse2 = scald_atom_load($imagereponse2->sid);
+    if (isset($obj_reponse2) && isset($obj_reponse2->scald_thumbnail[LANGUAGE_NONE][0])) {
+        $img_reponse2['uri'] = file_create_url($obj_reponse2->scald_thumbnail[LANGUAGE_NONE][0]['uri']);
+        $img_reponse2['alt'] = $obj_reponse2->scald_thumbnail[LANGUAGE_NONE][0]['alt'];
+    }
+    $info['reponses'][1] = array('image' => $img_reponse2, 'texte' => $wrapper->field_quizz_reponse2->value());
+
+    $imagereponse3 = $wrapper->field_quizz_image_reponse3->value();
+    $obj_reponse3 = scald_atom_load($imagereponse3->sid);
+    if (isset($obj_reponse3) && isset($obj_reponse3->scald_thumbnail[LANGUAGE_NONE][0])) {
+        $img_reponse3['uri'] = file_create_url($obj_reponse3->scald_thumbnail[LANGUAGE_NONE][0]['uri']);
+        $img_reponse3['alt'] = $obj_reponse3->scald_thumbnail[LANGUAGE_NONE][0]['alt'];
+    }
+    $info['reponses'][2] = array('image' => $img_reponse3, 'texte' => $wrapper->field_quizz_reponse3->value());
+
+    $imagereponse4 = $wrapper->field_quizz_image_reponse4->value();
+    $obj_reponse4 = scald_atom_load($imagereponse4->sid);
+    if (isset($obj_reponse4) && isset($obj_reponse4->scald_thumbnail[LANGUAGE_NONE][0])) {
+        $img_reponse4['uri'] = file_create_url($obj_reponse4->scald_thumbnail[LANGUAGE_NONE][0]['uri']);
+        $img_reponse4['alt'] = $obj_reponse4->scald_thumbnail[LANGUAGE_NONE][0]['alt'];
+    }
+    $info['reponses'][3] = array('image' => $img_reponse4, 'texte' => $wrapper->field_quizz_reponse4->value());
+
+    $imagereponse5 = $wrapper->field_quizz_image_reponse5->value();
+    $obj_reponse5 = scald_atom_load($imagereponse5->sid);
+    if (isset($obj_reponse5) && isset($obj_reponse5->scald_thumbnail[LANGUAGE_NONE][0])) {
+        $img_reponse5['uri'] = file_create_url($obj_reponse5->scald_thumbnail[LANGUAGE_NONE][0]['uri']);
+        $img_reponse5['alt'] = $obj_reponse5->scald_thumbnail[LANGUAGE_NONE][0]['alt'];
+    }
+    $info['reponses'][4] = array('image' => $img_reponse5, 'texte' => $wrapper->field_quizz_reponse5->value());
+
+    return $info;
+}
+
+function darty_quizz_preprocess_page(&$variables) {
+    if (!isset($_COOKIE['sid_dv'])) {
+        $sid = uniqid() . uniqid();
+        $_COOKIE['sid_dv'] = $sid;
+        drupal_add_js(
+                "jQuery(document).ready(function ($) { 
+createCookie('sid_dv','" . $sid . "',365);\n
+});", array('type' => 'inline', 'scope' => 'footer'));
+    }
+}
+
+function darty_quizz_theme($existing, $type, $theme, $path) {
+    $theme = array();
+    $theme['node__quizz'] = array(
+        'render element' => 'content',
+        'base hook' => 'node',
+        'template' => 'node--quizz',
+        'path' => drupal_get_path('module', 'darty_quizz') . '/templates',
+    );
+    $theme['bean__bloc_quizz'] = array(
+        'variables' => array(),
+        'template' => 'bean--bloc-quizz',
+        'path' => drupal_get_path('module', 'darty_quizz') . "/templates"
+    );
+    $theme['quizz_question'] = array(
+        'variables' => array(),
+        'template' => 'quizz_question',
+        'path' => drupal_get_path('module', 'darty_quizz') . "/templates"
+    );
+    $theme['quizz_result'] = array(
+        'variables' => array(),
+        'template' => 'quizz_result',
+        'path' => drupal_get_path('module', 'darty_quizz') . "/templates"
+    );
+    return $theme;
+}
+
+function darty_quizz_preprocess_node(&$vars) {
+    global $user;
+    global $base_path;
+
+    $type = $vars['type'];
+    $view_mode = $vars['elements']['#view_mode'];
+
+    if ($type == "quizz") {
+        $vars['theme_hook_suggestion'] = 'node__quizz';
+        drupal_add_css(drupal_get_path('module', 'darty_quizz') . '/css/quizz.css', 'file');
+        drupal_add_js(drupal_get_path('module', 'darty_quizz') . '/js/quizz.js', 'file');
+
+        $node_quizz = $vars['node'];
+
+//couleur
+        if (!empty($node_quizz->field_contenu_couleur))
+            $vars['couleur'] = $node_quizz->field_contenu_couleur[LANGUAGE_NONE][0]['value'];
+        else
+            $vars['couleur'] = 'orange';
+
+//content
+        if (!empty($node_quizz->field_contenu_contenu))
+            $vars['contenu'] = $node_quizz->field_contenu_contenu[LANGUAGE_NONE][0]['safe_value'];
+
+//exergue
+        if (!empty($node_quizz->field_contenu_exergue))
+            $vars['exergue'] = $node_quizz->field_contenu_exergue[LANGUAGE_NONE][0]['value'];
+
+        if ($view_mode == 'full') {
+            drupal_add_js(
+                    "jQuery(document).ready(function () { 
+                    quizz_view('.quizz-wrapper','" . $base_path . "'," . $node_quizz->nid . ");
+                });", array('type' => 'inline', 'scope' => 'footer')
+            );
+        }
+    }
+}
+
+function darty_quizz_preprocess_entity(&$vars) {
+    $entity_type = $vars['elements']['#entity_type'];
+    $type = $vars['elements']['#bundle'];
+    $view_mode = $vars['view_mode'];
+
+//Define some preprocess functions for the field collection field_menu_items
+    if ($type == "bloc_quizz") {
+        $preprocess_type = 'darty_bloc_preprocess_' . $entity_type . '_' . $type;
+        $preprocess_type_view_mode = 'darty_bloc_preprocess_' . $entity_type . '_' . $type . '_' . $view_mode;
+        if (function_exists($preprocess_type)) {
+            $preprocess_type($vars);
+        }
+
+        if (function_exists($preprocess_type_view_mode)) {
+            $preprocess_type_view_mode($vars);
+        }
+    }
+}

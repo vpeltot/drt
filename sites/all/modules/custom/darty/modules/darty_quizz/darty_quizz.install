@@ -1,0 +1,58 @@
+<?php
+
+function darty_quizz_schema() {
+    $schema['quizz_result'] = array(
+    'description' => 'Stores quizz result',
+    'fields' => array(
+      'nid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => '',
+      ),
+      
+      'uid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => '',
+      ),
+        'sid' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => '',
+      ),
+        'bid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'The question id',
+      ),
+      'value' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'The value choosen',
+      ),
+      'date' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'The time that the comment was created, as a Unix timestamp.',
+      )
+    ),
+    'primary key' => array('nid','uid','sid','bid')
+    
+  );
+    return $schema;
+}
+
+function darty_quizz_install() {
+    //drupal_install_schema('darty_comment_signal');
+}
+
+function darty_quizz_uninstall() {
+    drupal_uninstall_schema('darty_quizz');
+}

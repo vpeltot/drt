@@ -254,7 +254,6 @@ function getCommonAnalyticsProperties() {
     
     $output .= "if(readCookie('segm')){\n";
     $output .= "var val_segm = readCookie('segm');\n";
-    $output .= "if (val_segm < 10)val_segm = '0'+val_segm;\n";
     $output .= "s.prop5=val_segm;\n";
     $output .= "}\n";
     $output .= "else{\n";

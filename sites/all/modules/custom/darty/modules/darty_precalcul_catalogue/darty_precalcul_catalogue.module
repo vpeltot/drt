@@ -1,0 +1,93 @@
+<?php
+
+function darty_precalcul_catalogue_cron() {
+    dpc_rubrique_precalculate();
+    dpc_produit_precalculate();
+}
+
+function dpc_info_rubrique($lien) {
+    global $conf;
+
+    $url_avance = pathinfo($lien);
+    preg_match('/.*[?](.*)/', $url_avance['basename'], $matches);
+    if (isset($conf['darty_header_htaccess']) && !empty($conf['darty_header_htaccess']))
+        $url_tmp = $conf['darty_header_protocol'] . $conf['darty_header_htaccess'] . '@' . $conf['darty_api_url'];
+    else
+        $url_tmp = $conf['darty_header_protocol'] . $conf['darty_api_url'];
+    if (!isset($matches[1])) {
+        $rub['error'] = 'Erreur URL';
+        $rub['url'] = $lien;
+    } else {
+        $navUrl = $url_tmp . '/nav?query=' . $matches[1];
+        $navUrl_code = $url_tmp . '/nav?query=' . str_replace('&', '%26', $matches[1]);
+        $rub['url'] = $lien;
+        $options = array('method' => 'GET');
+        $result_more = drupal_http_request($navUrl_code, $options);
+        if (!isset($result_more) || !isset($result_more->data)) {
+            $result_more = drupal_http_request($navUrl, $options);
+        }
+        $data_encode = $result_more->data;
+        cache_set('info_rubrique_' . md5($lien), $data_encode, 'cache', time() + 86400);
+    }
+}
+
+function dpc_rubrique_precalculate() {
+
+    //PRODUIT
+    $query1 = db_select('field_data_field_bloc_choix_rub_avance', 'fbc')
+            ->fields('fbc', array('field_bloc_choix_rub_avance_value'))
+            ->distinct()
+            ->execute()
+            ->fetchCol();
+    $query2 = db_select('field_data_field_categorie_url', 'fcu')
+            ->fields('fcu', array('field_categorie_url_value'))
+            ->distinct()
+            ->execute()
+            ->fetchCol();
+
+    $merge_tab_rubs = array_unique(array_merge($query1, $query2));
+
+    foreach ($merge_tab_rubs as $lien) {
+        dpc_info_rubrique($lien);
+    }
+}
+
+function dpc_produit_precalculate() {
+
+    //PRODUIT
+    $query1 = db_select('field_data_field_bloc_codics', 'fbc')
+            ->fields('fbc', array('field_bloc_codics_value'))
+            ->distinct()
+            ->execute()
+            ->fetchCol();
+    $query2 = db_select('field_data_field_item_diapo_codic', 'fid')
+            ->fields('fid', array('field_item_diapo_codic_value'))
+            ->distinct()
+            ->execute()
+            ->fetchCol();
+    $query3 = db_select('field_data_field_contenu_push_produits', 'fpp')
+            ->fields('fpp', array('field_contenu_push_produits_value'))
+            ->distinct()
+            ->execute()
+            ->fetchCol();
+
+    $merge_tab_codics = array_unique(array_merge($query1, $query2, $query3));
+    dpc_info_produits($merge_tab_codics);
+}
+
+function dpc_info_produits($codics) {
+    global $conf;
+
+    foreach ($codics as $codic) {
+
+        if (isset($conf['darty_header_htaccess']) && !empty($conf['darty_header_htaccess']))
+            $url_tmp = $conf['darty_header_protocol'] . $conf['darty_header_htaccess'] . '@' . $conf['darty_api_url'];
+        else
+            $url_tmp = $conf['darty_header_protocol'] . $conf['darty_api_url'];
+        $url = url($url_tmp . '/product_list?codics=' . $codic);
+        $options = array('method' => 'GET');
+        $result = drupal_http_request($url, $options);
+        $data_encode = $result->data;
+        cache_set('info_produit_' . $codic, $data_encode, 'cache', time() + 86400);
+    }
+}

@@ -1,0 +1,414 @@
+<?php
+
+function darty_alert_menu() {
+
+    $items['admin/alerte/produit'] = array(
+        'title' => 'Alerte indispo/epuisement produits',
+        'page callback' => 'alerte_produit',
+        'page arguments' => array(),
+        'access callback' => 'alerte_info',
+        'type' => MENU_CALLBACK,
+    );
+    $items['admin/alerte/produit/generate'] = array(
+        'title' => 'Alerte indispo/epuisement produits',
+        'page callback' => 'alerte_produit_generate',
+        'page arguments' => array(),
+        'access callback' => 'alerte_info',
+        'type' => MENU_CALLBACK,
+    );
+    $items['admin/alerte/rubrique'] = array(
+        'title' => 'Alerte rubrique sans produit ou avec un produit',
+        'page callback' => 'alerte_rubrique',
+        'page arguments' => array(),
+        'access callback' => 'alerte_info',
+        'type' => MENU_CALLBACK,
+    );
+    $items['admin/alerte/rubrique/generate'] = array(
+        'title' => 'Alerte rubrique sans produit ou avec un produit',
+        'page callback' => 'alerte_rubrique_generate',
+        'page arguments' => array(),
+        'access callback' => 'alerte_info',
+        'type' => MENU_CALLBACK,
+    );
+    return $items;
+}
+
+function alerte_rubrique() {
+    $cache = cache_get('alerte_rubrique');
+
+
+    if (!empty($cache->data)) {
+        if (time() > $cache->expire && $cache->expire != 0) {
+            drupal_goto('admin/alerte/rubrique/generate');
+        } else {
+            $produit_nok = $cache->data;
+        }
+    } else {
+        drupal_goto('admin/alerte/rubrique/generate');
+    }
+    $header = array(array('data' => 'Url', 'field' => 'url'),
+        array('data' => 'Status', 'field' => 'status'),
+        array('data' => 'Contenu(s) attaché(s)'),
+        array('data' => 'Type'),
+        array('data' => 'Zone')
+    );
+    $order = tablesort_get_order($header);
+    $sort = tablesort_get_sort($header);
+
+    $table_attributes = array();
+    $tableData = array();
+    foreach ($produit_nok as $elem) {
+        if (!empty($elem)) {
+            $titres = $types = $zones = $actions = "";
+            foreach ($elem as $e) {
+                $titres .= l($e['titre'], 'node/' . $e['nid'], array('attributes' => array('target' => '_blank'))) . '<br/>';
+                $types .= $e['type'] . '<br/>';
+                $zones .= $e['zone'] . '<br/>';
+            }
+            $tableData[] = array(
+                'url' => l($elem[0]['url'], $elem[0]['url'], array('attributes' => array('target' => '_blank'))),
+                'status' => strtoupper($elem[0]['number']),
+                'contenu' => $titres,
+                'type' => $types,
+                'zone' => $zones,
+            );
+        }
+    }
+    $dir = ($sort == 'asc') ? SORT_ASC : SORT_DESC;
+    usort($tableData, make_comparer([$order['sql'], $dir]));
+    $rows = array();
+    foreach ($tableData as $entry) {
+        $rows[] = array(
+            array('data' => $entry['url']),
+            array('data' => $entry['status']),
+            array('data' => $entry['contenu']),
+            array('data' => $entry['type']),
+            array('data' => $entry['zone']),
+        );
+    }
+    $output = l('Regénérer la liste des alertes rubrique', 'admin/alerte/rubrique/generate') . "<br/><br/>";
+    return $output . theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => $table_attributes));
+}
+function alerte_produit() {
+    $cache = cache_get('alerte_produit');
+
+
+    if (!empty($cache->data)) {
+        if (time() > $cache->expire && $cache->expire != 0) {
+            drupal_goto('admin/alerte/produit/generate');
+        } else {
+            $produit_nok = $cache->data;
+        }
+    } else {
+        drupal_goto('admin/alerte/produit/generate');
+    }
+    $header = array(array('data' => 'Codic', 'field' => 'codic'),
+        array('data' => 'Nom du produit', 'field' => 'nom'),
+        array('data' => 'Status', 'field' => 'status'),
+        array('data' => 'Contenu(s) attaché(s)'),
+        array('data' => 'Type'),
+        array('data' => 'Zone')
+    );
+    $order = tablesort_get_order($header);
+    $sort = tablesort_get_sort($header);
+
+    $table_attributes = array();
+    $tableData = array();
+    foreach ($produit_nok as $elem) {
+        if (!empty($elem)) {
+            $titres = $types = $zones = $actions = "";
+            foreach ($elem as $e) {
+                $titres .= l($e['titre'], 'node/' . $e['nid'], array('attributes' => array('target' => '_blank'))) . '<br/>';
+                $types .= $e['type'] . '<br/>';
+                $zones .= $e['zone'] . '<br/>';
+            }
+            $tableData[] = array(
+                'codic' => l($elem[0]['codic'], $elem[0]['url'], array('attributes' => array('target' => '_blank'))),
+                'nom' => $elem[0]['marque'] . " " . $elem[0]['nomproduct'],
+                'status' => strtoupper($elem[0]['dispo']),
+                'contenu' => $titres,
+                'type' => $types,
+                'zone' => $zones,
+                'url_codic' => $elem[0]['url'],
+            );
+        }
+    }
+    $dir = ($sort == 'asc') ? SORT_ASC : SORT_DESC;
+    usort($tableData, make_comparer([$order['sql'], $dir]));
+    $rows = array();
+    foreach ($tableData as $entry) {
+        $rows[] = array(
+            array('data' => $entry['codic']),
+            array('data' => l($entry['nom'], $entry['url_codic'], array('attributes' => array('target' => '_blank')))),
+            array('data' => $entry['status']),
+            array('data' => $entry['contenu']),
+            array('data' => $entry['type']),
+            array('data' => $entry['zone']),
+        );
+    }
+    $output = l('Regénérer la liste des alertes produit', 'admin/alerte/produit/generate') . "<br/><br/>";
+    return $output . theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => $table_attributes));
+}
+function make_comparer() {
+    // Normalize criteria up front so that the comparer finds everything tidy
+    $criteria = func_get_args();
+    foreach ($criteria as $index => $criterion) {
+        $criteria[$index] = is_array($criterion) ? array_pad($criterion, 3, null) : array($criterion, SORT_ASC, null);
+    }
+
+    return function($first, $second) use (&$criteria) {
+                foreach ($criteria as $criterion) {
+                    // How will we compare this round?
+                    list($column, $sortOrder, $projection) = $criterion;
+                    $sortOrder = $sortOrder === SORT_DESC ? -1 : 1;
+
+                    // If a projection was defined project the values now
+                    if ($projection) {
+                        $lhs = call_user_func($projection, $first[$column]);
+                        $rhs = call_user_func($projection, $second[$column]);
+                    } else {
+                        $lhs = $first[$column];
+                        $rhs = $second[$column];
+                    }
+
+                    // Do the actual comparison; do not return if equal
+                    if ($lhs < $rhs) {
+                        return -1 * $sortOrder;
+                    } else if ($lhs > $rhs) {
+                        return 1 * $sortOrder;
+                    }
+                }
+
+                return 0; // tiebreakers exhausted, so $first == $second
+            };
+}
+
+function get_info_rubrique($lien) {
+    global $conf;
+
+    $url_avance = pathinfo($lien);
+    preg_match('/.*[?](.*)/', $url_avance['basename'], $matches);
+    if (isset($conf['darty_header_htaccess']) && !empty($conf['darty_header_htaccess']))
+        $url_tmp = $conf['darty_header_protocol'] . $conf['darty_header_htaccess'] . '@' . $conf['darty_api_url'];
+    else
+        $url_tmp = $conf['darty_header_protocol'] . $conf['darty_api_url'];
+    if (!isset($matches[1])) {
+        $rub['error'] = 'Erreur URL';
+        $rub['url'] = $lien;
+    } else {
+        $navUrl = $url_tmp . '/nav?query=' . $matches[1];
+        $navUrl_code = $url_tmp . '/nav?query=' . str_replace('&', '%26', $matches[1]);
+        $rub['url'] = $lien;
+        $options = array('method' => 'GET');
+        $result_more = drupal_http_request($navUrl_code, $options);
+        if (isset($result_more) && isset($result_more->data)) {
+            $json_more = json_decode($result_more->data);
+        } else {
+            $result_more = drupal_http_request($navUrl, $options);
+            if (isset($result_more) && isset($result_more->data)) {
+                $json_more = json_decode($result_more->data);
+            }
+        }
+        $rub['count'] = (isset($json_more->resultCount)) ? $json_more->resultCount : 0;
+        $rub['minPrice'] = (isset($json_more->minPrice)) ? $json_more->minPrice : 0;
+        $rub['maxPrice'] = (isset($json_more->maxPrice)) ? $json_more->maxPrice : 0;
+    }
+    return $rub;
+}
+
+function alerte_rubrique_generate() {
+
+    //PRODUIT
+    $query1 = db_select('field_data_field_bloc_choix_rub_avance', 'fbc')
+            ->fields('fbc', array('field_bloc_choix_rub_avance_value'))
+            ->distinct()
+            ->execute()
+            ->fetchCol();
+    $query2 = db_select('field_data_field_categorie_url', 'fcu')
+            ->fields('fcu', array('field_categorie_url_value'))
+            ->distinct()
+            ->execute()
+            ->fetchCol();
+
+    $merge_tab_rubs = array_unique(array_merge($query1, $query2));
+    $infos_rubrique = array();
+    foreach ($merge_tab_rubs as $lien) {
+        $infos_rubrique[] = get_info_rubrique($lien);
+    }
+    $produit_nok = array();
+    foreach ($infos_rubrique as $info) {
+        if ((isset($info['count']) && $info['count'] <= 1) || (isset($info['error']))) {
+
+
+            if (in_array($info['url'], $query1)) {
+                $query_check1 = db_select('field_data_field_bloc_choix_rub_avance', 'fbc')
+                        ->fields('fbc');
+                $query_check1->join('field_data_field_contenu_blocs_droite', 'fcbd', 'fbc.entity_id = fcbd.field_contenu_blocs_droite_target_id');
+                $query_check1->join('node', 'n', 'n.nid = fcbd.entity_id');
+                $query_check1->condition('n.status', 1, '=');
+                $query_check1->fields('fcbd');
+                $query_check1->fields('n');
+                $query_check1->condition('field_bloc_choix_rub_avance_value', $info['url'], '=');
+                $query_check1 = $query_check1->execute()
+                        ->fetchAll();
+                foreach ($query_check1 as $elem) {
+                    $produit_nok[$info['url']][] = array(
+                        'url' => $info['url'],
+                        'number' => (isset($info['count']))?$info['count']:$info['error'],
+                        'nid' => $elem->nid,
+                        'titre' => $elem->title,
+                        'type' => $elem->type,
+                        'zone' => "Bloc de droite"
+                    );
+                }
+            }
+
+            if (in_array($info['url'], $query2)) {
+
+                $query_check2 = db_select('field_data_field_categorie_url', 'fcu')
+                        ->fields('fcu');
+                $query_check2->join('field_data_field_contenu_push_categories', 'fcpc', 'fcu.entity_id = fcpc.field_contenu_push_categories_value');
+
+                $query_check2->join('node', 'n', 'n.nid = fcpc.entity_id');
+                $query_check2->condition('n.status', 1, '=');
+                $query_check2->fields('n');
+                $query_check2->condition('field_categorie_url_value', $info['url'], '=');
+                $query_check2 = $query_check2->execute()
+                        ->fetchAll();
+                foreach ($query_check2 as $elem) {
+                    $produit_nok[$info['url']][] = array(
+                        'url' => $info['url'],
+                        'number' => (isset($info['count']))?$info['count']:$info['error'],
+                        'nid' => $elem->nid,
+                        'titre' => $elem->title,
+                        'type' => $elem->type,
+                        'zone' => "Le choix darty"
+                    );
+                }
+            }
+        }
+    }
+    cache_clear_all('alerte_rubrique', 'cache');
+    cache_set('alerte_rubrique', $produit_nok);
+    drupal_goto('admin/alerte/rubrique');
+}
+
+function alerte_produit_generate() {
+
+    //PRODUIT
+    $query1 = db_select('field_data_field_bloc_codics', 'fbc')
+            ->fields('fbc', array('field_bloc_codics_value'))
+            ->distinct()
+            ->execute()
+            ->fetchCol();
+    $query2 = db_select('field_data_field_item_diapo_codic', 'fid')
+            ->fields('fid', array('field_item_diapo_codic_value'))
+            ->distinct()
+            ->execute()
+            ->fetchCol();
+    $query3 = db_select('field_data_field_contenu_push_produits', 'fpp')
+            ->fields('fpp', array('field_contenu_push_produits_value'))
+            ->distinct()
+            ->execute()
+            ->fetchCol();
+
+    $merge_tab_codics = array_unique(array_merge($query1, $query2, $query3));
+    $infos_produits = get_info_produits($merge_tab_codics);
+//    $infos_produits = get_info_produits(array(2712466, 3725359));
+    $produit_nok = array();
+    foreach ($infos_produits as $info) {
+        if (isset($info->avail->stock)) {
+
+            if (in_array($info->avail->stock, array('epuise', 'rupture'))) {
+                if (in_array($info->codic, $query1)) {
+                    $query_check1 = db_select('field_data_field_bloc_codics', 'fbc')
+                            ->fields('fbc');
+                    $query_check1->join('field_data_field_contenu_blocs_droite', 'fcbd', 'fbc.entity_id = fcbd.field_contenu_blocs_droite_target_id');
+                    $query_check1->join('node', 'n', 'n.nid = fcbd.entity_id');
+                    $query_check1->condition('n.status', 1, '=');
+                    $query_check1->fields('fcbd');
+                    $query_check1->fields('n');
+                    $query_check1->condition('field_bloc_codics_value', $info->codic, '=');
+                    $query_check1 = $query_check1->execute()
+                            ->fetchAll();
+                    foreach ($query_check1 as $elem) {
+                        $produit_nok[$info->codic][] = array(
+                            'codic' => $info->codic,
+                            'url' => 'http://www.darty.com/nav/codic/' . $info->codic,
+                            'nomproduct' => $info->reference,
+                            'marque' => $info->brand,
+                            'dispo' => $info->avail->stock,
+                            'nid' => $elem->nid,
+                            'titre' => $elem->title,
+                            'type' => $elem->type,
+                            'zone' => "Bloc de droite"
+                        );
+                    }
+                }
+                if (in_array($info->codic, $query2)) {
+                    $query_check2 = db_select('field_data_field_item_diapo_codic', 'fid')
+                            ->fields('fid');
+                    $query_check2->join('field_data_field_contenu_items_diapo', 'fcid', 'fid.entity_id = fcid.field_contenu_items_diapo_target_id');
+                    $query_check2->join('node', 'n', 'n.nid = fcid.entity_id');
+                    $query_check2->condition('n.status', 1, '=');
+                    $query_check2->fields('fcid');
+                    $query_check2->fields('n');
+                    $query_check2->condition('field_item_diapo_codic_value', $info->codic, '=');
+                    $query_check2 = $query_check2->execute()
+                            ->fetchAll();
+                    foreach ($query_check2 as $elem) {
+                        $produit_nok[$info->codic][] = array(
+                            'codic' => $info->codic,
+                            'url' => 'http://www.darty.com/nav/codic/' . $info->codic,
+                            'nomproduct' => $info->reference,
+                            'marque' => $info->brand,
+                            'dispo' => $info->avail->stock,
+                            'nid' => $elem->nid,
+                            'titre' => $elem->title,
+                            'type' => $elem->type,
+                            'zone' => "Diaporama"
+                        );
+                    }
+                }
+                if (in_array($info->codic, $query3)) {
+                    $query_check3 = db_select('field_data_field_contenu_push_produits', 'fcp')
+                            ->fields('fcp');
+                    $query_check3->join('node', 'n', 'n.nid = fcp.entity_id');
+                    $query_check3->condition('n.status', 1, '=');
+                    $query_check3->fields('n');
+                    $query_check3->condition('field_contenu_push_produits_value', $info->codic, '=');
+                    $query_check3 = $query_check3->execute()
+                            ->fetchAll();
+                    foreach ($query_check3 as $elem) {
+                        $produit_nok[$info->codic][] = array(
+                            'codic' => $info->codic,
+                            'url' => 'http://www.darty.com/nav/codic/' . $info->codic,
+                            'nomproduct' => $info->reference,
+                            'marque' => $info->brand,
+                            'dispo' => $info->avail->stock,
+                            'nid' => $elem->nid,
+                            'titre' => $elem->title,
+                            'type' => $elem->type,
+                            'zone' => "Le choix darty"
+                        );
+                    }
+                }
+            }
+        }
+    }
+    cache_clear_all('alerte_produit', 'cache');
+    cache_set('alerte_produit', $produit_nok);
+    drupal_goto('admin/alerte/produit');
+}
+
+function darty_alert_permission() {
+    return array(
+        'alerte info' => array(
+            'title' => t('Autoriser à voir les alertes pour les produits et les rubriques')
+        )
+    );
+}
+
+function alerte_info() {
+    return user_access('alerte info');
+}

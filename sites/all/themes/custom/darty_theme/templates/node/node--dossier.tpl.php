@@ -16,7 +16,12 @@
     </div>
     <div class="zone-partage">
         <div class="left">
+            <?php
+            if ($user_clickable === true){?>
             <a class='prenom' href="<?php print url('user/' . $node->uid); ?>"><?php print $prenom; ?></a> -
+            <?php }else{?>
+            <span class='prenom'><?php print $prenom;?></span>
+            <?php }?>
             <span class="creation_date"><?php print date('d/m/y', $date_crea); ?></span>
             <?php if (!empty($date_modif)) { ?>
                 <span class="maj_date">Mis à jour le <?php print date('d/m/y', $date_modif); ?></span>

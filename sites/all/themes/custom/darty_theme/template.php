@@ -17,7 +17,6 @@ function darty_theme_preprocess_html(&$variables) {
 //        ),
 //    );
 //    drupal_add_html_head($element, 'mytheme_noindex');
-
     //Add a specific html template to the list for each node type.
     //Usefull for the newsletter in order to have a simple HTML with only the content
     if ($node = menu_get_object()) {
@@ -33,6 +32,9 @@ function darty_theme_preprocess_html(&$variables) {
  * Implementation of template_preprocess_page
  */
 function darty_theme_preprocess_page(&$variables) {
+    global $user;
+    drupal_add_http_header('Cache-Control', 'public, max-age=' . variable_get('page_cache_maximum_age', 0));
+
     $variables['site_slogan'] = filter_xss_admin(variable_get('site_slogan', 'DES IDÉES ET DES CONSEILS POUR TOUTES VOS ENVIES'));
 
     drupal_add_css(drupal_get_path('theme', 'darty_theme') . '/css/dcmegamenu.css', array('scope' => 'header', 'group' => CSS_THEME));
@@ -40,7 +42,7 @@ function darty_theme_preprocess_page(&$variables) {
     drupal_add_js(drupal_get_path('theme', 'darty_theme') . '/js/jquery.dcmegamenu.1.3.3.min.js', array('scope' => 'header', 'group' => JS_LIBRARY));
 
     drupal_add_css(drupal_get_path('theme', 'darty_theme') . '/js/fancybox/jquery.fancybox-1.3.4.css', array('scope' => 'header', 'group' => CSS_THEME));
-    
+
     drupal_add_js(drupal_get_path('theme', 'darty_theme') . '/js/script.js', array('scope' => 'header'));
     drupal_add_js(drupal_get_path('theme', 'darty_theme') . '/js/fancybox/jquery.fancybox-1.3.4.pack.js', array('scope' => 'footer'));
     //Add a specific page template to the list for each node type.
@@ -48,7 +50,7 @@ function darty_theme_preprocess_page(&$variables) {
     if ($node = menu_get_object()) {
         $variables ['theme_hook_suggestions'] [] = 'page__' . $node->type;
     }
-   drupal_set_title(html_entity_decode(drupal_get_title(), ENT_QUOTES, "utf-8" ).' - Darty & Vous');
+    drupal_set_title(html_entity_decode(drupal_get_title(), ENT_QUOTES, "utf-8") . ' - Darty & Vous');
 }
 
 /**
@@ -101,4 +103,19 @@ function darty_theme_sdl_editor_legend($variables) {
     return "
   
   ";
+}
+
+function darty_theme_js_alter(&$javascript) {
+    //We define the path of our new jquery core file
+    //assuming we are using the minified version 1.8.3
+    $jquery_path = drupal_get_path('theme', 'darty_theme') . '/js/jquery.min.js';
+
+    //We duplicate the important information from the Drupal one
+    $javascript[$jquery_path] = $javascript['misc/jquery.js'];
+    //..and we update the information that we care about
+    $javascript[$jquery_path]['version'] = '1.7.1';
+    $javascript[$jquery_path]['data'] = $jquery_path;
+
+    //Then we remove the Drupal core version
+    unset($javascript['misc/jquery.js']);
 }

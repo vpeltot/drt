@@ -1183,6 +1183,7 @@ function advagg_context_css($aggregate_settings, $mode) {
  * @see https://drupal.org/node/1514182#comment-7875489
  */
 function _advagg_build_css_path($matches, $base = NULL) {
+    global $base_path;
   $_base = &drupal_static(__FUNCTION__);
   // Store base path for preg_replace_callback.
   if (isset($base)) {
@@ -1197,9 +1198,9 @@ function _advagg_build_css_path($matches, $base = NULL) {
     $path = preg_replace('`(^|/)(?!\.\./)([^/]+)/\.\./`', '$1', $path);
   }
 
-  $path = file_create_url($path);
+  //$path = file_create_url($path);
   // Decoding path because some browsers can not handle encoded urls inside of
   // CSS. file_create_url() -> drupal_encode_path() -> rawurlencode().
-  $path = rawurldecode($path);
-  return 'url(' . $path . ')';
+  //$path = rawurldecode($path);
+  return 'url(' . $base_path . $path . ')';
 }

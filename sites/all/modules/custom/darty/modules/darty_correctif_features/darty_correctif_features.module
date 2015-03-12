@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the Darty_correctif_features feature.
+ */
+
+include_once 'darty_correctif_features.features.inc';

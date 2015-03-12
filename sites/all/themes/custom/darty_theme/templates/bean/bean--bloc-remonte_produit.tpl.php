@@ -13,8 +13,14 @@
                     <?php if (in_array($product->avail->stock, array('epuise', 'rupture'))) { ?>
                         <div class="nonstock"><?php print ($product->avail->stock == 'epuise') ? 'épuisé' : 'Temporairement indisponible'; ?></div>
                     <?php } else { ?>
-                        <div class="montant"><?php print number_format($product->webSalePrice / 100, 2, ',', ' '); ?> €<?php print (!empty($product->ecopartPrice)) ? '<sup>*</sup>' : ''; ?></div>
+                        <?php
+                        if (isset($product->stripedPrice)) {
+                            ?>
+                            <div class="montant"><?php print number_format($product->webSalePrice / 100, 2, ',', ' '); ?> €<?php print (!empty($product->ecopartPrice)) ? '<sup>*</sup>' : ''; ?> <span class='barre'> <?php print number_format($product->stripedPrice->amount / 100, 2, ',', ' '); ?> €</span> <span class='pourcent'>(-<?php print number_format($product->stripedPrice->discount, 0, ',', ' '); ?>%)</span></div>
+                        <?php } else { ?>
+                            <div class="montant"><?php print number_format($product->webSalePrice / 100, 2, ',', ' '); ?> €<?php print (!empty($product->ecopartPrice)) ? '<sup>*</sup>' : ''; ?></div>
 
+                        <?php } ?>
                         <!-- condition eco -->
                         <?php if (!empty($product->ecopartPrice)) { ?>
                             <div class="eco"><sup>*</sup>dont <?php print number_format($product->ecopartPrice / 100, 2, ',', ' '); ?> € d'éco-part. DEEE</div>
@@ -41,7 +47,7 @@
                     <?php if ($product->avail->stock == 'dispo' && !empty($product->avail->storeCount) && !isset($product->avail->precommandeDate)) { ?>
                         <div class="stock_label">En stock dans <?php print $product->avail->storeCount; ?> <?php print format_plural($product->avail->storeCount, 'magasin', 'magasins'); ?></div>
                     <?php } ?>
-                    <?php if ($product->avail->stock == 'dispo' && !empty($product->avail->storeCount) && isset($product->avail->precommandeDate) && $empty($product->avail->precommandeDate)) { ?>
+                    <?php if ($product->avail->stock == 'dispo' && isset($product->avail->precommandeDate) && !empty($product->avail->precommandeDate)) { ?>
                         <div class="stock_label">En précommande</div>
                     <?php } ?>
                     <?php if ($product->avail->stock == 'appro') { ?>

@@ -59,7 +59,8 @@ function darty_article_preprocess_node(&$vars) {
     if ($type == "article_sans_sommaire" ||
             $type == "article_avec_sommaire" ||
             $type == "dossier" ||
-            $type == 'diaporama') {
+            $type == 'diaporama' ||
+            $type == 'quizz') {
 
         $node_article = $vars['node'];
         $vars['analyticsLinks'] = "";
@@ -211,6 +212,7 @@ s.t();"
 // Récupère le prénom (ou à défault le login) de l'auteur
     $uid_auteur = $node_article->uid;
     $userObj = user_load($uid_auteur);
+    $vars['user_clickable'] = (count($userObj->roles) > 1)?true:false;
     if (!empty($userObj->field_account_prenom))
         $vars['prenom'] = $userObj->field_account_prenom[LANGUAGE_NONE][0]['value'];
     if (empty($vars['prenom']))
@@ -400,6 +402,9 @@ function darty_article_preprocess_node_diaporama(&$vars) {
     global $conf;
 
     $node_article = $vars['node'];
+    
+    $view_mode = $vars['elements']['#view_mode'];
+    if ($view_mode == 'full'){
 
     if (!empty($node_article->field_contenu_items_diapo)) {
         $bloc_diapos = $node_article->field_contenu_items_diapo[LANGUAGE_NONE];
@@ -482,29 +487,32 @@ function darty_article_preprocess_node_diaporama(&$vars) {
                     $rub['lien'] = array('url' => $categorie->field_categorie_lien[LANGUAGE_NONE][0]['url'], 'title' => 'Découvrir', 'attributes' => array('target' => '_blank'));
                     
                 }
-                $url_avance = pathinfo($url);
-                preg_match('/.*[?](.*)/', $url_avance['basename'], $matches);
-
-                if (isset($conf['darty_header_htaccess']) && !empty($conf['darty_header_htaccess']))
-                    $url_tmp = $conf['darty_header_protocol'] . $conf['darty_header_htaccess'] . '@' . $conf['darty_api_url'];
-                else
-                    $url_tmp = $conf['darty_header_protocol'] . $conf['darty_api_url'];
-
-                $navUrl = $url_tmp . '/nav?query=' . $matches[1];
-                $navUrl_code = $url_tmp . '/nav?query=' . str_replace('&', '%26', $matches[1]);
-
                 if (empty($rub['lien']))
                     $rub['lien'] = array('url' => $url, 'title' => 'Découvrir', 'attributes' => array('target' => '_blank'));
-                $options = array('method' => 'GET');
-                $result_more = drupal_http_request($navUrl_code, $options);
+                
+                $url_avance = pathinfo($url);
+                preg_match('/.*[?](.*)/', $url_avance['basename'], $matches);
+                $cache = cache_get('info_rubrique_' . md5($url));
+            	if ($cache && $cache->expire > time()) {
+                	$data_encode = $cache->data;
+            	} else {
+                    if (isset($conf['darty_header_htaccess']) && !empty($conf['darty_header_htaccess']))
+                        $url_tmp = $conf['darty_header_protocol'] . $conf['darty_header_htaccess'] . '@' . $conf['darty_api_url'];
+                    else
+                        $url_tmp = $conf['darty_header_protocol'] . $conf['darty_api_url'];
 
-                $json_more = json_decode($result_more->data);
-                if (empty($json_more)) {
-                    $result_more = drupal_http_request($navUrl, $options);
-                    $json_more = json_decode($result_more->data);
+                    $navUrl = $url_tmp . '/nav?query=' . $matches[1];
+                    $navUrl_code = $url_tmp . '/nav?query=' . str_replace('&', '%26', $matches[1]);
+
+                    $options = array('method' => 'GET');
+                    $result_more = drupal_http_request($navUrl_code, $options);
+                    if (empty($json_more)) {
+                        $result_more = drupal_http_request($navUrl, $options);
+                    }
+                    $data_encode = $result_more->data;
+                    cache_set('info_rubrique_' . md5($url), $data_encode, 'cache', time() + 300);
                 }
-                if (empty($json_more))
-                    continue;
+                $json_more = json_decode($data_encode);
                 $rub['count'] = $json_more->resultCount;
                 $rub['minPrice'] = $json_more->minPrice;
                 $rub['maxPrice'] = $json_more->maxPrice;
@@ -517,6 +525,8 @@ function darty_article_preprocess_node_diaporama(&$vars) {
 
         drupal_add_js(drupal_get_path('module', 'darty_article') . '/js/diaporama.js', array('type' => 'file', 'scope' => 'footer'));
     }
+    
+                }
 }
 
 function get_info_produits($codics) {
@@ -553,7 +563,8 @@ function get_info_produits($codics) {
  */
 function darty_article_preprocess_node_article_sans_sommaire(&$vars) {
     $node_article = $vars['node'];
-
+    $view_mode = $vars['elements']['#view_mode'];
+    if ($view_mode == 'full'){
 //content
     if (!empty($node_article->field_contenu_contenu))
         $vars['contenu'] = $node_article->field_contenu_contenu[LANGUAGE_NONE][0]['safe_value'];
@@ -591,6 +602,7 @@ function darty_article_preprocess_node_article_sans_sommaire(&$vars) {
             $vars['position_diapo'] = 'none';
     }
     //$vars['diapos'] = array_merge($vars['diapos'],$vars['diapos'],$vars['diapos']);
+    }
 }
 
 /**
@@ -598,7 +610,8 @@ function darty_article_preprocess_node_article_sans_sommaire(&$vars) {
  */
 function darty_article_preprocess_node_article_avec_sommaire(&$vars) {
     $node_article = $vars['node'];
-
+    $view_mode = $vars['elements']['#view_mode'];
+    if ($view_mode == 'full'){
 //content
     $vars['chapitres'] = array();
     if (!empty($node_article->field_contenu_chapitres)) {
@@ -619,6 +632,7 @@ function darty_article_preprocess_node_article_avec_sommaire(&$vars) {
             $vars['chapitres'][] = array('titre' => $wrapper->label->value(), 'id' => $id, 'contenu' => $texte, 'render' => bean_view($chapitre, $id));
         }
     }
+    }
 }
 
 /**
@@ -627,7 +641,8 @@ function darty_article_preprocess_node_article_avec_sommaire(&$vars) {
 function darty_article_preprocess_node_dossier(&$vars) {
     $node_dossier = $vars['node'];
 
-
+    $view_mode = $vars['elements']['#view_mode'];
+    if ($view_mode=='full'){
 //couleur du dossier
     if (!empty($node_dossier->field_contenu_couleur))
         $vars['couleur'] = $node_dossier->field_contenu_couleur[LANGUAGE_NONE][0]['value'];
@@ -659,6 +674,7 @@ function darty_article_preprocess_node_dossier(&$vars) {
 jQuery('.node-type-dossier .col_right').css('margin-top',(jQuery('.node-type-dossier .col_left').height()/2 - jQuery('.node-type-dossier .col_right').height()/2));
 });", array('type' => 'inline', 'scope' => 'footer')
     );
+    }
 }
 
 function cleanCut($string, $length, $cutString = '...') {
@@ -948,6 +964,7 @@ function plusde_label($format, $type) {
     $libelle[41] = array('titre' => 'Plus de décryptages', 'titre_lien' => 'Voir tous les décryptages', 'tous' => 'Tous les décryptages');
     $libelle[42] = array('titre' => 'Plus de shopping lists', 'titre_lien' => 'Voir toutes les shopping lists', 'tous' => 'Toutes les shopping lists');
     $libelle[45] = array('titre' => 'Plus d\'actualités Darty', 'titre_lien' => 'Voir toutes les actualités Darty', 'tous' => 'Toutes les actualités Darty');
+    $libelle[43] = array('titre' => 'Plus de quiz', 'titre_lien' => 'Voir tous les quiz', 'tous' => 'Tous les quiz');
 
     if (isset($libelle[$format][$type]))
         return $libelle[$format][$type];

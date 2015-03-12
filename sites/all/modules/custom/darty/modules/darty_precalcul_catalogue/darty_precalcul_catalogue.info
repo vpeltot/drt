@@ -1,0 +1,6 @@
+name = Darty Precalcul Catalogue
+description = Module permettant de mettre en cache l'ensemble des appels catalogue
+core = 7.x
+package = Darty
+version = 7.x-1.0
+project = darty_precalcul_catalogue

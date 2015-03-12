@@ -56,6 +56,36 @@ function ajax_content_search($currentTid, $level1, $level2, $format, $page, $uid
     $vars['level1'] = (!empty($level1)) ? $level1 : 'null';
     $vars['level2'] = (!empty($level2)) ? $level2 : 'null';
     $vars['format'] = (!empty($format)) ? $format : 'null';
+    if (isset($_GET['format']) && $format == 'null') {
+        $format_get = $_GET['format'];
+        switch ($format_get) {
+            case 'null' : $format_tmp = 'null';
+                break;
+            case 'dossier' : $format_tmp = 36;
+                break;
+            case 'conseil' : $format_tmp = 37;
+                break;
+            case 'air': $format_tmp = 38;
+                break;
+            case 'choisir' : $format_tmp = 39;
+                break;
+            case 'test' : $format_tmp = 40;
+                break;
+            case 'kesako' : $format_tmp = 41;
+                break;
+            case 'shopping' : $format_tmp = 42;
+                break;
+            case 'quiz' : $format_tmp = 43;
+                break;
+            case 'pensez' : $format_tmp = 44;
+                break;
+            case 'vousnous' : $format_tmp = 45;
+                break;
+            default : $format_tmp = $format_get;
+        }
+        $vars['format'] = $format_tmp;
+        $format = $format_tmp;
+    }
     $vars['uid'] = (!empty($uid)) ? $uid : 'null';
     $vars['type'] = $type;
 
@@ -143,7 +173,7 @@ function ajax_content_search($currentTid, $level1, $level2, $format, $page, $uid
         }
     }
     //récupération des champs Themes et sous themes
-    $vars['childrenTaxo'] = taxonomy_get_tree(VID_ARBO, ($tid == 'null' || $tid === null) ? 0 : $tid, 1);
+    $vars['childrenTaxo'] = taxonomy_get_tree(VID_ARBO, (!isset($tid) || $tid == 'null' || $tid === null) ? 0 : $tid, 1);
     foreach ($vars['childrenTaxo'] as $key => $elem) {
         if (!in_array($elem->tid, $allTids))
             unset($vars['childrenTaxo'][$key]);
@@ -207,7 +237,7 @@ function darty_sommaire_preprocess_page(&$vars) {
 function darty_sommaire_process(&$vars, $hook) {
     if ($hook == 'taxonomy_term') {
         if (isset($vars['field_meta_title'][0]['value']) && $vars['field_meta_title'][0]['value'] != "") {
-            drupal_set_title($vars['field_meta_title'][0]['value'] . ' - Darty & Vous');
+            drupal_set_title(html_entity_decode($vars['field_meta_title'][0]['value'], ENT_QUOTES, "utf-8") . ' - Darty & Vous');
         }
         if (isset($vars['field_meta_description'][0]['value']) && $vars['field_meta_description'][0]['value'] != "") {
             $meta_desc = $vars['field_meta_description'][0]['value'];
@@ -303,7 +333,7 @@ function darty_sommaire_preprocess_taxonomy_term(&$vars) {
     }
 
 
-    $vars['firstcontent'] = ajax_content_search($tid, 'null', 'null', $format, 1, 'null','html');
+    $vars['firstcontent'] = ajax_content_search($tid, 'null', 'null', $format, 1, 'null', 'html');
     drupal_add_js(
             "jQuery(document).ready(function ($) { 
                 $('.zone-header .description').width($('.zone-header').width() - $('.zone-header .titre').width() - $('.zone-header .separation').width() - 30);            

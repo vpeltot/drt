@@ -1,0 +1,6 @@
+name = Darty_correct_url
+description = Module permettant de gérer les problèmes d'url d'image et de lien
+core = 7.x
+package = Darty
+version = 7.x-1.0
+project = darty_correct_url

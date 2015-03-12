@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the testasup feature.
+ */
+
+include_once 'testasup.features.inc';

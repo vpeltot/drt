@@ -36,7 +36,11 @@
                         print '<span class="number">0</span> votant';
                     ?>
                 </div>
-                <div class='date'>du <?php print date('d/m/Y', $datedeb); ?> au <?php print date('d/m/Y', $datefin); ?></div>
+                <?php if ($node->status_sondage == 1) { ?>
+                    <div class='date'>depuis le <?php print date('d/m/Y', $datedeb); ?></div>
+                <?php } else { ?>
+                    <div class='date'>du <?php print date('d/m/Y', $datedeb); ?> au <?php print date('d/m/Y', $datefin); ?></div>
+                <?php } ?>
             </div>
         </div>
     <?php } ?>

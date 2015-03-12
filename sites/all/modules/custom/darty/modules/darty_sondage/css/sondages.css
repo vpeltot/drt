@@ -372,7 +372,7 @@
 }
 #sondages_tls .sondage-wrapper .form .reponses .reponse, 
 .node-type-sondage .sondage-wrapper .form .reponses .reponse{
-    max-height: 35px;
+    max-height: 37px;
     margin-bottom: 10px;
     overflow: hidden;
     color: #675f5c;

@@ -82,8 +82,8 @@ s.t();"
             }
             $elem['entity']->analytics['localisation'] = "bloc-bas";
             $elem['entity']->analytics['type'] = "HDV";
-
-            $vars['contenu_remonte'][] = drupal_render(bean_view($elem['entity']));
+            $view_bean = bean_view($elem['entity']);
+            $vars['contenu_remonte'][] = drupal_render($view_bean);
         }
     }
     drupal_add_js(

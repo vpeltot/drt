@@ -27,9 +27,25 @@ function darty_bloc_inline_entity_form_entity_form_submit($entity_form, &$form_s
         $form_state['inline_entity_form'][$ief_id]['entities'][$delta]['entity'] = $entity_form['#entity'];
         $form_state['inline_entity_form'][$ief_id]['entities'][$delta]['needs_save'] = TRUE;
     }
+    if ($entity_form['#entity_type'] == 'bean' && in_array($entity_form['#bundle'], array('bloc_plus_moins', 'bloc_bio_express', 'bloc_edito', 'bloc_forum', 'bloc_lien_rubrique',
+                'bloc_remonte_produit', 'bloc_sondage', 'chapitre_article', 'item_diapo',
+                'contenu', 'forum', 'mise_en_avant', 'question_quizz'))) {
+        if ($entity_form['#entity']->label != '')
+            $entity_form['#entity']->title = $entity_form['#entity']->label;
+    }
+}
 
-    if ($entity_form['#entity']->label != '')
-        $entity_form['#entity']->title = $entity_form['#entity']->label;
+function darty_bloc_form_alter(&$form, &$form_state, $form_id) {
+    if ($form_id == 'bean_form' && isset($form['#entity'])) {
+        $bean = $form['#entity'];
+        if ($bean->type == 'bloc_services_darty') {
+            $form['label']['#title'] = 'Titre du bloc (affiché)';
+            $form['label']['#description'] = "";
+            $form['title']['#title'] = 'Nom d\'administration du bloc';
+            $form['title']['#description'] = "";
+            $form['revision']['#access'] = FALSE;
+        }
+    }
 }
 
 /**
@@ -41,7 +57,7 @@ function darty_bloc_inline_entity_form_entity_form_alter(&$entity_form, &$form_s
 
     if ($entity_form['#entity_type'] == 'bean' && in_array($entity_form['#bundle'], array('bloc_plus_moins', 'bloc_bio_express', 'bloc_edito', 'bloc_forum', 'bloc_lien_rubrique',
                 'bloc_remonte_produit', 'bloc_services_darty', 'bloc_sondage', 'chapitre_article', 'item_diapo',
-                'contenu', 'forum', 'mise_en_avant'))) {
+                'contenu', 'forum', 'mise_en_avant', 'question_quizz'))) {
         $entity_form['revision']['#access'] = false;
         $entity_form['default_revision']['#access'] = false;
 
@@ -77,6 +93,7 @@ function darty_bloc_preprocess_entity(&$vars) {
     if ($type == "bloc_bio_express" ||
             $type == "bloc_edito" ||
             $type == "bloc_forum" ||
+            $type == "forum" ||
             $type == "bloc_lien_rubrique" ||
             $type == "bloc_plus_moins" ||
             $type == "bloc_remonte_produit" ||
@@ -85,6 +102,7 @@ function darty_bloc_preprocess_entity(&$vars) {
             $type == 'chapitre_article'
     ) {
         $preprocess_type = 'darty_bloc_preprocess_' . $entity_type . '_' . $type;
+
         $preprocess_type_view_mode = 'darty_bloc_preprocess_' . $entity_type . '_' . $type . '_' . $view_mode;
         if (function_exists($preprocess_type)) {
             $preprocess_type($vars);
@@ -111,43 +129,106 @@ function darty_bloc_preprocess_bean_bloc_lien_rubrique(&$vars) {
         $rub_avance = $wrapper->field_bloc_choix_rub_avance->value();
         $rub_url = $wrapper->field_bloc_choix_rub_url->value();
         $title = $wrapper->field_bloc_choix_rub_title->value();
+        $image = false;
+        if (isset($entity->field_bloc_choix_rub_image) && !empty($entity->field_bloc_choix_rub_image)) {
+            $sid = $entity->field_bloc_choix_rub_image[LANGUAGE_NONE][0]['sid'];
+            $obj_atom = scald_atom_load($sid);
+            if (isset($obj_atom) && isset($obj_atom->scald_thumbnail[LANGUAGE_NONE][0])) {
+                $image = '<img src="' . file_create_url($obj_atom->scald_thumbnail[LANGUAGE_NONE][0]['uri']) . '" alt="' . $obj_atom->scald_thumbnail[LANGUAGE_NONE][0]['alt'] . '"></img>';
+            }
+        }
         $rub_avance2 = $wrapper->field_bloc_choix_rub2_avance->value();
         $rub2_url = $wrapper->field_bloc_choix_rub2_url->value();
         $title2 = $wrapper->field_bloc_choix_rub2_title->value();
-        $rub_ids[] = array('rub' => $rub_avance, 'title' => $title, 'url' => $rub_url);
+        $rub_ids[] = array('rub' => $rub_avance, 'title' => $title, 'url' => $rub_url, 'image' => $image);
         if (!empty($rub_avance2))
-            $rub_ids[] = array('rub' => $rub_avance2, 'title' => $title2, 'url' => $rub2_url);
+            $rub_ids[] = array('rub' => $rub_avance2, 'title' => $title2, 'url' => $rub2_url, 'image' => false);
 
         foreach ($rub_ids as $item) {
             $rub = array();
 
             $rub['title'] = $item['title'];
+            $rub['image'] = $item['image'];
             $url_avance = pathinfo($item['rub']);
             preg_match('/.*[?](.*)/', $url_avance['basename'], $matches);
-            if (isset($conf['darty_header_htaccess']) && !empty($conf['darty_header_htaccess']))
-                $url_tmp = $conf['darty_header_protocol'] . $conf['darty_header_htaccess'] . '@' . $conf['darty_api_url'];
-            else
-                $url_tmp = $conf['darty_header_protocol'] . $conf['darty_api_url'];
-
-            $navUrl = $url_tmp . '/nav?query=' . $matches[1];
-            $navUrl_code = $url_tmp . '/nav?query=' . str_replace('&', '%26', $matches[1]);
             if (isset($item['url']) && !empty($item['url']))
-                $rub['url'] = $item['url'];
-            else
-                $rub['url'] = $item['rub'];
-            $options = array('method' => 'GET');
-            $result_more = drupal_http_request($navUrl_code, $options);
+                    $rub['url'] = $item['url'];
+                else
+                    $rub['url'] = $item['rub'];
+                
+            $cache = cache_get('info_rubrique_' . md5($item['rub']));
+            if ($cache && $cache->expire > time()) {
+                $data_encode = $cache->data;
+            } else {
+                if (isset($conf['darty_header_htaccess']) && !empty($conf['darty_header_htaccess']))
+                    $url_tmp = $conf['darty_header_protocol'] . $conf['darty_header_htaccess'] . '@' . $conf['darty_api_url'];
+                else
+                    $url_tmp = $conf['darty_header_protocol'] . $conf['darty_api_url'];
 
-            $json_more = json_decode($result_more->data);
-            if (empty($json_more)) {
-                $result_more = drupal_http_request($navUrl, $options);
-                $json_more = json_decode($result_more->data);
+                $navUrl = $url_tmp . '/nav?query=' . $matches[1];
+                $navUrl_code = $url_tmp . '/nav?query=' . str_replace('&', '%26', $matches[1]);
+                
+                $options = array('method' => 'GET');
+                $result_more = drupal_http_request($navUrl_code, $options);
+                if (!isset($result_more) || !isset($result_more->data)) {
+
+                    $result_more = drupal_http_request($navUrl, $options);
+                   
+                }
+                $data_encode = $result_more->data;
+                cache_set('info_rubrique_' . md5($item['rub']), $data_encode, 'cache', time() + 300);
             }
-            $rub['count'] = $json_more->resultCount;
-            $rub['minPrice'] = $json_more->minPrice;
-            $rub['maxPrice'] = $json_more->maxPrice;
+            $json_more = json_decode($data_encode);
+            $rub['count'] = (isset($json_more->resultCount)) ? $json_more->resultCount : 0;
+            $rub['minPrice'] = (isset($json_more->minPrice)) ? $json_more->minPrice : 0;
+            $rub['maxPrice'] = (isset($json_more->maxPrice)) ? $json_more->maxPrice : 0;
 
             $vars['rubrique_info'][] = $rub;
+        }
+    }
+}
+
+/**
+ * Implements darty_bloc_preprocess_bean_forum().
+ */
+function darty_bloc_preprocess_bean_forum(&$vars) {
+    global $conf;
+    $entity = $vars['elements']['#entity'];
+    $wrapper = entity_metadata_wrapper('bean', $entity);
+
+    if (is_object($wrapper)) {
+        //post or user
+        $vars['type'] = $wrapper->field_type_forum_bloc->value();
+
+        $cache = cache_get('forum_36000_' . $vars['type']);
+        if ($cache && $cache->expire > time()) {
+            $data_encode = $cache->data;
+        } else {
+            if ($vars['type'] == 'user')
+                $navUrl = $conf['36000_api_protocol'].$conf['36000_api_url'].'/api.php/utilisateurs/listeexperts.json';
+            else if ($vars['type'] == 'post')
+                $navUrl = $conf['36000_api_protocol'].$conf['36000_api_url'].'/api.php/questions/lastanswered.json';
+            $options = array('method' => 'GET');
+            $result_more = drupal_http_request($navUrl, $options);
+            if (isset($result_more) && isset($result_more->data)) {
+                $data_encode = $result_more->data;
+                cache_set('forum_36000_' . $vars['type'], $data_encode, 'cache', time() + 3600);
+            }
+        }
+        if (isset($data_encode) && !empty($data_encode)){
+            $json_more = drupal_json_decode($data_encode);
+
+            if ($vars['type'] == 'user'){
+                $rd = rand(0, count($json_more)-1);
+                $vars['user'] = $json_more[$rd];
+            }elseif($vars['type'] == 'post'){
+                if (isset($json_more[0])){
+                    $vars['contenu'] = $json_more[0]['contenu'];
+                    $vars['link'] = $json_more[0]['frontendLink'];
+                }
+            }
+        }else{
+            $vars['error'] = true;
         }
     }
 }
@@ -188,9 +269,8 @@ function darty_bloc_preprocess_bean_bloc_services_darty(&$vars) {
 
         $objPortrait = $wrapper->field_bloc_image->value();
         $vars['image'] = (!empty($objPortrait)) ? scald_render($objPortrait->sid, 'darty_context_90_x_90') : '';
-
-        if (isset($wrapper->field_bloc_bool_titre)) {
-            $bool_titre = $wrapper->field_bloc_bool_titre->value();
+        if (isset($wrapper->field_field_bloc_bool_titre)) {
+            $bool_titre = $wrapper->field_field_bloc_bool_titre->value();
             $vars['bool_titre'] = $bool_titre;
         }
 
@@ -286,4 +366,32 @@ function darty_bloc_preprocess_bean_chapitre_article(&$vars) {
 
         drupal_add_js(drupal_get_path('module', 'darty_bloc') . "/js/sommaire.js", array('type' => 'file', 'scope' => 'footer'));
     }
+}
+
+function darty_bloc_menu() {
+
+    $items['admin/bloc_services'] = array(
+        'title' => 'Listing de tous les blocs services',
+        'page callback' => 'listing_bloc_services',
+        'page arguments' => array(),
+        'access callback' => 'access_listing_services',
+        'type' => MENU_CALLBACK,
+    );
+    return $items;
+}
+
+function darty_bloc_permission() {
+    return array(
+        'listing services' => array(
+            'title' => t('Autoriser à voir le listing des blocs services')
+        )
+    );
+}
+
+function listing_bloc_services() {
+    return 'listing';
+}
+
+function access_listing_services() {
+    return user_access('listing services');
 }

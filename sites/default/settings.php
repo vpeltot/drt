@@ -263,7 +263,7 @@ $drupal_hash_salt = '7s6A374RUY6n4vKRRUbK2_l0yNbLj-DtbpFqp7vrZpc';
  * It is not allowed to have a trailing slash; Drupal will add it
  * for you.
  */
-# $base_url = 'http://www.example.com';  // NO trailing slash!
+//$base_url = 'http://192.168.0.47/cms';  // NO trailing slash!
 
 /**
  * PHP settings:
@@ -552,5 +552,5 @@ $conf['404_fast_html'] = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML+RDFa 1.0//EN"
 # $conf['allow_authorize_operations'] = FALSE;
 
 if (file_exists(DRUPAL_ROOT . '/' . conf_path() . '/settings.local.php')) {
-    include DRUPAL_ROOT . '/' . conf_path() . '/settings.local.php';
+  include DRUPAL_ROOT . '/' . conf_path() . '/settings.local.php';
 }

@@ -47,6 +47,7 @@
     <div class="list-comment">
         <div class="bulle"><?php print $num_comments;?></div><div class="title"> Commentaire<?php print ($num_comments > 1)?'s':'';?></div><div class="clear"></div>
         <?php print render($content['comments']); ?>
+        <div id='more_comment_btn'>DE COMMENTAIRES</div>
     </div>
     <?php }?>
 </div>

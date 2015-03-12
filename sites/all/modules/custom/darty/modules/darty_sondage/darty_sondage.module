@@ -274,9 +274,11 @@ function darty_sondage_preprocess_page(&$variables) {
     drupal_add_js(drupal_get_path('module', 'darty_sondage') . '/js/sondages_ajax.js', 'file');
 
     if (!isset($_COOKIE['sid_dv'])){
+        $sid = uniqid().uniqid();
+        $_COOKIE['sid_dv'] = $sid;
         drupal_add_js(
             "jQuery(document).ready(function ($) { 
-                createCookie('sid_dv','".uniqid().uniqid()."',365);\n
+                createCookie('sid_dv','".$sid."',365);\n
             });", array('type' => 'inline', 'scope' => 'footer'));
     }
 }
