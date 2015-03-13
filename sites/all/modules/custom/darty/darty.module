@@ -318,3 +318,11 @@ function send_email($email, $subject, $message_html, $message_txt, $name_from, $
 
     return mail($email, $subject, $message, $header);
 }
+
+/**
+* Implements theme_preprocess_page().
+*/
+function darty_preprocess_page(&$vars) {
+    drupal_add_http_header('Expires', gmdate('D, d M Y H:i:s T', time() + 300));
+    drupal_add_http_header('Cache-Control', 'max-age=300');
+}
