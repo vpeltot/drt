@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# Clear APC cache
+drush php-eval "apc_clear_cache();"
+
 # Enable maintenance mode
 drush vset maintenance_mode 1
 
