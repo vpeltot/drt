@@ -9,24 +9,43 @@ function darty_sso_info() {
 
     //check if user is connected on D.com
     if (isset($_COOKIE['DARTYIDS']) && isset($_COOKIE['PCKLOGIN']) && $_COOKIE['PCKLOGIN'] == 1) {
-        $attributes = array('operation' => 'ListAddressEC', 'tokenEC' => $_COOKIE['DARTYIDS'], 'version' => '2', 'userAgent' => 'DartyEtVous', 'ipAddress' => '127.0.0.1');
 
-        $options['header'] = $attributes;
-        $ch = curl_init();
+        $options['header'] = array( 
+          'operation' => 'ListAddressEC', 
+          'tokenEC' => $_COOKIE['DARTYIDS'], 
+          'version' => 2, 
+          'userAgent' => 'DartyEtVous', 
+          'ipAddress' => isset($conf['darty_sso_ip']) ? $conf['darty_sso_ip'] : '127.0.0.1' // 192.168.101.34 local proxy ip
+        ); 
+        
         if (isset($conf['darty_header_htaccess'])){
-            $url_service = $conf['darty_ec_protocol'] . $conf['darty_ec_htaccess'].'@'. $conf['darty_ec_url'] . '/webapp/wcs/stores/controller/json/api/request';
+          $url_service = $conf['darty_ec_protocol'] . $conf['darty_ec_htaccess'].'@'. $conf['darty_ec_url'] . '/webapp/wcs/stores/controller/json/api/request';
         }else{
-            $url_service = $conf['darty_ec_protocol'] . $conf['darty_ec_url'] . '/webapp/wcs/stores/controller/json/api/request';
+          $url_service = $conf['darty_ec_protocol'] . $conf['darty_ec_url'] . '/webapp/wcs/stores/controller/json/api/request';
         }
-        curl_setopt($ch, CURLOPT_URL, $url_service);
+
+        $postfields = array('maps' => json_encode($options));
+
+        $ch = curl_init($url_service);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-        curl_setopt($ch, CURLOPT_POST, 1);
-
-        curl_setopt($ch, CURLOPT_POSTFIELDS, array('maps' => json_encode($options)));
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $postfields);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true); 
+        $CURLOPT_CAINFO = getcwd() . '/' . drupal_get_path('module', 'darty_sso').'/cacert.pem';
+        curl_setopt($ch, CURLOPT_CAINFO, $CURLOPT_CAINFO);
+        
+        // Proxy
+        if (isset($conf['darty_sso_proxy'])) {
+          curl_setopt($ch, CURLOPT_PROXYPORT,    $conf['darty_sso_proxy']['port']);
+          curl_setopt($ch, CURLOPT_PROXYTYPE,    $conf['darty_sso_proxy']['type']);
+          curl_setopt($ch, CURLOPT_PROXY,        $conf['darty_sso_proxy']['proxy']);
+          curl_setopt($ch, CURLOPT_PROXYUSERPWD, $conf['darty_sso_proxy']['userpwd']);
+        }
 
         $result = curl_exec($ch);
         $result_decode = json_decode($result);
+        // $error = curl_error($ch);
+
         if (isset($result_decode->adresses[0])) {
             $info = $result_decode->adresses[0];
             return array('mail' => $info->email, 'prenom' => $info->prenom, 'id' => $info->id);
