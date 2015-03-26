@@ -189,18 +189,11 @@ s.t();"
     $breadcrumb[] = $node_article->title;
     $vars['breadcrumb'] = theme('breadcrumb', array('breadcrumb' => $breadcrumb));
 
-//count page view and cache it
-    if (!empty($node_article->field_contenu_add_view))
-        $add_page_view = $node_article->field_contenu_add_view[LANGUAGE_NONE][0]['value'];
-    $cache = cache_get('viewcount_' . $node_article->nid);
-    if ($cache && $cache->expire > time()) {
-        $viewCount = $cache->data;
-    } else {
-        $objCount = nodeviewcount_db_count_node_views($node_article);
-        $viewCount = $objCount[0]->expression;
-        cache_set('viewcount_' . $node_article->nid, $viewCount, 'cache', time() + 300);
-    }
-    $vars['viewCount'] = ($viewCount + $add_page_view);
+  // get page view
+  if (!empty($node_article->field_contenu_add_view))
+    $add_page_view = $node_article->field_contenu_add_view[LANGUAGE_NONE][0]['value'];
+  $viewCount = _darty_nodeviewcount_get_node_view($node_article->nid);
+  $vars['viewCount'] = ($viewCount + $add_page_view);
 
 //getNb comments
     $vars['nbComments'] = $node_article->comment_count;
@@ -848,8 +841,8 @@ function article_moreviews($nb, $ids_use) {
 
     $query = db_select('node', 'n');
 
-    $query->join('nodeviewcount', 'c', 'n.nid = c.nid'); //JOIN node with users
-    $query->addExpression('COUNT(c.nid)', 'ncount');
+    $query->join('darty_nodeviewcount', 'c', 'n.nid = c.nid'); //JOIN node with users
+    $query->addExpression('c.count', 'ncount');
 
     $query->join('field_data_field_contenu_date_crea', 'cr', 'n.nid = cr.entity_id');
     $query->condition('cr.field_contenu_date_crea_value', time() - 2592000, '>='); // 2592000
