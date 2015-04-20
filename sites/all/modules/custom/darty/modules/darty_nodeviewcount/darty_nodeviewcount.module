@@ -10,22 +10,24 @@ require_once 'darty_nodeviewcount.inc';
 
 /**
  * Implement Hook_cron().
+ *
+ * @todo : A SUPPRIMER !!!
  */
 function darty_nodeviewcount_cron() {
   // Migrate Node View Statistics Data
   if (db_table_exists('nodeviewcount') && db_table_exists('darty_nodeviewcount')) {
   	$check_empty = db_query(
   	  "
-  	  SELECT nid 
+  	  SELECT nid
   	  FROM {darty_nodeviewcount}
   	  ",array()
   	)->rowCount();
   	if ($check_empty === 0) {
   	  $migrate_insert = db_query(
   	  	"
-  	  	INSERT INTO 
+  	  	INSERT INTO
   		  {darty_nodeviewcount} (nid, count)
-    		SELECT DISTINCT nid, COUNT(nid) AS count 
+    		SELECT DISTINCT nid, COUNT(nid) AS count
     		FROM {nodeviewcount}
     		GROUP BY nid
   	  	"
