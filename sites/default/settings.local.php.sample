@@ -66,3 +66,13 @@ $conf['darty_newsletter_tmp'] = '/tmp/';
 $conf['darty_api_url'] = 'm.darty.com/e_api/4';
 
 $conf['file_temporary_path'] = "/tmp";
+
+/**
+ * Proxy configuration.
+ */
+// $conf['proxy_server'] = '';
+// $form['proxy_port'] = '';
+// $form['proxy_username'] = '';
+// $form['proxy_password'] = '';
+// $form['proxy_user_agent'] = '';
+// $form['proxy_exceptions'] = array();
