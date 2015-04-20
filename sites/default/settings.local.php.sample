@@ -64,3 +64,5 @@ $conf['darty_gigya_apikey'] = '3_5hdNOehD57ZNpsLuccU_o7CylKsYTzZ8KkKcIz06Wa8-jy3
 */
 $conf['darty_newsletter_tmp'] = '/tmp/';
 $conf['darty_api_url'] = 'm.darty.com/e_api/4';
+
+$conf['file_temporary_path'] = "/tmp";
