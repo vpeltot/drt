@@ -41,3 +41,16 @@ function darty_update_7002() {
 
   return $t('Entity cache & Bean Entity cache module enabled.');
 }
+
+/**
+ * Implements hook_update_N().
+ *
+ * Enable File (Field) Paths module.
+ */
+function darty_update_7003() {
+  $t = get_t();
+
+  module_enable(array('filefield_paths'));
+
+  return $t('File (Field) Paths module enabled.');
+}
