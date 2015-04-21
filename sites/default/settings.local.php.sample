@@ -1,0 +1,101 @@
+<?php
+
+/**
+ * @file
+ * Local settings
+ */
+
+/**
+ * Base URL (optional).
+ *
+ * If Drupal is generating incorrect URLs on your site, which could
+ * be in HTML headers (links to CSS and JS files) or visible links on pages
+ * (such as in menus), uncomment the Base URL statement below (remove the
+ * leading hash sign) and fill in the absolute URL to your Drupal installation.
+ *
+ * You might also want to force users to use a given domain.
+ * See the .htaccess file for more information.
+ *
+ * Examples:
+ *   $base_url = 'http://www.example.com';
+ *   $base_url = 'http://www.example.com:8888';
+ *   $base_url = 'http://www.example.com/drupal';
+ *   $base_url = 'https://www.example.com:8888/drupal';
+ *
+ * It is not allowed to have a trailing slash; Drupal will add it
+ * for you.
+ */
+$base_url = 'http://www.darty.com/darty-et-vous';  // NO trailing slash!
+
+
+/**
+ * Database configuration
+ */
+$databases = array (
+    'default' => array (
+        'default' => array (
+            'database' => 'CMS',
+            'username' => 'darty',
+            'password' => 'darty',
+            'host' => 'localhost',
+            'port' => '3309',
+            'driver' => 'mysql',
+            'prefix' => '',
+        ),
+    ),
+);
+
+/**
+ * Redis Configuration
+ */
+$conf['redis_client_host'] = '127.0.0.1';
+$conf['redis_client_port'] = '6379';
+$conf['redis_client_interface'] = 'PhpRedis';
+
+$conf['lock_inc'] = 'sites/all/modules/contrib/redis/redis.lock.inc';
+
+$conf['cache_backends'][] = 'sites/all/modules/contrib/redis/redis.autoload.inc';
+$conf['cache_default_class'] = 'Redis_Cache';
+$conf['cache_class_cache_form'] = 'DrupalDatabaseCache';
+$conf['cache_class_cache_update'] = 'DrupalDatabaseCache';
+
+$conf['cache_prefix']['default'] = 'darty_et_vous';
+
+/**
+* Variables for the header/footer integration
+*
+* HTML, JS and CSS for the header ant the footer are sent by a service.
+* We define here some variables in order to define the URL of this service.
+*/
+$conf['darty_header_protocol'] = 'http://';
+$conf['darty_header_htaccess'] = '';
+$conf['darty_header_url'] = 'darty.com';
+
+$conf['darty_ec_protocol'] = 'http://';
+$conf['darty_ec_htaccess'] = 'darty:darty';
+$conf['darty_ec_url'] = 'secure.darty.com';
+//URL à utiliser lors de l'intervention sur site
+// $conf['darty_header_url'] = 'catalogue.integration.intranet.darty.fr';
+
+/**
+* API key for Gygia
+*/
+$conf['darty_gigya_apikey'] = '3_5hdNOehD57ZNpsLuccU_o7CylKsYTzZ8KkKcIz06Wa8-jy3rUIpqnUpLJABOUT9S';
+
+/**
+* Temporary folder use to download the newsletter
+*/
+$conf['darty_newsletter_tmp'] = '/tmp/';
+$conf['darty_api_url'] = 'm.darty.com/e_api/4';
+
+$conf['file_temporary_path'] = "/tmp";
+
+/**
+ * Proxy configuration.
+ */
+// $conf['proxy_server'] = '';
+// $form['proxy_port'] = '';
+// $form['proxy_username'] = '';
+// $form['proxy_password'] = '';
+// $form['proxy_user_agent'] = '';
+// $form['proxy_exceptions'] = array();

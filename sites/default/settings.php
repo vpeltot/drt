@@ -210,21 +210,6 @@
  *   );
  * @endcode
  */
-$databases = array (
-  'default' =>
-  array (
-    'default' =>
-    array (
-      'database' => 'CMS',
-      'username' => 'cat2cms',
-      'password' => '1v5e4f',
-      'host' => 'MUTSQLPRD1',
-      'port' => '3309',
-      'driver' => 'mysql',
-      'prefix' => '',
-    ),
-  ),
-);
 
 /**
  * Access control for update.php script.
@@ -566,29 +551,6 @@ $conf['404_fast_html'] = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML+RDFa 1.0//EN"
  */
 # $conf['allow_authorize_operations'] = FALSE;
 
-/**
- * Variables for the header/footer integration
- *
- * HTML, JS and CSS for the header ant the footer are sent by a service.
- * We define here some variables in order to define the URL of this service.
- */
-$conf['darty_header_protocol'] = 'http://';
-$conf['darty_header_htaccess'] = '';
-$conf['darty_header_url'] = 'darty.com';
-
-$conf['darty_ec_protocol'] = 'http://';
-$conf['darty_ec_htaccess'] = 'darty:darty';
-$conf['darty_ec_url'] = 'secure.darty.com';
-//URL à utiliser lors de l'intervention sur site
-// $conf['darty_header_url'] = 'catalogue.integration.intranet.darty.fr';
-
-/**
- * API key for Gygia
- */
-$conf['darty_gigya_apikey'] = '3_5hdNOehD57ZNpsLuccU_o7CylKsYTzZ8KkKcIz06Wa8-jy3rUIpqnUpLJABOUT9S';
-
-/**
- * Temporary folder use to download the newsletter
- */
-$conf['darty_newsletter_tmp'] = '/tmp/';
-$conf['darty_api_url'] = 'm.darty.com/e_api/4';
+if (file_exists(DRUPAL_ROOT . '/' . conf_path() . '/settings.local.php')) {
+    include DRUPAL_ROOT . '/' . conf_path() . '/settings.local.php';
+}
