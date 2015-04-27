@@ -70,10 +70,6 @@ $conf['cache_prefix']['default'] = 'darty_et_vous';
 $conf['darty_header_protocol'] = 'http://';
 $conf['darty_header_htaccess'] = '';
 $conf['darty_header_url'] = 'darty.com';
-
-$conf['darty_ec_protocol'] = 'http://';
-$conf['darty_ec_htaccess'] = 'darty:darty';
-$conf['darty_ec_url'] = 'secure.darty.com';
 //URL à utiliser lors de l'intervention sur site
 // $conf['darty_header_url'] = 'catalogue.integration.intranet.darty.fr';
 
@@ -83,8 +79,12 @@ $conf['darty_header'] = array(
   'url' => 'darty.com',
 );
 
+$conf['darty_ec_protocol'] = 'https://';
+$conf['darty_ec_htaccess'] = 'darty:darty';
+$conf['darty_ec_url'] = 'secure.darty.com';
+
 $conf['darty_ec'] = array(
-  'protocol' => 'http://',
+  'protocol' => 'https://',
   'htaccess' => 'darty:darty',
   'url' => 'secure.darty.com',
 );

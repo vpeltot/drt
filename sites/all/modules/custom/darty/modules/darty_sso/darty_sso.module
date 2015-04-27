@@ -17,12 +17,10 @@ function darty_sso_info() {
       'ipAddress' => variable_get('darty_sso_ip', '127.0.0.1')
     );
 
-    $darty_ec = variable_get('darty_ec', array());
-    if (isset($darty_ec['htaccess'])){
-        $url_service = $darty_ec['protocol'] . $darty_ec['htaccess'].'@'. $darty_ec['url'] . '/webapp/wcs/stores/controller/json/api/request';
-    }
-    else{
-      $url_service = $darty_ec['protocol'] . $darty_ec['url'] . '/webapp/wcs/stores/controller/json/api/request';
+    if (variable_get('darty_ec_htaccess', FALSE)){
+      $url_service = variable_get('darty_ec_protocol', '') . variable_get('darty_ec_htaccess', '').'@'. variable_get('darty_ec_url', '') . '/webapp/wcs/stores/controller/json/api/request';
+    }else{
+      $url_service = variable_get('darty_ec_protocol', '') . variable_get('darty_ec_url', '') . '/webapp/wcs/stores/controller/json/api/request';
     }
 
     $postfields = array('maps' => json_encode($options));
