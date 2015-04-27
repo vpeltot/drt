@@ -23,7 +23,7 @@ function darty_update_7001() {
  *
  * Enable darty_nodeviewcount module.
  */
-function darty_update_7002() {
+function darty_update_7009() {
   $t = get_t();
 
   module_enable(array('darty_nodeviewcount'));
