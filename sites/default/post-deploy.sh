@@ -12,6 +12,7 @@ drush updb -y
 
 # Run php-script to migrate node view count data
 drush php-script darty_nodeviewcount_migrate
+drush php-script sites/default/darty_nodeviewcount_migrate
 
 # Disable old node view count module
 drush dis nodeviewcount -y
