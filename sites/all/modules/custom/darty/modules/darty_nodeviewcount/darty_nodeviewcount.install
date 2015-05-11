@@ -1,0 +1,40 @@
+<?php
+
+/**
+ * @file
+ * darty_nodeviewcount.install
+ * Installs database schema for darty node view count module
+ */
+
+/**
+ * Implements hook_schema().
+ */
+function darty_nodeviewcount_schema() {
+  $schema = array();
+  $schema['darty_nodeviewcount'] = array(
+    'description' => 'The count views of nodes.',
+    'fields' => array(
+      'nid' => array(
+        'description' => 'The unique ID.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'count' => array(
+        'description' => 'The count views of the node.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('nid'),     
+    'indexes' => array(
+      'nid_count' => array('nid', 'count'),
+    ),
+    'unique keys' => array(
+      'nid' => array('nid'),
+    ),
+  );
+  return $schema;
+}
