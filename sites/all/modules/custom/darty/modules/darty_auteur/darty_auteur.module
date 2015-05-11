@@ -4,48 +4,48 @@
  * Implementation of template_preprocess_
  */
 function darty_auteur_preprocess_user_profile(&$vars) {
-    global $base_path;
-    $currentUser = $vars['elements']['#account'];
+  global $base_path;
+  $currentUser = $vars['elements']['#account'];
 
-    $breadcrumb = drupal_get_breadcrumb();
+  $breadcrumb = drupal_get_breadcrumb();
 
-    if (!empty($currentUser->field_account_prenom))
-        $vars['user_name'] = $currentUser->field_account_prenom[LANGUAGE_NONE][0]['value'];
-    else
-        $vars['user_name'] = $currentUser->name;
+  if (!empty($currentUser->field_account_prenom))
+    $vars['user_name'] = $currentUser->field_account_prenom[LANGUAGE_NONE][0]['value'];
+  else
+    $vars['user_name'] = $currentUser->name;
 
-    $breadcrumb[] = 'Profil de ' . $vars['user_name'];
+  $breadcrumb[] = 'Profil de ' . $vars['user_name'];
 
-    if (!empty($currentUser->field_account_pres))
-        $vars['pres'] = $currentUser->field_account_pres[LANGUAGE_NONE][0]['value'];
-    else
-        $vars['pres'] = "";
+  if (!empty($currentUser->field_account_pres))
+    $vars['pres'] = $currentUser->field_account_pres[LANGUAGE_NONE][0]['value'];
+  else
+    $vars['pres'] = "";
 
-    if (!empty($currentUser->field_account_photo))
-        $vars['photo'] = file_create_url($currentUser->field_account_photo[LANGUAGE_NONE][0]['uri']);
-    else
-        $vars['photo'] = "";
-    $vars['breadcrumb'] = theme('breadcrumb', array('breadcrumb' => $breadcrumb));
+  if (!empty($currentUser->field_account_photo))
+    $vars['photo'] = file_create_url($currentUser->field_account_photo[LANGUAGE_NONE][0]['uri']);
+  else
+    $vars['photo'] = "";
+  $vars['breadcrumb'] = theme('breadcrumb', array('breadcrumb' => $breadcrumb));
 
-    $uid = $currentUser->uid;
-    $tid = 'null';
-    $format = 'null';
+  $uid = $currentUser->uid;
+  $tid = 'null';
+  $format = 'null';
 
-    drupal_add_js(drupal_get_path('module', 'darty_sommaire') . '/sommaire.js', 'file');
+  drupal_add_js(drupal_get_path('module', 'darty_sommaire') . '/sommaire.js', 'file');
 
-    $vars['firstcontent'] = ajax_content_search($tid, 'null', 'null', $format, 1, $uid ,'html');
-    
-    drupal_add_js(
-            "jQuery(document).ready(function ($) { 
-                reaffectHandler('" . $base_path . "','user');        
-                //loadAjaxSommaire('" . $base_path . "','ajax/search/" . $tid . "/null/null/" . $format . "/1/" . $uid . "/html','no','user');
-                
-            });", array('type' => 'inline', 'scope' => 'footer'));
+  $vars['firstcontent'] = ajax_content_search($tid, 'null', 'null', $format, 1, $uid ,'html');
+  
+  drupal_add_js(
+      "jQuery(document).ready(function ($) { 
+        reaffectHandler('" . $base_path . "','user');    
+        //loadAjaxSommaire('" . $base_path . "','ajax/search/" . $tid . "/null/null/" . $format . "/1/" . $uid . "/html','no','user');
+        
+      });", array('type' => 'inline', 'scope' => 'footer'));
 }
 
 function darty_auteur_form_user_profile_form_alter(&$form, $form_state, $form_id) {
-    global $user;
-    if (!in_array('Administrateur global', $user->roles)) {
-        $form['wysiwyg']['#access'] = false;
-    }
+  global $user;
+  if (!in_array('Administrateur global', $user->roles)) {
+    $form['wysiwyg']['#access'] = false;
+  }
 }

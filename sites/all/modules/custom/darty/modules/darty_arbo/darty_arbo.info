@@ -2,5 +2,4 @@ name = Darty arbo
 description = Module gérant tout ce qui concerne l'arborescence du site (menu, footer, sitemap, breadcrumb)
 core = 7.x
 package = Darty
-version = 7.x-1.0
 project = darty_arbo
