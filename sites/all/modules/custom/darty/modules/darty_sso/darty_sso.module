@@ -23,15 +23,14 @@ function darty_sso_info() {
       $url_service = variable_get('darty_ec_protocol', '') . variable_get('darty_ec_url', '') . '/webapp/wcs/stores/controller/json/api/request';
     }
 
-    $postfields = array('maps' => json_encode($options));
-
-    $ch = curl_init($url_service);
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url_service);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, $postfields);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
-    $CURLOPT_CAINFO = getcwd() . '/' . drupal_get_path('module', 'darty_sso').'/cacert.pem';
-    curl_setopt($ch, CURLOPT_CAINFO, $CURLOPT_CAINFO);
+    curl_setopt($ch, CURLOPT_POST, 1);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, array('maps' => json_encode($options)));
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
 
     // Proxy
     if (variable_get('proxy', FALSE)) {
@@ -43,7 +42,6 @@ function darty_sso_info() {
 
     $result = curl_exec($ch);
     $result_decode = json_decode($result);
-
     if (isset($result_decode->adresses[0])) {
         $info = $result_decode->adresses[0];
         return array('mail' => $info->email, 'prenom' => $info->prenom, 'id' => $info->id);

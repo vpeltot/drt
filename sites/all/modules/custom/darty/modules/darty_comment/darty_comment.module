@@ -58,7 +58,7 @@ function ajax_comment($nid) {
   global $user;
   $message_nonlog = "";
   if ($user->uid == 0){
-    $message_nonlog = "<div id='comment-form' class='message-nonlog'><div class='subtitle'>Publier votre commentaire</div><div class='message'>Vous souhaitez commenter ?<br/> Connectez-vous à votre espace client ou <a href='https://secure.darty.com/webapp/wcs/stores/controller/UserLogonDisplayView?storeId=10001&espaceclient=0&org=head'>inscrivez-vous</a>.</div></div>";
+    $message_nonlog = "<div id='comment-form' class='message-nonlog'><div class='subtitle'>Publier votre commentaire</div><div class='message'>Vous souhaitez commenter ?<br/> Connectez-vous à votre espace client ou <a href='" . variable_get('darty_ec_protocol', '') . variable_get('darty_ec_url', '') . "/webapp/wcs/stores/controller/UserLogonDisplayView?storeId=10001&espaceclient=0&org=head'>inscrivez-vous</a>.</div></div>";
   }
   $node = node_load($nid);
   $node_view = node_view($node);
