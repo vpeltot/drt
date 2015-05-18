@@ -66,7 +66,7 @@ function state_flow_events($node) {
       $state_actions_str = implode(' | ', $state_actions);
       $item = array(
         l($vid, $path_view),
-        l($state_node->title, $path_view),
+        l(check_plain($state_node->title), $path_view),
         t($state->state),
         $state_date_str,
         theme('username', array('account' => $rev_author)),
@@ -196,7 +196,7 @@ function state_flow_events_revision($form, &$form_state, $node_revision, $new_ev
   $events = array();
   foreach ($all_events as $event_machine_name => $event) {
     if (state_flow_access($node_revision, $event_machine_name)) {
-      $events[] = $event_machine_name;
+      $events[$event_machine_name] = $event->get_option('label');
     }
   }
 
@@ -204,7 +204,7 @@ function state_flow_events_revision($form, &$form_state, $node_revision, $new_ev
     drupal_set_message(t('You cannot perform any workflow transitions on this revision.'), 'warning');
     drupal_goto('node/' . $node_revision->nid . '/workflow');
   }
-  elseif (empty($new_event) || !in_array($new_event, $events)) {
+  elseif (empty($new_event) || !array_key_exists($new_event, $events)) {
     drupal_set_title(t('Transition revision @rev-vid to a new state', array('@rev-vid' => $node_revision->vid)));
     $form['event'] = array(
       '#type' => 'radios',
@@ -213,7 +213,11 @@ function state_flow_events_revision($form, &$form_state, $node_revision, $new_ev
     );
   }
   else {
-    drupal_set_title(t('Transition revision @rev-vid to %state', array('@rev-vid' => $node_revision->vid, '%state' => $new_event)), PASS_THROUGH);
+    drupal_set_title(t('Transition @title (revision @rev-vid) to "@state"', array(
+      '@title' => $node_revision->title,
+      '@rev-vid' => $node_revision->vid,
+      '@state' => $events[$new_event])), PASS_THROUGH);
+
     $form['event'] = array(
       '#type' => 'value',
       '#value' => $new_event,

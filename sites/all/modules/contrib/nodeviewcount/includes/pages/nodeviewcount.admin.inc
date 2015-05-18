@@ -13,6 +13,20 @@ function nodeviewcount_admin_settings_form($form, &$form_state) {
     '#options' => $options_node_type,
     '#default_value' => variable_get('nodeviewcount_node_types', array()),
   );
+  $form['nodeviewcount_node_modes'] = array(
+    '#title' => t('Node view modes'),
+    '#type' => 'fieldset',
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+  $options_node_view_modes = nodeviewcount_get_node_view_modes();
+  $nodeviewcount_node_view_modes = variable_get('nodeviewcount_node_view_modes', array());
+  $form['nodeviewcount_node_modes']['nodeviewcount_node_view_modes'] = array(
+    '#description' => t('Choose node view modes to count views of node.'),
+    '#type' => 'checkboxes',
+    '#options' => $options_node_view_modes,
+    '#default_value' => $nodeviewcount_node_view_modes,
+  );
   // Get user roles options.
   $options_user_roles = node_view_count_get_checked_user_roles();
   $form['nodeviewcount_user_roles'] = array(
@@ -89,6 +103,22 @@ function node_view_count_get_checked_user_roles() {
   $user_roles = user_roles();
   foreach ($user_roles as $key => $user_role) {
     $options[$key] = $user_role;
+  }
+  return $options;
+}
+
+/**
+ * Get node view modes options.
+ *
+ * @return array
+ *   Associative array of node view modes.
+ */
+function nodeviewcount_get_node_view_modes() {
+  $options = array();
+  $node_info = entity_get_info('node');
+  $node_view_modes = $node_info['view modes'];
+  foreach ($node_view_modes as $key => $node_view_mode) {
+    $options[$key] = $node_view_mode['label'];
   }
   return $options;
 }

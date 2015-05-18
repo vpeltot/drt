@@ -37,6 +37,7 @@ function state_flow_schema() {
   $schema['node_revision_states_history'] = array(
     'description' => 'Saves the state history of a node revision.',
     'fields' => array(
+      'nrshid' => array('description' => 'The primary identifier for this record.', 'type' => 'serial', 'unsigned' => TRUE, 'not null' => TRUE,),
       'vid' => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0),
       'nid' => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0),
       'state' => array('type' => 'varchar', 'length' => '255', 'not null' => FALSE),
@@ -44,6 +45,7 @@ function state_flow_schema() {
       'uid' => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0),
       'log' => array('type' => 'text', 'not null' => FALSE, 'size' => 'big'),
     ),
+    'primary key' => array('nrshid'),
     'indexes' => array(
       'vid' => array('vid'),
       'nid' => array('nid'),
@@ -65,3 +67,20 @@ function state_flow_update_7001() {
   db_add_index('node_revision_states', 'nid', array('nid'));
   return t('Created a new {node_revision_states_history} table.');
 }
+
+
+/**
+ * Add primary index to node_revision_states_history.
+ */
+function state_flow_update_7002() {
+  db_add_field('node_revision_states_history', 'nrshid', array(
+    'description' => 'The primary identifier for this record.',
+    'type' => 'serial',
+    'unsigned' => TRUE,
+    'not null' => TRUE,
+    ), array(
+      'primary key' => array('nrshid'),
+    )
+  );
+}
+

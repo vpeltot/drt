@@ -1,3 +1,10 @@
+7.x-2.6
+--------------
+#2263215 by -enzo-: Added Integrate table node_revision_states_history with views.
+#2269259 by hefox: Added primary key to node_revision_states_history.
+#2269303 by xdavidson: Fixed Notice: Undefined index: pathauto in state_flow_promote_node_revision.
+#2270247 by muschpusch: Fixed Use proper label and message on workflow page.
+
 7.x-2.5
 --------------
 #2220535 by fmitchell: Apachesolr is not updated when events are fired.

@@ -20,9 +20,9 @@ files[] = includes/views/state_flow_handler_field_events.inc
 files[] = includes/views/state_flow_handler_field_workflow_link.inc
 files[] = includes/views/state_flow_handler_filter_state.inc
 
-; Information added by Drupal.org packaging script on 2014-03-18
-version = "7.x-2.5"
+; Information added by Drupal.org packaging script on 2014-09-26
+version = "7.x-2.6"
 core = "7.x"
 project = "state_machine"
-datestamp = "1395166472"
+datestamp = "1411705194"
 

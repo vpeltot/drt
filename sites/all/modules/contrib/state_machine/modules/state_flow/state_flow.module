@@ -326,6 +326,11 @@ function state_flow_invoke_event_handlers(StateMachine $state_machine, $event_ke
       rules_invoke_event('state_flow_event_fired', $node, $author, $state);
     }
 
+    // Make sure Apachesolr gets update
+    if ($node && module_exists('apachesolr')) {
+      module_invoke('apachesolr', 'entity_update', $node, 'node');
+    }
+
     module_invoke_all('state_flow_event_fired', $node, $event_key, $uid, $log);
   }
 }
@@ -450,11 +455,7 @@ function state_flow_prevent_live_revision($node) {
     // When a draft is saved and does not become the current revision, then
     // redirect the user to the revision saved. This hijacks the redirection by
     // drupal_goto().
-    if ($node->type == 'panel') {
-      $_GET['destination'] = 'node/' . $node->nid . '/revisions/' . $node->vid . '/edit/view';
-    } else {
-      $_GET['destination'] = 'node/' . $node->nid . '/revisions/' . $node->vid . '/view';
-    }
+    $_GET['destination'] = 'node/' . $node->nid . '/revisions/' . $node->vid . '/view';
 
     // Save the vid for the draft revision back to the node in case other modules need it.
     $node->new_draft_vid = $node->vid;
@@ -486,7 +487,7 @@ function state_flow_promote_node_revision($rev_state_rec, $nid, $current_vid) {
       $path = array();
     }
     if (module_exists('pathauto')) {
-      if (isset($current_rev->path)) {
+      if (isset($current_rev->path) && isset($path['pathauto'])) {
         $path['pathauto'] += $current_rev->path['pathauto'];
       }
     }

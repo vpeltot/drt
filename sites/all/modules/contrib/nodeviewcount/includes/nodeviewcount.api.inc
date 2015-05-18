@@ -25,14 +25,40 @@ function nodeviewcount_insert_node_view($nid, $uid) {
  * @return bool
  *   TRUE if the node content type checked for count views, otherwise FALSE.
  */
-function nodeviewcount_is_node_count($node) {
+function nodeviewcount_is_node_type_count($node) {
   $node_types = variable_get('nodeviewcount_node_types');
-  foreach ($node_types as $value) {
-    if ($value === $node->type) {
-      return TRUE;
-    }
+  if (in_array($node->type, $node_types)) {
+    return TRUE;
   }
   return FALSE;
+}
+
+/**
+ * Check node on content type for node view count.
+ *
+ * @param string $view_mode
+ *   The node view mode for checking.
+ *
+ * @return bool
+ *   TRUE if the node content type checked for count views, otherwise FALSE.
+ */
+function nodeviewcount_is_node_view_mode_count($view_mode) {
+  $node_view_modes = variable_get('nodeviewcount_node_view_modes');
+  if (in_array($view_mode, $node_view_modes, TRUE)) {
+    return TRUE;
+  }
+  return FALSE;
+}
+
+function nodeviewcount_get_node_view_modes_count() {
+  $node_view_modes_count = array();
+  $node_view_modes = variable_get('nodeviewcount_node_view_modes');
+  foreach ($node_view_modes as $node_view_mode) {
+    if ($node_view_mode !== 0) {
+      $node_view_modes_count[] = $node_view_mode;
+    }
+  }
+  return $node_view_modes_count;
 }
 
 /**
@@ -44,7 +70,7 @@ function nodeviewcount_is_node_count($node) {
  * @return bool
  *   TRUE if the user role checked for count views, otherwise FALSE.
  */
-function nodeviewcount_is_user_count($user) {
+function nodeviewcount_is_user_role_count($user) {
   $nodeviewcount_user_roles = variable_get('nodeviewcount_user_roles');
   $user_roles_ids = array_keys($user->roles);
   foreach ($user_roles_ids as $role_id) {
@@ -69,11 +95,11 @@ function nodeviewcount_is_user_count($user) {
  *   Count of node views.
  */
 function nodeviewcountcount_count_node_views($node, $user = NULL, $distinct_users = FALSE) {
-  $is_node_count = nodeviewcount_is_node_count($node);
+  $is_node_count = nodeviewcount_is_node_type_count($node);
   if (!$is_node_count) {
     return FALSE;
   }
-  $is_user_count = nodeviewcount_is_user_count($user);
+  $is_user_count = nodeviewcount_is_user_role_count($user);
   if (!is_null($user) && !$is_user_count) {
     return FALSE;
   }

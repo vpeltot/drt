@@ -264,6 +264,13 @@ function redirect_update_7000(&$sandbox) {
 }
 
 /**
+ * Empty update to trigger registry and entity info rebuild.
+ */
+function redirect_update_7100() {
+  // Do nothing.
+}
+
+/**
  * Migrate a path redirect redirect to a redirect redirect.
  */
 function _redirect_migrate_path_redirect_redirect($old_redirect) {
@@ -354,30 +361,5 @@ function _redirect_migrate_path_redirect_variables() {
 
     // Delete the old path redirect variable.
     variable_del($old_variable);
-  }
-}
-
-/**
- * Remove existing redirect causing infinite loops.
- */
-function redirect_update_7100(&$sandbox) {
-  $query = db_select('redirect', 'r');
-  $query->join(
-    'url_alias',
-    'u',
-    'r.source = u.alias AND r.redirect = u.source AND r.language = u.language'
-  );
-  $query->fields('r', array('rid'));
-  $result = $query->execute();
-  $rid_to_delete = array();
-  while ($record = $result->fetchAssoc()) {
-    $rid_to_delete[] = $record['rid'];
-  }
-  if (count($rid_to_delete) > 0) {
-    $deleted = db_delete('redirect')->condition('rid', $rid_to_delete, 'IN')->execute();
-    return format_plural($deleted, '1 circular redirect causing infinite loop was deleted.', '@count circular redirects causing infinite loop were deleted.');
-  }
-  else {
-    return t('No circular redirect causing infinite loop was found.');
   }
 }
