@@ -5,36 +5,51 @@
  * @return array with informations or false if account was not found
  */
 function darty_sso_info() {
-    global $conf;
 
-    //check if user is connected on D.com
-    if (isset($_COOKIE['DARTYIDS']) && isset($_COOKIE['PCKLOGIN']) && $_COOKIE['PCKLOGIN'] == 1) {
-        $attributes = array('operation' => 'ListAddressEC', 'tokenEC' => $_COOKIE['DARTYIDS'], 'version' => '2', 'userAgent' => 'DartyEtVous', 'ipAddress' => '127.0.0.1');
+  //check if user is connected on D.com
+  if (isset($_COOKIE['DARTYIDS']) && isset($_COOKIE['PCKLOGIN']) && $_COOKIE['PCKLOGIN'] == 1) {
 
-        $options['header'] = $attributes;
-        $ch = curl_init();
-        if (isset($conf['darty_header_htaccess'])){
-            $url_service = $conf['darty_ec_protocol'] . $conf['darty_ec_htaccess'].'@'. $conf['darty_ec_url'] . '/webapp/wcs/stores/controller/json/api/request';
-        }else{
-            $url_service = $conf['darty_ec_protocol'] . $conf['darty_ec_url'] . '/webapp/wcs/stores/controller/json/api/request';
-        }
-        curl_setopt($ch, CURLOPT_URL, $url_service);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-        curl_setopt($ch, CURLOPT_POST, 1);
+    $options['header'] = array(
+      'operation' => 'ListAddressEC',
+      'tokenEC' => $_COOKIE['DARTYIDS'],
+      'version' => 2,
+      'userAgent' => 'DartyEtVous',
+      'ipAddress' => variable_get('darty_sso_ip', '127.0.0.1')
+    );
 
-        curl_setopt($ch, CURLOPT_POSTFIELDS, array('maps' => json_encode($options)));
-
-        $result = curl_exec($ch);
-        $result_decode = json_decode($result);
-        if (isset($result_decode->adresses[0])) {
-            $info = $result_decode->adresses[0];
-            return array('mail' => $info->email, 'prenom' => $info->prenom, 'id' => $info->id);
-        } else {
-            return false;
-        }
+    if (variable_get('darty_ec_htaccess', FALSE)){
+      $url_service = variable_get('darty_ec_protocol', '') . variable_get('darty_ec_htaccess', '').'@'. variable_get('darty_ec_url', '') . '/webapp/wcs/stores/controller/json/api/request';
+    }else{
+      $url_service = variable_get('darty_ec_protocol', '') . variable_get('darty_ec_url', '') . '/webapp/wcs/stores/controller/json/api/request';
     }
-    return false;
+
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url_service);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+    curl_setopt($ch, CURLOPT_POST, 1);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, array('maps' => json_encode($options)));
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+
+    // Proxy
+    if (variable_get('proxy', FALSE)) {
+      curl_setopt($ch, CURLOPT_PROXYTYPE, 'HTTP');
+      curl_setopt($ch, CURLOPT_PROXY, variable_get('proxy_server', ''));
+      curl_setopt($ch, CURLOPT_PROXYPORT, variable_get('proxy_port', ''));
+      curl_setopt($ch, CURLOPT_PROXYUSERPWD, variable_get('proxy_username', '') . ':' . variable_get('proxy_password', ''));
+    }
+
+    $result = curl_exec($ch);
+    $result_decode = json_decode($result);
+    if (isset($result_decode->adresses[0])) {
+        $info = $result_decode->adresses[0];
+        return array('mail' => $info->email, 'prenom' => $info->prenom, 'id' => $info->id);
+    } else {
+        return false;
+    }
+  }
+  return false;
 }
 
 /**
@@ -42,88 +57,97 @@ function darty_sso_info() {
  * @global type $user
  */
 function darty_sso_check_account() {
-    global $user;
-    // check if user is connected on D.com and connected on D&V
-    // then verify DARTYIDS is the same else deconnect of D&V and try to reconnect with the good DartyIDS
-    if (isset($user) && $user->uid != 0 && isset($_COOKIE['PCKLOGIN']) && $_COOKIE['PCKLOGIN'] == 1 && isset($_COOKIE['DARTYIDS'])) {
-        //check le dartyids
-        $userObj = user_load($user->uid);
-        if (isset($userObj->field_account_dartyid) && isset($userObj->field_account_dartyid[LANGUAGE_NONE][0]['value'])) {
-            if ($userObj->field_account_dartyid[LANGUAGE_NONE][0]['value'] != $_COOKIE['DARTYIDS']) {
-                $tmp = NULL;
-                session_destroy();
-                user_module_invoke('logout', $tmp, $user);
-                $user = drupal_anonymous_user();
-            }
-        }
+  global $user;
+  // check if user is connected on D.com and connected on D&V
+  // then verify DARTYIDS is the same else deconnect of D&V and try to reconnect with the good DartyIDS
+  if (isset($user) && $user->uid != 0 && isset($_COOKIE['PCKLOGIN']) && $_COOKIE['PCKLOGIN'] == 1 && isset($_COOKIE['DARTYIDS'])) {
+    //check le dartyids
+    $userObj = user_load($user->uid);
+    if (isset($userObj->field_account_dartyid) && isset($userObj->field_account_dartyid[LANGUAGE_NONE][0]['value'])) {
+      if ($userObj->field_account_dartyid[LANGUAGE_NONE][0]['value'] != $_COOKIE['DARTYIDS']) {
+        $tmp = NULL;
+        session_destroy();
+        user_module_invoke('logout', $tmp, $user);
+        $user = drupal_anonymous_user();
+      }
     }
-    // check if user is connected on D.com and if is not connected on D&V
-    // then connect him (and create account if not exist on D&V)
-    if ((!isset($user) || $user->uid == 0) && isset($_COOKIE['PCKLOGIN']) && $_COOKIE['PCKLOGIN'] == 1 && isset($_COOKIE['DARTYIDS'])) {
-        $infos = darty_sso_info();
-        // Test if account with login "$infos['id']" exist (else create account)
-        if (isset($infos) && !empty($infos)){
-            $user_exist = user_load_by_name($infos['mail']);
-            if (isset($user_exist->field_account_dartyid) && isset($user_exist->field_account_dartyid[LANGUAGE_NONE][0]['value']))
-                $user_dartyid = $user_exist->field_account_dartyid[LANGUAGE_NONE][0]['value'];
-            if (!isset($user_exist) || empty($user_exist)) {
-                $password = user_password(8);
-                $new_user = array(
-                    'name' => $infos['mail'],
-                    'pass' => $password,
-                    'mail' => $infos['mail'],
-                    'signature_format' => 'full_html',
-                    'status' => 1,
-                    'timezone' => 'Europe/Paris',
-                    'init' => $infos['mail'],
-                    'roles' => array(
-                        DRUPAL_AUTHENTICATED_RID => 'authenticated user',
-                    ),
-                    'field_account_prenom' => array(
-                        LANGUAGE_NONE => array(
-                            0 => array(
-                                'value' => $infos['prenom'],
-                            ),
-                        )
-                    ),
-                    'field_account_dartyid' => array(
-                        LANGUAGE_NONE => array(
-                            0 => array(
-                                'value' => $_COOKIE['DARTYIDS'],
-                            ),
-                        )
-                    )
-                );
-                $account = user_save(NULL, $new_user);
-                $id_user = $account->uid;
-            } elseif ($user_dartyid != $_COOKIE['DARTYIDS']) {
-                $user_exist->field_account_dartyid[LANGUAGE_NONE][0]['value'] = $_COOKIE['DARTYIDS'];
-                user_save($user_exist);
-            } else {
-                $id_user = $user_exist->uid;
-            }
-            $user = user_load($id_user);
-            drupal_session_regenerate();
-        }
+  }
+  // check if user is connected on D.com and if is not connected on D&V
+  // then connect him (and create account if not exist on D&V)
+  if ((!isset($user) || $user->uid == 0) && isset($_COOKIE['PCKLOGIN']) && $_COOKIE['PCKLOGIN'] == 1 && isset($_COOKIE['DARTYIDS'])) {
+    $infos = darty_sso_info();
+    // Test if account with login "$infos['id']" exist (else create account)
+    if (isset($infos) && !empty($infos)) {
+      $user_exist = user_load_by_name($infos['mail']);
+      if (isset($user_exist->field_account_dartyid) && isset($user_exist->field_account_dartyid[LANGUAGE_NONE][0]['value'])) {
+        $user_dartyid = $user_exist->field_account_dartyid[LANGUAGE_NONE][0]['value'];
+      }
+      if (!isset($user_exist) || empty($user_exist)) {
+        $password = user_password(8);
+        $new_user = array(
+          'name' => $infos['mail'],
+          'pass' => $password,
+          'mail' => $infos['mail'],
+          'signature_format' => 'full_html',
+          'status' => 1,
+          'timezone' => 'Europe/Paris',
+          'init' => $infos['mail'],
+          'roles' => array(
+            DRUPAL_AUTHENTICATED_RID => 'authenticated user',
+          ),
+          'field_account_prenom' => array(
+            LANGUAGE_NONE => array(
+              0 => array(
+                'value' => $infos['prenom'],
+              ),
+            )
+          ),
+          'field_account_dartyid' => array(
+            LANGUAGE_NONE => array(
+              0 => array(
+                'value' => $_COOKIE['DARTYIDS'],
+              ),
+            )
+          )
+        );
+        $account = user_save(NULL, $new_user);
+        $id_user = $account->uid;
+      }
+      elseif ($user_dartyid != $_COOKIE['DARTYIDS']) {
+        $user_exist->field_account_dartyid[LANGUAGE_NONE][0]['value'] = $_COOKIE['DARTYIDS'];
+        user_save($user_exist);
+      }
+      else {
+        $id_user = $user_exist->uid;
+      }
+      $user = user_load($id_user);
+      drupal_session_regenerate();
     }
-    // if user is connected ON D&V and not connected on D.com
-    // then disconnect it
-    elseif (isset($user) && $user->uid != 0 && (!isset($_COOKIE['PCKLOGIN']) || $_COOKIE['PCKLOGIN'] != 1 || !isset($_COOKIE['DARTYIDS']))) {
-        if (count($user->roles) == 1 && $user->uid != 1) {
-            $tmp = NULL;
-            session_destroy();
-            user_module_invoke('logout', $tmp, $user);
-            $user = drupal_anonymous_user();
-            drupal_goto('<front>');
-        }
+  }
+  // if user is connected ON D&V and not connected on D.com
+  // then disconnect it
+  elseif (isset($user) && $user->uid != 0 && (!isset($_COOKIE['PCKLOGIN']) || $_COOKIE['PCKLOGIN'] != 1 || !isset($_COOKIE['DARTYIDS']))) {
+    if (count($user->roles) == 1 && $user->uid != 1) {
+      $tmp = NULL;
+      session_destroy();
+      user_module_invoke('logout', $tmp, $user);
+      $user = drupal_anonymous_user();
+      drupal_goto('<front>');
     }
+  }
 }
 
+/**
+ * Implements hook_init().
+ */
 function darty_sso_init() {
-    darty_sso_check_account();
+  darty_sso_check_account();
 }
 
+/**
+ * Implements hook_scald_atom_access().
+ */
 function darty_sso_scald_atom_access($atom, $action, $account){
-    if ($action == 'view' || $action == 'fetch')
-        return TRUE;
+  if ($action == 'view' || $action == 'fetch')
+    return TRUE;
 }

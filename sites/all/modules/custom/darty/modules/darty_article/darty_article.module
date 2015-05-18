@@ -2,1114 +2,1107 @@
 
 
 function darty_article_permission() {
-    return array(
-        'view message' => array(
-            'title' => t('Voir les messages')
-        )
-    );
+  return array(
+    'view message' => array(
+      'title' => t('Voir les messages')
+    )
+  );
 }
 
 function darty_article_process(&$vars, $hook) {
-    if ($hook == 'node' && $vars['view_mode'] == 'full') {
+  if ($hook == 'node' && $vars['view_mode'] == 'full') {
 
-        if (isset($vars['node']->field_meta_description[LANGUAGE_NONE][0]['value']) && $vars['node']->field_meta_description[LANGUAGE_NONE][0]['value'] != "") {
-            $meta_desc = $vars['node']->field_meta_description[LANGUAGE_NONE][0]['value'];
-        } elseif (isset($vars['node']->field_contenu_accroche[LANGUAGE_NONE][0]['value']) && $vars['node']->field_contenu_accroche[LANGUAGE_NONE][0]['value'] != "") {
-            $meta_desc = $vars['node']->field_contenu_accroche[LANGUAGE_NONE][0]['value'];
-        } else {
-            $meta_desc = "";
-        }
-        $element = array(
-            '#tag' => 'meta',
-            '#attributes' => array(
-                'name' => 'description',
-                'content' => $meta_desc,
-            ),
-        );
-
-        drupal_add_html_head($element, 'metatags_quick_description');
+    if (isset($vars['node']->field_meta_description[LANGUAGE_NONE][0]['value']) && $vars['node']->field_meta_description[LANGUAGE_NONE][0]['value'] != "") {
+      $meta_desc = $vars['node']->field_meta_description[LANGUAGE_NONE][0]['value'];
+    } elseif (isset($vars['node']->field_contenu_accroche[LANGUAGE_NONE][0]['value']) && $vars['node']->field_contenu_accroche[LANGUAGE_NONE][0]['value'] != "") {
+      $meta_desc = $vars['node']->field_contenu_accroche[LANGUAGE_NONE][0]['value'];
+    } else {
+      $meta_desc = "";
     }
+    $element = array(
+      '#tag' => 'meta',
+      '#attributes' => array(
+        'name' => 'description',
+        'content' => $meta_desc,
+      ),
+    );
+
+    drupal_add_html_head($element, 'metatags_quick_description');
+  }
 }
 
 /**
  * Implementation of hook_form_alter
  */
 function darty_article_form_alter(&$form, &$form_state, $form_id) {
-    global $user;
-    if (!in_array('Administrateur global', $user->roles)) {
-        if (in_array($form_id, array('dossier_node_form', 'diaporama_node_form', 'article_sans_sommaire_node_form', 'article_avec_sommaire_node_form'))) {
-            $form['title']['#description'] = "Titre du contenu (utilisation par les moteurs SEO et dans le fil d'ariane)";
-            if (isset($form['revision_information'])) {
-                $form['author']['date']['#access'] = false;
-                $form['revision_information']['publication_date']['#access'] = false;
-                $form['revision_information']['revision_operation']['#access'] = false;
-            }
-        }
+  global $user;
+  if (!in_array('Administrateur global', $user->roles)) {
+    if (in_array($form_id, array('dossier_node_form', 'diaporama_node_form', 'article_sans_sommaire_node_form', 'article_avec_sommaire_node_form'))) {
+      $form['title']['#description'] = "Titre du contenu (utilisation par les moteurs SEO et dans le fil d'ariane)";
+      if (isset($form['revision_information'])) {
+        $form['author']['date']['#access'] = false;
+        $form['revision_information']['publication_date']['#access'] = false;
+        $form['revision_information']['revision_operation']['#access'] = false;
+      }
     }
+  }
 }
 
 /**
  * Implementation of template_preprocess_node
  */
 function darty_article_preprocess_node(&$vars) {
-    $view_mode = $vars['elements']['#view_mode'];
+  $view_mode = $vars['elements']['#view_mode'];
 
-    $type = $vars['type'];
+  $type = $vars['type'];
 
-    if ($type == "article_sans_sommaire" ||
-            $type == "article_avec_sommaire" ||
-            $type == "dossier" ||
-            $type == 'diaporama') {
+  if ($type == "article_sans_sommaire" ||
+      $type == "article_avec_sommaire" ||
+      $type == "dossier" ||
+      $type == 'diaporama') {
 
-        $node_article = $vars['node'];
-        $vars['analyticsLinks'] = "";
-        if (isset($node_article->analytics)) {
-            if (!empty($node_article->field_contenu_titre))
-                $titre = $node_article->field_contenu_titre[LANGUAGE_NONE][0]['value'];
-            else
-                $titre = $node_article->title;
-            $vars['analyticsLinks'] = generateLinkForAnalytics($node_article->analytics['type'], $node_article->analytics['localisation'], $node_article->analytics['position'], $titre);
-        }
-        if ($type != 'article_avec_sommaire'){
-            setcookie('dvar', '1|100|1|Indisponible', 0 , '/');
-        }
-        
-
-        if ($view_mode == 'teaser') {
-            $vars['theme_hook_suggestion'] = 'node__article__teaser';
-            darty_article_global_node_teaser_preprocess($vars, 'teaser');
-        } elseif ($view_mode == 'teaser2') {
-            $vars['theme_hook_suggestion'] = 'node__article__teaser';
-            darty_article_global_node_teaser_preprocess($vars, 'teaser2');
-        } elseif ($view_mode == 'teaser_home') {
-            $vars['theme_hook_suggestion'] = 'node__article__teaser_home';
-            darty_article_global_node_teaser_preprocess($vars, 'teaser2');
-        } elseif ($view_mode == 'teaser_une_home') {
-            $vars['theme_hook_suggestion'] = 'node__article__teaser_une_home';
-            darty_article_global_node_teaser_preprocess($vars, 'teaser2');
-        } elseif ($view_mode == 'mise_en_avant') {
-            $vars['theme_hook_suggestion'] = 'node__article__mise_en_avant';
-            darty_article_global_node_teaser_preprocess($vars, 'mise_en_avant');
-        } elseif ($view_mode == 'sommaire_top_alone') {
-            $vars['theme_hook_suggestion'] = 'node__article__sommaire_top_alone';
-            darty_article_global_node_teaser_preprocess($vars, 'sommaire_top_alone');
-        } elseif ($view_mode == 'sommaire_top_first') {
-            $vars['theme_hook_suggestion'] = 'node__article__sommaire_top_first';
-            darty_article_global_node_teaser_preprocess($vars, 'sommaire_top_first');
-        } elseif ($view_mode == 'sommaire_top_other') {
-            $vars['theme_hook_suggestion'] = 'node__article__sommaire_top_other';
-            darty_article_global_node_teaser_preprocess($vars, 'sommaire_top_other');
-        } elseif ($view_mode == 'sommaire_article') {
-            $vars['theme_hook_suggestion'] = 'node__article__sommaire_article';
-            darty_article_global_node_teaser_preprocess($vars, 'sommaire_article');
-        } else {
-//applique le preprocess global
-            prepare_gigya_article($vars['node']);
-            darty_article_global_node_preprocess($vars);
-            $preprocess_type = 'darty_article_preprocess_node_' . $type;
-            $preprocess_type_view_mode = 'darty_article _preprocess_node_' . $type . '_' . $view_mode;
-
-            if (function_exists($preprocess_type)) {
-                $preprocess_type($vars);
-            }
-
-            if (function_exists($preprocess_type_view_mode)) {
-                $preprocess_type_view_mode($vars);
-            }
-        }
+    $node_article = $vars['node'];
+    $vars['analyticsLinks'] = "";
+    if (isset($node_article->analytics)) {
+      if (!empty($node_article->field_contenu_titre))
+        $titre = $node_article->field_contenu_titre[LANGUAGE_NONE][0]['value'];
+      else
+        $titre = $node_article->title;
+      $vars['analyticsLinks'] = generateLinkForAnalytics($node_article->analytics['type'], $node_article->analytics['localisation'], $node_article->analytics['position'], $titre);
     }
+    if ($type != 'article_avec_sommaire'){
+      setcookie('dvar', '1|100|1|Indisponible', 0 , '/');
+    }
+    
+
+    if ($view_mode == 'teaser') {
+      $vars['theme_hook_suggestion'] = 'node__article__teaser';
+      darty_article_global_node_teaser_preprocess($vars, 'teaser');
+    } elseif ($view_mode == 'teaser2') {
+      $vars['theme_hook_suggestion'] = 'node__article__teaser';
+      darty_article_global_node_teaser_preprocess($vars, 'teaser2');
+    } elseif ($view_mode == 'teaser_home') {
+      $vars['theme_hook_suggestion'] = 'node__article__teaser_home';
+      darty_article_global_node_teaser_preprocess($vars, 'teaser2');
+    } elseif ($view_mode == 'teaser_une_home') {
+      $vars['theme_hook_suggestion'] = 'node__article__teaser_une_home';
+      darty_article_global_node_teaser_preprocess($vars, 'teaser2');
+    } elseif ($view_mode == 'mise_en_avant') {
+      $vars['theme_hook_suggestion'] = 'node__article__mise_en_avant';
+      darty_article_global_node_teaser_preprocess($vars, 'mise_en_avant');
+    } elseif ($view_mode == 'sommaire_top_alone') {
+      $vars['theme_hook_suggestion'] = 'node__article__sommaire_top_alone';
+      darty_article_global_node_teaser_preprocess($vars, 'sommaire_top_alone');
+    } elseif ($view_mode == 'sommaire_top_first') {
+      $vars['theme_hook_suggestion'] = 'node__article__sommaire_top_first';
+      darty_article_global_node_teaser_preprocess($vars, 'sommaire_top_first');
+    } elseif ($view_mode == 'sommaire_top_other') {
+      $vars['theme_hook_suggestion'] = 'node__article__sommaire_top_other';
+      darty_article_global_node_teaser_preprocess($vars, 'sommaire_top_other');
+    } elseif ($view_mode == 'sommaire_article') {
+      $vars['theme_hook_suggestion'] = 'node__article__sommaire_article';
+      darty_article_global_node_teaser_preprocess($vars, 'sommaire_article');
+    } else {
+//applique le preprocess global
+      prepare_gigya_article($vars['node']);
+      darty_article_global_node_preprocess($vars);
+      $preprocess_type = 'darty_article_preprocess_node_' . $type;
+      $preprocess_type_view_mode = 'darty_article _preprocess_node_' . $type . '_' . $view_mode;
+
+      if (function_exists($preprocess_type)) {
+        $preprocess_type($vars);
+      }
+
+      if (function_exists($preprocess_type_view_mode)) {
+        $preprocess_type_view_mode($vars);
+      }
+    }
+  }
 }
 
 function darty_article_global_node_teaser_preprocess(&$vars, $view_mode = 'teaser') {
-    $node_article = $vars['node'];
+  $node_article = $vars['node'];
 
-    if (!empty($node_article->field_contenu_visuel)) {
-        $sid = $node_article->field_contenu_visuel[LANGUAGE_NONE][0]['sid'];
-        $obj_atom = scald_atom_load($sid);
-        if (isset($obj_atom) && isset($obj_atom->scald_thumbnail[LANGUAGE_NONE][0])){
-            $vars['image_teaser'] = '<img src="'.  file_create_url($obj_atom->scald_thumbnail[LANGUAGE_NONE][0]['uri']).'" alt="'.$obj_atom->scald_thumbnail[LANGUAGE_NONE][0]['alt'].'"></img>';
-        }
+  if (!empty($node_article->field_contenu_visuel)) {
+    $sid = $node_article->field_contenu_visuel[LANGUAGE_NONE][0]['sid'];
+    $obj_atom = scald_atom_load($sid);
+    if (isset($obj_atom) && isset($obj_atom->scald_thumbnail[LANGUAGE_NONE][0])){
+      $vars['image_teaser'] = '<img src="'.  file_create_url($obj_atom->scald_thumbnail[LANGUAGE_NONE][0]['uri']).'" alt="'.$obj_atom->scald_thumbnail[LANGUAGE_NONE][0]['alt'].'"></img>';
     }
+  }
 
 //header article
-    if (!empty($node_article->field_contenu_format) && isset($node_article->field_contenu_format[LANGUAGE_NONE][0]['taxonomy_term'])) {
-        $objFormat = $node_article->field_contenu_format[LANGUAGE_NONE][0]['taxonomy_term'];
-    }
-    else
-        $objFormat = taxonomy_term_load($node_article->field_contenu_format[LANGUAGE_NONE][0]['tid']);
-    if (isset($objFormat) && is_object($objFormat))
-        $vars['format_article'] = $objFormat->name;
-    if (!empty($node_article->field_contenu_titre))
-        $vars['titre'] = $node_article->field_contenu_titre[LANGUAGE_NONE][0]['value'];
+  if (!empty($node_article->field_contenu_format) && isset($node_article->field_contenu_format[LANGUAGE_NONE][0]['taxonomy_term'])) {
+    $objFormat = $node_article->field_contenu_format[LANGUAGE_NONE][0]['taxonomy_term'];
+  }
+  else
+    $objFormat = taxonomy_term_load($node_article->field_contenu_format[LANGUAGE_NONE][0]['tid']);
+  if (isset($objFormat) && is_object($objFormat))
+    $vars['format_article'] = $objFormat->name;
+  if (!empty($node_article->field_contenu_titre))
+    $vars['titre'] = $node_article->field_contenu_titre[LANGUAGE_NONE][0]['value'];
 
-    if (!empty($node_article->field_contenu_accroche)) {
-        $accroche = $node_article->field_contenu_accroche[LANGUAGE_NONE][0]['value'];
-        if ($view_mode == 'teaser2')
-            $nbCarAccrocheMax = 110;
-        elseif ($view_mode == 'sommaire_top_alone')
-            $nbCarAccrocheMax = 230;
-        elseif ($view_mode == 'sommaire_top_first')
-            $nbCarAccrocheMax = 270;
-        elseif ($view_mode == 'mise_en_avant')
-            $nbCarAccrocheMax = 210;
-        else
-            $nbCarAccrocheMax = 115;
-        if (isset($vars['analyticsLinks']) && $vars['analyticsLinks'] != '')
-            $vars['accroche'] = cleanCut($accroche, $nbCarAccrocheMax, '<span class="dot_blue">...</span><a class="suite" href="' . url('node/' . $node_article->nid) . $vars['analyticsLinks'].'" title="' . $vars['titre'] . '">Suite</a>');
-        else
-            $vars['accroche'] = cleanCut($accroche, $nbCarAccrocheMax, '<span class="dot_blue">...</span><a class="suite" href="' . url('node/' . $node_article->nid) . '" title="' . $vars['titre'] . '">Suite</a>');
-    }
+  if (!empty($node_article->field_contenu_accroche)) {
+    $accroche = $node_article->field_contenu_accroche[LANGUAGE_NONE][0]['value'];
+    if ($view_mode == 'teaser2')
+      $nbCarAccrocheMax = 110;
+    elseif ($view_mode == 'sommaire_top_alone')
+      $nbCarAccrocheMax = 230;
+    elseif ($view_mode == 'sommaire_top_first')
+      $nbCarAccrocheMax = 270;
+    elseif ($view_mode == 'mise_en_avant')
+      $nbCarAccrocheMax = 210;
+    else
+      $nbCarAccrocheMax = 115;
+    if (isset($vars['analyticsLinks']) && $vars['analyticsLinks'] != '')
+      $vars['accroche'] = cleanCut($accroche, $nbCarAccrocheMax, '<span class="dot_blue">...</span><a class="suite" href="' . url('node/' . $node_article->nid) . $vars['analyticsLinks'].'" title="' . $vars['titre'] . '">Suite</a>');
+    else
+      $vars['accroche'] = cleanCut($accroche, $nbCarAccrocheMax, '<span class="dot_blue">...</span><a class="suite" href="' . url('node/' . $node_article->nid) . '" title="' . $vars['titre'] . '">Suite</a>');
+  }
 }
 
 function darty_article_global_node_preprocess(&$vars) {
 //preprocess generale à l'ensemble des articles
-    $node_article = $vars['node'];
+  $node_article = $vars['node'];
 
 //generate or overwrite breadcrumb here
-    $breadcrumb[] = l('Accueil', '<front>');
-    $pageName = "www/darty_vous/";
-    if (!empty($node_article->field_contenu_rubrique)) {
-        $tid = $node_article->field_contenu_rubrique[LANGUAGE_NONE][0]['tid'];
-        $parentsTerm = taxonomy_get_parents_all($tid);
-        foreach (array_reverse($parentsTerm) as $term) {
-            $pageName .= convertForAnalytics($term->name) . "/";
-            $breadcrumb[] = l($term->name, 'taxonomy/term/' . $term->tid);
-        }
+  $breadcrumb[] = l('Accueil', '<front>');
+  $pageName = "www/darty_vous/";
+  if (!empty($node_article->field_contenu_rubrique)) {
+    $tid = $node_article->field_contenu_rubrique[LANGUAGE_NONE][0]['tid'];
+    $parentsTerm = taxonomy_get_parents_all($tid);
+    foreach (array_reverse($parentsTerm) as $term) {
+      $pageName .= convertForAnalytics($term->name) . "/";
+      $breadcrumb[] = l($term->name, 'taxonomy/term/' . $term->tid);
     }
-    $pageName .= "article";
-    drupal_add_js(
-            "s.pageName = '" . $pageName . "';
-" . getCommonAnalyticsProperties() . "    
+  }
+  $pageName .= "article";
+  drupal_add_js(
+      "s.pageName = '" . $pageName . "';
+" . getCommonAnalyticsProperties() . "  
 s.t();"
-            , array('type' => 'inline', 'scope' => 'footer', 'weight' => 100)
-    );
-//    if (!empty($node_article->field_contenu_titre))
-//            $breadcrumb[] = $node_article->field_contenu_titre[LANGUAGE_NONE][0]['value'];
-//    else
-    $breadcrumb[] = $node_article->title;
-    $vars['breadcrumb'] = theme('breadcrumb', array('breadcrumb' => $breadcrumb));
+      , array('type' => 'inline', 'scope' => 'footer', 'weight' => 100)
+  );
+//  if (!empty($node_article->field_contenu_titre))
+//      $breadcrumb[] = $node_article->field_contenu_titre[LANGUAGE_NONE][0]['value'];
+//  else
+  $breadcrumb[] = $node_article->title;
+  $vars['breadcrumb'] = theme('breadcrumb', array('breadcrumb' => $breadcrumb));
 
-//count page view and cache it
-    if (!empty($node_article->field_contenu_add_view))
-        $add_page_view = $node_article->field_contenu_add_view[LANGUAGE_NONE][0]['value'];
-    $cache = cache_get('viewcount_' . $node_article->nid);
-    if ($cache && $cache->expire > time()) {
-        $viewCount = $cache->data;
-    } else {
-        $objCount = nodeviewcount_db_count_node_views($node_article);
-        $viewCount = $objCount[0]->expression;
-        cache_set('viewcount_' . $node_article->nid, $viewCount, 'cache', time() + 300);
-    }
-    $vars['viewCount'] = ($viewCount + $add_page_view);
+  // get page view
+  if (!empty($node_article->field_contenu_add_view))
+  $add_page_view = $node_article->field_contenu_add_view[LANGUAGE_NONE][0]['value'];
+  $viewCount = _darty_nodeviewcount_get_node_view($node_article->nid);
+  $vars['viewCount'] = ($viewCount + $add_page_view);
 
 //getNb comments
-    $vars['nbComments'] = $node_article->comment_count;
+  $vars['nbComments'] = $node_article->comment_count;
 
 //partage GIGYA
-    $vars['nbPartage'] = 0;
+  $vars['nbPartage'] = 0;
 
 // Récupère le prénom (ou à défault le login) de l'auteur
-    $uid_auteur = $node_article->uid;
-    $userObj = user_load($uid_auteur);
-    if (!empty($userObj->field_account_prenom))
-        $vars['prenom'] = $userObj->field_account_prenom[LANGUAGE_NONE][0]['value'];
-    if (empty($vars['prenom']))
-        $vars['prenom'] = $userObj->name;
+  $uid_auteur = $node_article->uid;
+  $userObj = user_load($uid_auteur);
+  if (!empty($userObj->field_account_prenom))
+    $vars['prenom'] = $userObj->field_account_prenom[LANGUAGE_NONE][0]['value'];
+  if (empty($vars['prenom']))
+    $vars['prenom'] = $userObj->name;
 
 //creation date
-    if (!empty($node_article->field_contenu_date_crea)) {
-        $vars['date_crea'] = $node_article->field_contenu_date_crea[LANGUAGE_NONE][0]['value'];
-    } else {
-        $vars['date_crea'] = $node_article->created;
-    }
+  if (!empty($node_article->field_contenu_date_crea)) {
+    $vars['date_crea'] = $node_article->field_contenu_date_crea[LANGUAGE_NONE][0]['value'];
+  } else {
+    $vars['date_crea'] = $node_article->created;
+  }
 
 //modification  date
-    if (!empty($node_article->field_contenu_date_modif)) {
-        $vars['date_modif'] = $node_article->field_contenu_date_modif[LANGUAGE_NONE][0]['value'];
-    }
+  if (!empty($node_article->field_contenu_date_modif)) {
+    $vars['date_modif'] = $node_article->field_contenu_date_modif[LANGUAGE_NONE][0]['value'];
+  }
 
 //bloc bas de page
-    if (isset($node_article->field_contenu_blocs_bas) && !empty($node_article->field_contenu_blocs_bas[LANGUAGE_NONE])) {
-        if (isset($node_article->field_contenu_blocs_bas[LANGUAGE_NONE][0]['entity']))
-            $bloc_bas = $node_article->field_contenu_blocs_bas[LANGUAGE_NONE][0]['entity'];
-        else
-            $bloc_bas = bean_load($node_article->field_contenu_blocs_bas[LANGUAGE_NONE][0]['target_id']);
-            $vars['bloc_bas'] = bean_view($bloc_bas, 'bottom_article');
-    }
+  if (isset($node_article->field_contenu_blocs_bas) && !empty($node_article->field_contenu_blocs_bas[LANGUAGE_NONE])) {
+    if (isset($node_article->field_contenu_blocs_bas[LANGUAGE_NONE][0]['entity']))
+      $bloc_bas = $node_article->field_contenu_blocs_bas[LANGUAGE_NONE][0]['entity'];
+    else
+      $bloc_bas = bean_load($node_article->field_contenu_blocs_bas[LANGUAGE_NONE][0]['target_id']);
+      $vars['bloc_bas'] = bean_view($bloc_bas, 'bottom_article');
+  }
 
 //bloc droit de page
-    if (!empty($node_article->field_contenu_blocs_droite)) {
-        $blocs_droit = $node_article->field_contenu_blocs_droite[LANGUAGE_NONE];
-        $vars['bloc_droit'] = array();
-        foreach ($blocs_droit as $bloc) {
-            if (isset($bloc['entity']))
-                $bloc_droit = $bloc['entity'];
-            else
-                $bloc_droit = bean_load($bloc['target_id']);
-            $vars['blocs_droit'][] = bean_view($bloc_droit, 'bottom_article');
-        }
+  if (!empty($node_article->field_contenu_blocs_droite)) {
+    $blocs_droit = $node_article->field_contenu_blocs_droite[LANGUAGE_NONE];
+    $vars['bloc_droit'] = array();
+    foreach ($blocs_droit as $bloc) {
+      if (isset($bloc['entity']))
+        $bloc_droit = $bloc['entity'];
+      else
+        $bloc_droit = bean_load($bloc['target_id']);
+      $vars['blocs_droit'][] = bean_view($bloc_droit, 'bottom_article');
     }
+  }
 
 //header article
-    if (!empty($node_article->field_contenu_format)) {
-        if (isset($node_article->field_contenu_format[LANGUAGE_NONE][0]['taxonomy_term']))
-            $objFormat = $node_article->field_contenu_format[LANGUAGE_NONE][0]['taxonomy_term'];
-        else
-            $objFormat = taxonomy_term_load($node_article->field_contenu_format[LANGUAGE_NONE][0]['tid']);
+  if (!empty($node_article->field_contenu_format)) {
+    if (isset($node_article->field_contenu_format[LANGUAGE_NONE][0]['taxonomy_term']))
+      $objFormat = $node_article->field_contenu_format[LANGUAGE_NONE][0]['taxonomy_term'];
+    else
+      $objFormat = taxonomy_term_load($node_article->field_contenu_format[LANGUAGE_NONE][0]['tid']);
 
-        if (isset($objFormat) && is_object($objFormat))
-            $vars['format_article'] = $objFormat->name;
+    if (isset($objFormat) && is_object($objFormat))
+      $vars['format_article'] = $objFormat->name;
+  }
+  if (!empty($node_article->field_contenu_visuel)) {
+    $sid = $node_article->field_contenu_visuel[LANGUAGE_NONE][0]['sid'];
+    $obj_atom = scald_atom_load($sid);
+    if (isset($obj_atom) && isset($obj_atom->scald_thumbnail[LANGUAGE_NONE][0])){
+      $vars['image'] = '<img src="'.  file_create_url($obj_atom->scald_thumbnail[LANGUAGE_NONE][0]['uri']).'" alt="'.$obj_atom->scald_thumbnail[LANGUAGE_NONE][0]['alt'].'"></img>';
     }
-    if (!empty($node_article->field_contenu_visuel)) {
-        $sid = $node_article->field_contenu_visuel[LANGUAGE_NONE][0]['sid'];
-        $obj_atom = scald_atom_load($sid);
-        if (isset($obj_atom) && isset($obj_atom->scald_thumbnail[LANGUAGE_NONE][0])){
-            $vars['image'] = '<img src="'.  file_create_url($obj_atom->scald_thumbnail[LANGUAGE_NONE][0]['uri']).'" alt="'.$obj_atom->scald_thumbnail[LANGUAGE_NONE][0]['alt'].'"></img>';
-        }
-    }
-    if (!empty($node_article->field_contenu_titre))
-        $vars['titre'] = $node_article->field_contenu_titre[LANGUAGE_NONE][0]['value'];
-    if (!empty($node_article->field_contenu_accroche))
-        $vars['accroche'] = $node_article->field_contenu_accroche[LANGUAGE_NONE][0]['value'];
+  }
+  if (!empty($node_article->field_contenu_titre))
+    $vars['titre'] = $node_article->field_contenu_titre[LANGUAGE_NONE][0]['value'];
+  if (!empty($node_article->field_contenu_accroche))
+    $vars['accroche'] = $node_article->field_contenu_accroche[LANGUAGE_NONE][0]['value'];
 
 //Archive
-    if (!empty($node_article->field_contenu_archiver))
-        $vars['bool_archive'] = $node_article->field_contenu_archiver[LANGUAGE_NONE][0]['value'];
-    if (!empty($node_article->field_label_archive))
-        $vars['label_archive'] = $node_article->field_label_archive[LANGUAGE_NONE][0]['value'];
+  if (!empty($node_article->field_contenu_archiver))
+    $vars['bool_archive'] = $node_article->field_contenu_archiver[LANGUAGE_NONE][0]['value'];
+  if (!empty($node_article->field_label_archive))
+    $vars['label_archive'] = $node_article->field_label_archive[LANGUAGE_NONE][0]['value'];
 
 //PLUS DE
-    if (!empty($node_article->field_contenu_plusde_mode))
-        $vars['plusde_mode'] = $node_article->field_contenu_plusde_mode[LANGUAGE_NONE][0]['value'];
-    else
-        $vars['plusde_mode'] = 'none';
+  if (!empty($node_article->field_contenu_plusde_mode))
+    $vars['plusde_mode'] = $node_article->field_contenu_plusde_mode[LANGUAGE_NONE][0]['value'];
+  else
+    $vars['plusde_mode'] = 'none';
 
-    if ($vars['plusde_mode'] == 'auto' || $vars['plusde_mode'] == 'manuel') {
-
-
-        if ($vars['plusde_mode'] == 'auto') {
-            $vars['plusde_titre'] = plusde_label($objFormat->tid, 'titre');
-        }
-        if (!empty($node_article->field_contenu_plusde_titre))
-            $vars['plusde_titre'] = $node_article->field_contenu_plusde_titre[LANGUAGE_NONE][0]['value'];
-
-        if ($vars['plusde_mode'] == 'auto') {
-            $vars['plusde_lien'] = array('title' => plusde_label($objFormat->tid, 'titre_lien'), 'url' => 'taxonomy/term/' . $objFormat->tid, 'attributes' => array());
-        }
-        if (!empty($node_article->field_contenu_plusde_lien)) {
-            $vars['plusde_lien'] = $node_article->field_contenu_plusde_lien[LANGUAGE_NONE][0];
-        }
-
-        $cache = cache_get('plusde_article_' . $node_article->nid);
-        if ($cache && $cache->expire > time()) {
-            $vars['plusde_attaches'] = $cache->data;
-        } else {
-            if ($vars['plusde_mode'] == 'manuel') {
-                if (!empty($node_article->field_contenus_plusde_attaches))
-                    $plusde_attaches = $node_article->field_contenus_plusde_attaches[LANGUAGE_NONE];
-                foreach ($plusde_attaches as $elem) {
-                    $vars['plusde_attaches'][] = $elem['entity'];
-                }
-            } else {
-                $tab_rubformat = array();
-                $tab_rub1format = array();
-                $tab_rub2format = array();
-                $tab_otherformat = array();
-                $ids_use = array($node_article->nid);
-                if (!empty($node_article->field_contenu_rubrique) && !empty($node_article->field_contenu_format)) {
-                    $tab_rubformat = getArticlesByRubAndFormatAndRecent(4, $node_article->field_contenu_format[LANGUAGE_NONE][0]['tid'], $node_article->field_contenu_rubrique[LANGUAGE_NONE][0]['tid'], 151200000, $ids_use);
-
-                    foreach ($tab_rubformat as $elem) {
-                        $ids_use[] = $elem->nid;
-                    }
-
-                    if (count($tab_rubformat) < 4) {
-                        $parents = taxonomy_get_parents($node_article->field_contenu_rubrique[LANGUAGE_NONE][0]['tid']);
-                        $parent_tid = key($parents);
-                        $childrens = taxonomy_get_children_all($parent_tid);
-
-                        foreach ($childrens as $key => $elem) {
-                            $children_tid[] = $key;
-                        }
-                        if (isset($children_tid) && !empty($children_tid)) {
-                            $tab_rub1format = getArticlesByRubAndFormatAndRecent(4 - count($tab_rubformat), $node_article->field_contenu_format[LANGUAGE_NONE][0]['tid'], $children_tid, 151200000, $ids_use);
-                        }
-                        foreach ($tab_rub1format as $elem) {
-                            $ids_use[] = $elem->nid;
-                        }
-
-                        if ((count($tab_rubformat) + count($tab_rub1format)) < 4) {
-                            $parents2 = taxonomy_get_parents($parent_tid);
-                            $parent_tid2 = key($parents2);
-                            $childrens2 = taxonomy_get_children_all($parent_tid2);
-
-                            foreach ($childrens2 as $key => $elem) {
-                                $children_tid2[] = $key;
-                            }
-                            if (isset($children_tid2) && !empty($children_tid2)) {
-                                $tab_rub2format = getArticlesByRubAndFormatAndRecent(4 - (count($tab_rubformat) + count($tab_rub1format)), $node_article->field_contenu_format[LANGUAGE_NONE][0]['tid'], $children_tid2, 151200000, $ids_use);
-                            }
-                            foreach ($tab_rub2format as $elem) {
-                                $ids_use[] = $elem->nid;
-                            }
-
-                            if ((count($tab_rubformat) + count($tab_rub1format) + count($tab_rub2format)) < 4) {
-
-                                //getALLTIDS 1er niveau
-                                $parents_other = taxonomy_get_tree(4, 0, 1);
-
-                                foreach ($parents_other as $key => $elem) {
-                                    $parentTid_other = $elem->tid;
-                                    $childrens_other = taxonomy_get_children_all($parentTid_other);
-                                    foreach ($childrens_other as $key1 => $elem1) {
-                                        $children_other[] = $key1;
-                                    }
-                                }
-                                if (isset($children_other) && !empty($children_other)) {
-                                    $tab_otherformat = getArticlesByRubAndFormatAndRecent(4 - (count($tab_rubformat) + count($tab_rub1format) + count($tab_rub2format)), $node_article->field_contenu_format[LANGUAGE_NONE][0]['tid'], $children_other, 151200000, $ids_use);
-                                }
-                                foreach ($tab_otherformat as $elem) {
-                                    $ids_use[] = $elem->nid;
-                                }
-                            }
-                        }
-                    }
+  if ($vars['plusde_mode'] == 'auto' || $vars['plusde_mode'] == 'manuel') {
 
 
-                    //                $tab_format = array();
-                    //                if ((count($tab_rubformat) + count($tab_rub1format)) < 4)
-                    //                    $tab_format = getArticlesByRubAndFormatAndRecent(4 - (count($tab_rubformat) + count($tab_rub1format)), $node_article->field_contenu_format[LANGUAGE_NONE][0]['tid'], null, 151200000, $ids_use);
-
-                    $vars['plusde_attaches'] = array_merge($tab_rubformat, $tab_rub1format, $tab_rub2format, $tab_otherformat);
-                } elseif (!empty($node_article->field_contenu_format)) {
-                    //7760000 = 3mois
-                    $vars['plusde_attaches'] = getArticlesByFormatAndRecent(4, $node_article->field_contenu_format[LANGUAGE_NONE][0]['tid'], null, 151200000, $ids_use);
-                }
-                else
-                    $vars['plusde_attaches'] = array();
-            }
-            cache_set('plusde_article_' . $node_article->nid, $vars['plusde_attaches'], 'cache', time() + 300);
-        }
+    if ($vars['plusde_mode'] == 'auto') {
+      $vars['plusde_titre'] = plusde_label($objFormat->tid, 'titre');
     }
+    if (!empty($node_article->field_contenu_plusde_titre))
+      $vars['plusde_titre'] = $node_article->field_contenu_plusde_titre[LANGUAGE_NONE][0]['value'];
+
+    if ($vars['plusde_mode'] == 'auto') {
+      $vars['plusde_lien'] = array('title' => plusde_label($objFormat->tid, 'titre_lien'), 'url' => 'taxonomy/term/' . $objFormat->tid, 'attributes' => array());
+    }
+    if (!empty($node_article->field_contenu_plusde_lien)) {
+      $vars['plusde_lien'] = $node_article->field_contenu_plusde_lien[LANGUAGE_NONE][0];
+    }
+
+    $cache = cache_get('plusde_article_' . $node_article->nid);
+    if ($cache && $cache->expire > time()) {
+      $vars['plusde_attaches'] = $cache->data;
+    } else {
+      if ($vars['plusde_mode'] == 'manuel') {
+        if (!empty($node_article->field_contenus_plusde_attaches))
+          $plusde_attaches = $node_article->field_contenus_plusde_attaches[LANGUAGE_NONE];
+        foreach ($plusde_attaches as $elem) {
+          $vars['plusde_attaches'][] = $elem['entity'];
+        }
+      } else {
+        $tab_rubformat = array();
+        $tab_rub1format = array();
+        $tab_rub2format = array();
+        $tab_otherformat = array();
+        $ids_use = array($node_article->nid);
+        if (!empty($node_article->field_contenu_rubrique) && !empty($node_article->field_contenu_format)) {
+          $tab_rubformat = getArticlesByRubAndFormatAndRecent(4, $node_article->field_contenu_format[LANGUAGE_NONE][0]['tid'], $node_article->field_contenu_rubrique[LANGUAGE_NONE][0]['tid'], 151200000, $ids_use);
+
+          foreach ($tab_rubformat as $elem) {
+            $ids_use[] = $elem->nid;
+          }
+
+          if (count($tab_rubformat) < 4) {
+            $parents = taxonomy_get_parents($node_article->field_contenu_rubrique[LANGUAGE_NONE][0]['tid']);
+            $parent_tid = key($parents);
+            $childrens = taxonomy_get_children_all($parent_tid);
+
+            foreach ($childrens as $key => $elem) {
+              $children_tid[] = $key;
+            }
+            if (isset($children_tid) && !empty($children_tid)) {
+              $tab_rub1format = getArticlesByRubAndFormatAndRecent(4 - count($tab_rubformat), $node_article->field_contenu_format[LANGUAGE_NONE][0]['tid'], $children_tid, 151200000, $ids_use);
+            }
+            foreach ($tab_rub1format as $elem) {
+              $ids_use[] = $elem->nid;
+            }
+
+            if ((count($tab_rubformat) + count($tab_rub1format)) < 4) {
+              $parents2 = taxonomy_get_parents($parent_tid);
+              $parent_tid2 = key($parents2);
+              $childrens2 = taxonomy_get_children_all($parent_tid2);
+
+              foreach ($childrens2 as $key => $elem) {
+                $children_tid2[] = $key;
+              }
+              if (isset($children_tid2) && !empty($children_tid2)) {
+                $tab_rub2format = getArticlesByRubAndFormatAndRecent(4 - (count($tab_rubformat) + count($tab_rub1format)), $node_article->field_contenu_format[LANGUAGE_NONE][0]['tid'], $children_tid2, 151200000, $ids_use);
+              }
+              foreach ($tab_rub2format as $elem) {
+                $ids_use[] = $elem->nid;
+              }
+
+              if ((count($tab_rubformat) + count($tab_rub1format) + count($tab_rub2format)) < 4) {
+
+                //getALLTIDS 1er niveau
+                $parents_other = taxonomy_get_tree(4, 0, 1);
+
+                foreach ($parents_other as $key => $elem) {
+                  $parentTid_other = $elem->tid;
+                  $childrens_other = taxonomy_get_children_all($parentTid_other);
+                  foreach ($childrens_other as $key1 => $elem1) {
+                    $children_other[] = $key1;
+                  }
+                }
+                if (isset($children_other) && !empty($children_other)) {
+                  $tab_otherformat = getArticlesByRubAndFormatAndRecent(4 - (count($tab_rubformat) + count($tab_rub1format) + count($tab_rub2format)), $node_article->field_contenu_format[LANGUAGE_NONE][0]['tid'], $children_other, 151200000, $ids_use);
+                }
+                foreach ($tab_otherformat as $elem) {
+                  $ids_use[] = $elem->nid;
+                }
+              }
+            }
+          }
+
+
+          //        $tab_format = array();
+          //        if ((count($tab_rubformat) + count($tab_rub1format)) < 4)
+          //          $tab_format = getArticlesByRubAndFormatAndRecent(4 - (count($tab_rubformat) + count($tab_rub1format)), $node_article->field_contenu_format[LANGUAGE_NONE][0]['tid'], null, 151200000, $ids_use);
+
+          $vars['plusde_attaches'] = array_merge($tab_rubformat, $tab_rub1format, $tab_rub2format, $tab_otherformat);
+        } elseif (!empty($node_article->field_contenu_format)) {
+          //7760000 = 3mois
+          $vars['plusde_attaches'] = getArticlesByFormatAndRecent(4, $node_article->field_contenu_format[LANGUAGE_NONE][0]['tid'], null, 151200000, $ids_use);
+        }
+        else
+          $vars['plusde_attaches'] = array();
+      }
+      cache_set('plusde_article_' . $node_article->nid, $vars['plusde_attaches'], 'cache', time() + 300);
+    }
+  }
 }
 
 /**
  * Preprocess for the node diaporama
  */
 function darty_article_preprocess_node_diaporama(&$vars) {
-    global $conf;
+  global $conf;
 
-    $node_article = $vars['node'];
+  $node_article = $vars['node'];
 
-    if (!empty($node_article->field_contenu_items_diapo)) {
-        $bloc_diapos = $node_article->field_contenu_items_diapo[LANGUAGE_NONE];
-        $vars['item_diapos'] = array();
-        foreach ($bloc_diapos as $item) {
-            if (isset($item['entity']))
-                $diapo = $item['entity'];
-            else
-                $diapo = bean_load($item['target_id']);
+  if (!empty($node_article->field_contenu_items_diapo)) {
+    $bloc_diapos = $node_article->field_contenu_items_diapo[LANGUAGE_NONE];
+    $vars['item_diapos'] = array();
+    foreach ($bloc_diapos as $item) {
+      if (isset($item['entity']))
+        $diapo = $item['entity'];
+      else
+        $diapo = bean_load($item['target_id']);
 
-            $wrapper = entity_metadata_wrapper('bean', $diapo);
+      $wrapper = entity_metadata_wrapper('bean', $diapo);
 
-            $product = array();
-            if (is_object($wrapper)) {
-                $lien = "";
-                $codic = $wrapper->field_item_diapo_codic->value();
-                $products = get_info_produits(array($codic));
-                $productPhoto = false;
-                if (!empty($products)) {
-                    $product = $products[0];
+      $product = array();
+      if (is_object($wrapper)) {
+        $lien = "";
+        $codic = $wrapper->field_item_diapo_codic->value();
+        $products = get_info_produits(array($codic));
+        $productPhoto = false;
+        if (!empty($products)) {
+          $product = $products[0];
 
-                    $photo = $product->pictures[0]->medium;
-                    $legende = $product->brand . " " . $product->reference;
-                    if (isset($conf['darty_header_htaccess']) && !empty($conf['darty_header_htaccess']))
-                        $url_tmp = $conf['darty_header_protocol'] . $conf['darty_header_htaccess'] . '@' . $conf['darty_header_url'];
-                    else
-                        $url_tmp = $conf['darty_header_protocol'] . $conf['darty_header_url'];
+          $photo = $product->pictures[0]->medium;
+          $legende = $product->brand . " " . $product->reference;
+          if (isset($conf['darty_header_htaccess']) && !empty($conf['darty_header_htaccess']))
+            $url_tmp = $conf['darty_header_protocol'] . $conf['darty_header_htaccess'] . '@' . $conf['darty_header_url'];
+          else
+            $url_tmp = $conf['darty_header_protocol'] . $conf['darty_header_url'];
 
-                    if (!isset($lien) || empty($lien))
-                        $lien = l('Découvrir', $url_tmp . '/nav/codic/' . $product->codic, array('attributes' => array('target'=>'_blank')));
-                
-                    $productPhoto = true;
-                }
-
-
-                $objPhoto = $wrapper->field_item_diapo_photo->value();
-                
-                if (!empty($objPhoto)){
-                    $photo = image_style_url('darty_630_415', $objPhoto->scald_thumbnail[LANGUAGE_NONE][0]['uri']);
-                    $productPhoto = false;
-                }
-                $legende_tmp = $wrapper->field_item_diapo_legende->value();
-                if (!empty($legende_tmp))
-                    $legende = $legende_tmp;
-                $arrayTexte = $wrapper->field_item_diapo_texte->value();
-                $texte = (isset($arrayTexte) && is_array($arrayTexte)) ? $arrayTexte['value'] : $arrayTexte;
-                $lien_tmp = $wrapper->field_item_diapo_lien->value();
-
-                if (!empty($lien_tmp)) {
-                    $lien = l('Découvrir', $lien_tmp['url'], array('attributes' => array('target'=>'_blank')));
-                }
-                $titre = $wrapper->label->value();
-
-                $vars['item_diapos'][] = array('titre' => $titre, 'photo' => $photo, 'legende' => $legende, 'texte' => $texte, 'lien' => $lien, 'codic' => $codic, 'product' => $product,'productPhoto'=>$productPhoto);
-            }
+          if (!isset($lien) || empty($lien))
+            $lien = l('Découvrir', $url_tmp . '/nav/codic/' . $product->codic, array('attributes' => array('target'=>'_blank')));
+        
+          $productPhoto = true;
         }
-        //$vars['item_diapos'] = array_merge($vars['item_diapos'], $vars['item_diapos'], $vars['item_diapos']);
-        if (isset($node_article->field_contenu_push_titre) && !empty($node_article->field_contenu_push_titre[LANGUAGE_NONE][0]))
-            $vars['choix_titre'] = $node_article->field_contenu_push_titre[LANGUAGE_NONE][0]['value'];
-        else
-            $vars['choix_titre'] = '';
 
-        if (isset($node_article->field_contenu_push_produits) && !empty($node_article->field_contenu_push_produits[LANGUAGE_NONE])) {
-            $listPushProduits = $node_article->field_contenu_push_produits[LANGUAGE_NONE];
-            $codics = array();
-            foreach ($listPushProduits as $produit) {
-                $codics[] = $produit['value'];
-            }
-            $vars['products_choix'] = get_info_produits($codics);
+
+        $objPhoto = $wrapper->field_item_diapo_photo->value();
+        
+        if (!empty($objPhoto)){
+          $photo = image_style_url('darty_630_415', $objPhoto->scald_thumbnail[LANGUAGE_NONE][0]['uri']);
+          $productPhoto = false;
         }
-        $vars['categories_choix'] = array();
-        if (isset($node_article->field_contenu_push_categories) && !empty($node_article->field_contenu_push_categories[LANGUAGE_NONE])) {
-            $listCategories = $node_article->field_contenu_push_categories[LANGUAGE_NONE];
-            foreach ($listCategories as $key => $categorieId) {
-                $rub = array();
-                $categorie = field_collection_item_load($categorieId['value']);
-                $url = $categorie->field_categorie_url[LANGUAGE_NONE][0]['value'];
-                $rub['titre'] = $categorie->field_categorie_titre[LANGUAGE_NONE][0]['value'];
-                if (!empty($categorie->field_categorie_lien[LANGUAGE_NONE])){
-                    $rub['lien'] = array('url' => $categorie->field_categorie_lien[LANGUAGE_NONE][0]['url'], 'title' => 'Découvrir', 'attributes' => array('target' => '_blank'));
-                    
-                }
-                $url_avance = pathinfo($url);
-                preg_match('/.*[?](.*)/', $url_avance['basename'], $matches);
+        $legende_tmp = $wrapper->field_item_diapo_legende->value();
+        if (!empty($legende_tmp))
+          $legende = $legende_tmp;
+        $arrayTexte = $wrapper->field_item_diapo_texte->value();
+        $texte = (isset($arrayTexte) && is_array($arrayTexte)) ? $arrayTexte['value'] : $arrayTexte;
+        $lien_tmp = $wrapper->field_item_diapo_lien->value();
 
-                if (isset($conf['darty_header_htaccess']) && !empty($conf['darty_header_htaccess']))
-                    $url_tmp = $conf['darty_header_protocol'] . $conf['darty_header_htaccess'] . '@' . $conf['darty_api_url'];
-                else
-                    $url_tmp = $conf['darty_header_protocol'] . $conf['darty_api_url'];
-
-                $navUrl = $url_tmp . '/nav?query=' . $matches[1];
-                $navUrl_code = $url_tmp . '/nav?query=' . str_replace('&', '%26', $matches[1]);
-
-                if (empty($rub['lien']))
-                    $rub['lien'] = array('url' => $url, 'title' => 'Découvrir', 'attributes' => array('target' => '_blank'));
-                $options = array('method' => 'GET');
-                $result_more = drupal_http_request($navUrl_code, $options);
-
-                $json_more = json_decode($result_more->data);
-                if (empty($json_more)) {
-                    $result_more = drupal_http_request($navUrl, $options);
-                    $json_more = json_decode($result_more->data);
-                }
-                if (empty($json_more))
-                    continue;
-                $rub['count'] = $json_more->resultCount;
-                $rub['minPrice'] = $json_more->minPrice;
-                $rub['maxPrice'] = $json_more->maxPrice;
-
-                $vars['categories_choix'][] = $rub;
-            }
+        if (!empty($lien_tmp)) {
+          $lien = l('Découvrir', $lien_tmp['url'], array('attributes' => array('target'=>'_blank')));
         }
-        //$vars['categories_choix'] = array_merge($vars['categories_choix'],$vars['categories_choix'],$vars['categories_choix']);
-        //$vars['item_diapos'] = array_merge($vars['item_diapos'],$vars['item_diapos'],$vars['item_diapos'],$vars['item_diapos'],$vars['item_diapos']);
+        $titre = $wrapper->label->value();
 
-        drupal_add_js(drupal_get_path('module', 'darty_article') . '/js/diaporama.js', array('type' => 'file', 'scope' => 'footer'));
+        $vars['item_diapos'][] = array('titre' => $titre, 'photo' => $photo, 'legende' => $legende, 'texte' => $texte, 'lien' => $lien, 'codic' => $codic, 'product' => $product,'productPhoto'=>$productPhoto);
+      }
     }
+    //$vars['item_diapos'] = array_merge($vars['item_diapos'], $vars['item_diapos'], $vars['item_diapos']);
+    if (isset($node_article->field_contenu_push_titre) && !empty($node_article->field_contenu_push_titre[LANGUAGE_NONE][0]))
+      $vars['choix_titre'] = $node_article->field_contenu_push_titre[LANGUAGE_NONE][0]['value'];
+    else
+      $vars['choix_titre'] = '';
+
+    if (isset($node_article->field_contenu_push_produits) && !empty($node_article->field_contenu_push_produits[LANGUAGE_NONE])) {
+      $listPushProduits = $node_article->field_contenu_push_produits[LANGUAGE_NONE];
+      $codics = array();
+      foreach ($listPushProduits as $produit) {
+        $codics[] = $produit['value'];
+      }
+      $vars['products_choix'] = get_info_produits($codics);
+    }
+    $vars['categories_choix'] = array();
+    if (isset($node_article->field_contenu_push_categories) && !empty($node_article->field_contenu_push_categories[LANGUAGE_NONE])) {
+      $listCategories = $node_article->field_contenu_push_categories[LANGUAGE_NONE];
+      foreach ($listCategories as $key => $categorieId) {
+        $rub = array();
+        $categorie = field_collection_item_load($categorieId['value']);
+        $url = $categorie->field_categorie_url[LANGUAGE_NONE][0]['value'];
+        $rub['titre'] = $categorie->field_categorie_titre[LANGUAGE_NONE][0]['value'];
+        if (!empty($categorie->field_categorie_lien[LANGUAGE_NONE])){
+          $rub['lien'] = array('url' => $categorie->field_categorie_lien[LANGUAGE_NONE][0]['url'], 'title' => 'Découvrir', 'attributes' => array('target' => '_blank'));
+          
+        }
+        $url_avance = pathinfo($url);
+        preg_match('/.*[?](.*)/', $url_avance['basename'], $matches);
+
+        if (isset($conf['darty_header_htaccess']) && !empty($conf['darty_header_htaccess']))
+          $url_tmp = $conf['darty_header_protocol'] . $conf['darty_header_htaccess'] . '@' . $conf['darty_api_url'];
+        else
+          $url_tmp = $conf['darty_header_protocol'] . $conf['darty_api_url'];
+
+        $navUrl = $url_tmp . '/nav?query=' . $matches[1];
+        $navUrl_code = $url_tmp . '/nav?query=' . str_replace('&', '%26', $matches[1]);
+
+        if (empty($rub['lien']))
+          $rub['lien'] = array('url' => $url, 'title' => 'Découvrir', 'attributes' => array('target' => '_blank'));
+        $options = array('method' => 'GET');
+        $result_more = drupal_http_request($navUrl_code, $options);
+
+        $json_more = json_decode($result_more->data);
+        if (empty($json_more)) {
+          $result_more = drupal_http_request($navUrl, $options);
+          $json_more = json_decode($result_more->data);
+        }
+        if (empty($json_more))
+          continue;
+        $rub['count'] = $json_more->resultCount;
+        $rub['minPrice'] = $json_more->minPrice;
+        $rub['maxPrice'] = $json_more->maxPrice;
+
+        $vars['categories_choix'][] = $rub;
+      }
+    }
+    //$vars['categories_choix'] = array_merge($vars['categories_choix'],$vars['categories_choix'],$vars['categories_choix']);
+    //$vars['item_diapos'] = array_merge($vars['item_diapos'],$vars['item_diapos'],$vars['item_diapos'],$vars['item_diapos'],$vars['item_diapos']);
+
+    drupal_add_js(drupal_get_path('module', 'darty_article') . '/js/diaporama.js', array('type' => 'file', 'scope' => 'footer'));
+  }
 }
 
 function get_info_produits($codics) {
-    //$codics = array(1383558,4029100,3794474,8801843,3288021,1343211,3677281);
-    global $conf;
+  //$codics = array(1383558,4029100,3794474,8801843,3288021,1343211,3677281);
+  global $conf;
 
 
-    $tabResuts = array();
-    foreach ($codics as $codic) {
+  $tabResuts = array();
+  foreach ($codics as $codic) {
 
-        $cache = cache_get('info_produit_' . $codic);
-        if ($cache && $cache->expire > time()) {
-            $data_encode = $cache->data;
-        } else {
-            if (isset($conf['darty_header_htaccess']) && !empty($conf['darty_header_htaccess']))
-                $url_tmp = $conf['darty_header_protocol'] . $conf['darty_header_htaccess'] . '@' . $conf['darty_api_url'];
-            else
-                $url_tmp = $conf['darty_header_protocol'] . $conf['darty_api_url'];
-            $url = url($url_tmp . '/product_list?codics=' . $codic);
-            $options = array('method' => 'GET');
-            $result = drupal_http_request($url, $options);
-            $data_encode = $result->data;
-            cache_set('info_produit_' . $codic, $data_encode, 'cache', time() + 300);
-        }
-        $info = json_decode($data_encode);
-        if (!empty($info->products[0]))
-            $tabResuts[] = $info->products[0];
+    $cache = cache_get('info_produit_' . $codic);
+    if ($cache && $cache->expire > time()) {
+      $data_encode = $cache->data;
+    } else {
+      if (isset($conf['darty_header_htaccess']) && !empty($conf['darty_header_htaccess']))
+        $url_tmp = $conf['darty_header_protocol'] . $conf['darty_header_htaccess'] . '@' . $conf['darty_api_url'];
+      else
+        $url_tmp = $conf['darty_header_protocol'] . $conf['darty_api_url'];
+      $url = url($url_tmp . '/product_list?codics=' . $codic);
+      $options = array('method' => 'GET');
+      $result = drupal_http_request($url, $options);
+      $data_encode = $result->data;
+      cache_set('info_produit_' . $codic, $data_encode, 'cache', time() + 300);
     }
-    return $tabResuts;
+    $info = json_decode($data_encode);
+    if (!empty($info->products[0]))
+      $tabResuts[] = $info->products[0];
+  }
+  return $tabResuts;
 }
 
 /**
  * Preprocess for the node article_sans_sommaire
  */
 function darty_article_preprocess_node_article_sans_sommaire(&$vars) {
-    $node_article = $vars['node'];
+  $node_article = $vars['node'];
 
 //content
-    if (!empty($node_article->field_contenu_contenu))
-        $vars['contenu'] = $node_article->field_contenu_contenu[LANGUAGE_NONE][0]['safe_value'];
+  if (!empty($node_article->field_contenu_contenu))
+    $vars['contenu'] = $node_article->field_contenu_contenu[LANGUAGE_NONE][0]['safe_value'];
 
-    if (!empty($node_article->field_contenu_position_diapo))
-        $vars['position_diapo'] = $node_article->field_contenu_position_diapo[LANGUAGE_NONE][0]['value'];
-    else
-        $vars['position_diapo'] = 'none';
+  if (!empty($node_article->field_contenu_position_diapo))
+    $vars['position_diapo'] = $node_article->field_contenu_position_diapo[LANGUAGE_NONE][0]['value'];
+  else
+    $vars['position_diapo'] = 'none';
 
-    $vars['diapos'] = array();
-    if ($vars['position_diapo'] != 'none') {
-        if (!empty($node_article->field_account_diaporama)) {
+  $vars['diapos'] = array();
+  if ($vars['position_diapo'] != 'none') {
+    if (!empty($node_article->field_account_diaporama)) {
 
-            drupal_add_js(drupal_get_path('module', 'darty_article') . '/js/diaporama_article.js', array('type' => 'file', 'scope' => 'footer'));
+      drupal_add_js(drupal_get_path('module', 'darty_article') . '/js/diaporama_article.js', array('type' => 'file', 'scope' => 'footer'));
 
-            $diapo_sid = $node_article->field_account_diaporama[LANGUAGE_NONE][0]['sid'];
-            $diaposObj = scald_atom_load($diapo_sid);
-            $vars['titre_diapo'] = $diaposObj->title;
-            if (isset($diaposObj->data['items']) && !empty($diaposObj->data['items'])) {
-                foreach ($diaposObj->data['items'] as $sid_item => $item) {
-                    $infos = array();
-                    $objPhoto = scald_atom_load($sid_item);
-                    $infos['desc'] = $item['description'];
+      $diapo_sid = $node_article->field_account_diaporama[LANGUAGE_NONE][0]['sid'];
+      $diaposObj = scald_atom_load($diapo_sid);
+      $vars['titre_diapo'] = $diaposObj->title;
+      if (isset($diaposObj->data['items']) && !empty($diaposObj->data['items'])) {
+        foreach ($diaposObj->data['items'] as $sid_item => $item) {
+          $infos = array();
+          $objPhoto = scald_atom_load($sid_item);
+          $infos['desc'] = $item['description'];
 
-                    if (isset($objPhoto->file_source) && !empty($objPhoto->file_source)) {
-                        $infos['image'] = file_create_url($objPhoto->file_source);
-                        $vars['diapos'][] = $infos;
-                    }
-                }
-            } else {
-                $vars['position_diapo'] = 'none';
-            }
+          if (isset($objPhoto->file_source) && !empty($objPhoto->file_source)) {
+            $infos['image'] = file_create_url($objPhoto->file_source);
+            $vars['diapos'][] = $infos;
+          }
         }
-        else
-            $vars['position_diapo'] = 'none';
+      } else {
+        $vars['position_diapo'] = 'none';
+      }
     }
-    //$vars['diapos'] = array_merge($vars['diapos'],$vars['diapos'],$vars['diapos']);
+    else
+      $vars['position_diapo'] = 'none';
+  }
+  //$vars['diapos'] = array_merge($vars['diapos'],$vars['diapos'],$vars['diapos']);
 }
 
 /**
  * Preprocess for the node article_sans_sommaire
  */
 function darty_article_preprocess_node_article_avec_sommaire(&$vars) {
-    $node_article = $vars['node'];
+  $node_article = $vars['node'];
 
 //content
-    $vars['chapitres'] = array();
-    if (!empty($node_article->field_contenu_chapitres)) {
-        $chapitresList = $node_article->field_contenu_chapitres[LANGUAGE_NONE];
-        $countChapitreList = count($chapitresList);
-        foreach ($chapitresList as $key => $bloc) {
-            if (isset($bloc['entity']))
-                $chapitre = $bloc['entity'];
-            else
-                $chapitre = bean_load($bloc['target_id']);
-            $wrapper = entity_metadata_wrapper('bean', $chapitre);
-            $arrayTexte = $wrapper->field_contenu_chapitre->value();
-            if (isset($arrayTexte) && is_array($arrayTexte))
-                $texte = $arrayTexte['safe_value'];
-            else
-                $texte = $arrayTexte;
-            $id = 'sommaire_' . ($key + 1) . '_' . $countChapitreList;
-            $vars['chapitres'][] = array('titre' => $wrapper->label->value(), 'id' => $id, 'contenu' => $texte, 'render' => bean_view($chapitre, $id));
-        }
+  $vars['chapitres'] = array();
+  if (!empty($node_article->field_contenu_chapitres)) {
+    $chapitresList = $node_article->field_contenu_chapitres[LANGUAGE_NONE];
+    $countChapitreList = count($chapitresList);
+    foreach ($chapitresList as $key => $bloc) {
+      if (isset($bloc['entity']))
+        $chapitre = $bloc['entity'];
+      else
+        $chapitre = bean_load($bloc['target_id']);
+      $wrapper = entity_metadata_wrapper('bean', $chapitre);
+      $arrayTexte = $wrapper->field_contenu_chapitre->value();
+      if (isset($arrayTexte) && is_array($arrayTexte))
+        $texte = $arrayTexte['safe_value'];
+      else
+        $texte = $arrayTexte;
+      $id = 'sommaire_' . ($key + 1) . '_' . $countChapitreList;
+      $vars['chapitres'][] = array('titre' => $wrapper->label->value(), 'id' => $id, 'contenu' => $texte, 'render' => bean_view($chapitre, $id));
     }
+  }
 }
 
 /**
  * Preprocess for the node article_sans_sommaire
  */
 function darty_article_preprocess_node_dossier(&$vars) {
-    $node_dossier = $vars['node'];
+  $node_dossier = $vars['node'];
 
 
 //couleur du dossier
-    if (!empty($node_dossier->field_contenu_couleur))
-        $vars['couleur'] = $node_dossier->field_contenu_couleur[LANGUAGE_NONE][0]['value'];
-    else
-        $vars['couleur'] = 'orange';
+  if (!empty($node_dossier->field_contenu_couleur))
+    $vars['couleur'] = $node_dossier->field_contenu_couleur[LANGUAGE_NONE][0]['value'];
+  else
+    $vars['couleur'] = 'orange';
 
 //content
-    if (!empty($node_dossier->field_contenu_contenu))
-        $vars['contenu'] = $node_dossier->field_contenu_contenu[LANGUAGE_NONE][0]['safe_value'];
+  if (!empty($node_dossier->field_contenu_contenu))
+    $vars['contenu'] = $node_dossier->field_contenu_contenu[LANGUAGE_NONE][0]['safe_value'];
 
 //exergue
-    if (!empty($node_dossier->field_contenu_exergue))
-        $vars['exergue'] = $node_dossier->field_contenu_exergue[LANGUAGE_NONE][0]['value'];
+  if (!empty($node_dossier->field_contenu_exergue))
+    $vars['exergue'] = $node_dossier->field_contenu_exergue[LANGUAGE_NONE][0]['value'];
 
 //titre sommaire
-    if (!empty($node_dossier->field_contenu_titre_sommaire))
-        $vars['sommaire_dossier_title'] = $node_dossier->field_contenu_titre_sommaire[LANGUAGE_NONE][0]['value'];
+  if (!empty($node_dossier->field_contenu_titre_sommaire))
+    $vars['sommaire_dossier_title'] = $node_dossier->field_contenu_titre_sommaire[LANGUAGE_NONE][0]['value'];
 
 //contenu associes
-    if (!empty($node_dossier->field_contenus_contenu_associes)) {
-        $list_contenu = $node_dossier->field_contenus_contenu_associes[LANGUAGE_NONE];
-        foreach ($list_contenu as $elem) {
-            $vars['contenu_associes'][] = $elem['entity'];
-        }
+  if (!empty($node_dossier->field_contenus_contenu_associes)) {
+    $list_contenu = $node_dossier->field_contenus_contenu_associes[LANGUAGE_NONE];
+    foreach ($list_contenu as $elem) {
+      $vars['contenu_associes'][] = $elem['entity'];
     }
-    drupal_add_js(
-            "jQuery(document).ready(function () { 
-                if (jQuery('.node-type-dossier .col_left').height() > jQuery('.node-type-dossier .col_right').height())
+  }
+  drupal_add_js(
+      "jQuery(document).ready(function () { 
+        if (jQuery('.node-type-dossier .col_left').height() > jQuery('.node-type-dossier .col_right').height())
 jQuery('.node-type-dossier .col_right').css('margin-top',(jQuery('.node-type-dossier .col_left').height()/2 - jQuery('.node-type-dossier .col_right').height()/2));
 });", array('type' => 'inline', 'scope' => 'footer')
-    );
+  );
 }
 
 function cleanCut($string, $length, $cutString = '...') {
-    if (strlen($string) <= $length) {
-        return $string . $cutString;
-    }
-    $str = substr($string, 0, $length);
-    return substr($str, 0, strrpos($str, ' ')) . $cutString;
+  if (strlen($string) <= $length) {
+    return $string . $cutString;
+  }
+  $str = substr($string, 0, $length);
+  return substr($str, 0, strrpos($str, ' ')) . $cutString;
 }
 
 function get_api_last_articles($nbArticles) {
-    if (arg(2))
-        $nbArticles = arg(2);
+  if (arg(2))
+    $nbArticles = arg(2);
 
-    $query = new EntityFieldQuery();
-    $entities = $query->entityCondition('entity_type', 'node')
-            ->entityCondition('bundle', array('article_sans_sommaire', 'article_avec_sommaire', 'dossier', 'diaporama'), 'IN')
-            ->propertyCondition('status', 1)
-            ->propertyOrderBy('changed', 'DESC')
-            ->range(0, $nbArticles)
-            ->execute();
-    $nodes = entity_load('node', array_keys($entities['node']));
+  $query = new EntityFieldQuery();
+  $entities = $query->entityCondition('entity_type', 'node')
+      ->entityCondition('bundle', array('article_sans_sommaire', 'article_avec_sommaire', 'dossier', 'diaporama'), 'IN')
+      ->propertyCondition('status', 1)
+      ->propertyOrderBy('changed', 'DESC')
+      ->range(0, $nbArticles)
+      ->execute();
+  $nodes = entity_load('node', array_keys($entities['node']));
 
-    $items = array();
-    foreach ($nodes as $node) {
-        $item = new stdClass();
-        if (!empty($node->field_contenu_visuel)) {
-            $sid = $node->field_contenu_visuel[LANGUAGE_NONE][0]['sid'];
-            $atom = scald_atom_load($sid);
-            $item->visuel = file_create_url($atom->file_source);
-        }
+  $items = array();
+  foreach ($nodes as $node) {
+    $item = new stdClass();
+    if (!empty($node->field_contenu_visuel)) {
+      $sid = $node->field_contenu_visuel[LANGUAGE_NONE][0]['sid'];
+      $atom = scald_atom_load($sid);
+      $item->visuel = file_create_url($atom->file_source);
+    }
 
 //header article
-        if (!empty($node->field_contenu_format) && isset($node->field_contenu_format[LANGUAGE_NONE][0]['taxonomy_term'])) {
-            $objFormat = $node->field_contenu_format[LANGUAGE_NONE][0]['taxonomy_term'];
-        }
-        else
-            $objFormat = taxonomy_term_load($node->field_contenu_format[LANGUAGE_NONE][0]['tid']);
-        if (isset($objFormat) && is_object($objFormat))
-            $item->format = $objFormat->name;
-        if (!empty($node->field_contenu_titre))
-            $item->titre = $node->field_contenu_titre[LANGUAGE_NONE][0]['value'];
-
-        $item->url = url('node/' . $node->nid, array('absolute' => TRUE));
-
-        if (!empty($node->field_contenu_accroche)) {
-            $item->accroche = $node->field_contenu_accroche[LANGUAGE_NONE][0]['value'];
-        }
-        $items[] = $item;
+    if (!empty($node->field_contenu_format) && isset($node->field_contenu_format[LANGUAGE_NONE][0]['taxonomy_term'])) {
+      $objFormat = $node->field_contenu_format[LANGUAGE_NONE][0]['taxonomy_term'];
     }
-    return drupal_json_output($items);
+    else
+      $objFormat = taxonomy_term_load($node->field_contenu_format[LANGUAGE_NONE][0]['tid']);
+    if (isset($objFormat) && is_object($objFormat))
+      $item->format = $objFormat->name;
+    if (!empty($node->field_contenu_titre))
+      $item->titre = $node->field_contenu_titre[LANGUAGE_NONE][0]['value'];
+
+    $item->url = url('node/' . $node->nid, array('absolute' => TRUE));
+
+    if (!empty($node->field_contenu_accroche)) {
+      $item->accroche = $node->field_contenu_accroche[LANGUAGE_NONE][0]['value'];
+    }
+    $items[] = $item;
+  }
+  return drupal_json_output($items);
 }
 
 function prepare_gigya_article($node) {
-    global $conf;
+  global $conf;
 
-    if (!empty($node->field_contenu_titre))
-        $field_message_share = $node->field_contenu_titre[LANGUAGE_NONE][0]['value'];
-    else
-        $field_message_share = $node->title;
+  if (!empty($node->field_contenu_titre))
+    $field_message_share = $node->field_contenu_titre[LANGUAGE_NONE][0]['value'];
+  else
+    $field_message_share = $node->title;
 
-    $field_message_mail = "email@test.fr";
+  $field_message_mail = "email@test.fr";
 
+  drupal_add_html_head(
+      array(
+    '#tag' => 'meta',
+    '#attributes' => array(
+      'property' => 'og:url',
+      'centent' => url(current_path(), array('absolute' => TRUE))
+    )
+      ), 'og:url');
+
+  drupal_add_html_head(
+      array(
+    '#tag' => 'meta',
+    '#attributes' => array(
+      'property' => 'og:title',
+      'centent' => drupal_get_title()
+    )
+      ), 'og:title');
+
+  if (!empty($node->field_contenu_visuel)) {
+    $sid = $node->field_contenu_visuel[LANGUAGE_NONE][0]['sid'];
+    $image = scald_atom_load($sid);
     drupal_add_html_head(
-            array(
-        '#tag' => 'meta',
-        '#attributes' => array(
-            'property' => 'og:url',
-            'centent' => url(current_path(), array('absolute' => TRUE))
-        )
-            ), 'og:url');
+        array(
+      '#tag' => 'meta',
+      '#attributes' => array(
+        'property' => 'og:image',
+        'centent' => file_create_url($image->file_source)
+      )
+        ), 'og:image');
+  }
 
-    drupal_add_html_head(
-            array(
-        '#tag' => 'meta',
-        '#attributes' => array(
-            'property' => 'og:title',
-            'centent' => drupal_get_title()
-        )
-            ), 'og:title');
 
-    if (!empty($node->field_contenu_visuel)) {
-        $sid = $node->field_contenu_visuel[LANGUAGE_NONE][0]['sid'];
-        $image = scald_atom_load($sid);
-        drupal_add_html_head(
-                array(
-            '#tag' => 'meta',
-            '#attributes' => array(
-                'property' => 'og:image',
-                'centent' => file_create_url($image->file_source)
-            )
-                ), 'og:image');
+
+  drupal_add_js('http://cdn.gigya.com/js/socialize.js?apiKey=' . $conf['darty_gigya_apikey'] . '&lang=fr-fr', array(
+    'type' => 'external',
+    'scope' => 'footer'
+      )
+  );
+
+  drupal_add_js(
+      'var ua = new gigya.socialize.UserAction();
+  ua.setLinkBack("' . url(current_path(), array('absolute' => TRUE)) . '");
+  ua.setTitle("' . $field_message_share . '");
+
+  var shareButtonsList =
+  [
+    {
+    provider:"facebook-like",
+    tooltip:"Recommander ce produit sur Facebook",
+    action:"like",
+    font:"arial",
+    },
+    {
+    provider:"google-plusone",
+    tooltip:"Recommander ce produit sur Google",
+    userMessage:"' . drupal_get_title() . '",
+    },
+    {
+    provider:"share",
+    tooltip:"Partager ce produit",
+    userMessage:"' . drupal_get_title() . '",
+    enableCount:false
+    },
+    {
+    provider:"facebook",
+    tooltip:"Partager ce produit par Facebook",
+    userMessage:"' . drupal_get_title() . '",
+    enableCount:false,
+    iconOnly:"true"
+    },
+    {
+    provider:"twitter",
+    tooltip:"Partager ce produit par Twitter",
+    userMessage:"' . drupal_get_title() . '",
+    enableCount:false,
+    iconOnly:"true"
+    },
+    {
+    provider: "pinterest",
+    tooltip:"Partager ce produit par Pinterest",
+    userMessage:"' . drupal_get_title() . '",
+    enableCount:false,
+    iconOnly:"true"
+    },
+    {
+    provider:"email",
+    tooltip:"Partager ce produit par email",
+    iconOnly:"true",
+    },
+  ]
+  var shareBarParams = {
+    userAction:ua,
+    emailBody:"' . $field_message_mail . '",
+    shareButtons: shareButtonsList,
+    containerID: "darty_share_bar"
+  }
+  gigya.socialize.showShareBarUI(shareBarParams);
+  
+  gigya.socialize.getProviderShareCounts({url:"'.url(current_path(), array('absolute' => TRUE)).'",callback:countShareGigya});
+
+  function countShareGigya(response){
+    if ( response.errorCode == 0 ) {   
+      var count = response.shareCounts.facebook + response.shareCounts.linkedin + response.shareCounts.pinterest + response.shareCounts.twitter;
+      $(".zone-partage .separateur_share").show();
+      $(".zone-partage .page_share").show();
+      $(".zone-partage .page_share .number").html(count);
+      if (count > 1)
+        $(".zone-partage .page_share .label").html($(".zone-partage .page_share .label").html()+"s");
     }
+  }
 
-
-
-    drupal_add_js('http://cdn.gigya.com/js/socialize.js?apiKey=' . $conf['darty_gigya_apikey'] . '&lang=fr-fr', array(
-        'type' => 'external',
-        'scope' => 'footer'
-            )
-    );
-
-    drupal_add_js(
-            'var ua = new gigya.socialize.UserAction();
-    ua.setLinkBack("' . url(current_path(), array('absolute' => TRUE)) . '");
-    ua.setTitle("' . $field_message_share . '");
-
-    var shareButtonsList =
-    [
-      {
-        provider:"facebook-like",
-        tooltip:"Recommander ce produit sur Facebook",
-        action:"like",
-        font:"arial",
-      },
-      {
-        provider:"google-plusone",
-        tooltip:"Recommander ce produit sur Google",
-        userMessage:"' . drupal_get_title() . '",
-      },
-      {
-        provider:"share",
-        tooltip:"Partager ce produit",
-        userMessage:"' . drupal_get_title() . '",
-        enableCount:false
-      },
-      {
-        provider:"facebook",
-        tooltip:"Partager ce produit par Facebook",
-        userMessage:"' . drupal_get_title() . '",
-        enableCount:false,
-        iconOnly:"true"
-      },
-      {
-        provider:"twitter",
-        tooltip:"Partager ce produit par Twitter",
-        userMessage:"' . drupal_get_title() . '",
-        enableCount:false,
-        iconOnly:"true"
-      },
-      {
-        provider: "pinterest",
-        tooltip:"Partager ce produit par Pinterest",
-        userMessage:"' . drupal_get_title() . '",
-        enableCount:false,
-        iconOnly:"true"
-      },
-      {
-        provider:"email",
-        tooltip:"Partager ce produit par email",
-        iconOnly:"true",
-      },
-    ]
-    var shareBarParams = {
-      userAction:ua,
-      emailBody:"' . $field_message_mail . '",
-      shareButtons: shareButtonsList,
-      containerID: "darty_share_bar"
-    }
-    gigya.socialize.showShareBarUI(shareBarParams);
-    
-    gigya.socialize.getProviderShareCounts({url:"'.url(current_path(), array('absolute' => TRUE)).'",callback:countShareGigya});
-
-    function countShareGigya(response){
-        if ( response.errorCode == 0 ) {     
-            var count = response.shareCounts.facebook + response.shareCounts.linkedin + response.shareCounts.pinterest + response.shareCounts.twitter;
-            $(".zone-partage .separateur_share").show();
-            $(".zone-partage .page_share").show();
-            $(".zone-partage .page_share .number").html(count);
-            if (count > 1)
-                $(".zone-partage .page_share .label").html($(".zone-partage .page_share .label").html()+"s");
-        }
-    }
-
-    var shareBarParams_footer = {
-      userAction:ua,
-      emailBody:"' . $field_message_mail . '",
-      shareButtons: shareButtonsList,
-      containerID: "darty_share_bar_footer"
-    }
-    gigya.socialize.showShareBarUI(shareBarParams_footer);
-    ', array('type' => 'inline', 'scope' => 'footer')
-    );
+  var shareBarParams_footer = {
+    userAction:ua,
+    emailBody:"' . $field_message_mail . '",
+    shareButtons: shareButtonsList,
+    containerID: "darty_share_bar_footer"
+  }
+  gigya.socialize.showShareBarUI(shareBarParams_footer);
+  ', array('type' => 'inline', 'scope' => 'footer')
+  );
 }
 
 function article_moreviews($nb, $ids_use) {
 
-    $query = db_select('node', 'n');
+  $query = db_select('node', 'n');
 
-    $query->join('nodeviewcount', 'c', 'n.nid = c.nid'); //JOIN node with users
-    $query->addExpression('COUNT(c.nid)', 'ncount');
+  $query->join('darty_nodeviewcount', 'c', 'n.nid = c.nid'); //JOIN node with users
+  $query->addExpression('c.count', 'ncount');
 
-    $query->join('field_data_field_contenu_date_crea', 'cr', 'n.nid = cr.entity_id');
-    $query->condition('cr.field_contenu_date_crea_value', time() - 2592000, '>='); // 2592000
+  $query->join('field_data_field_contenu_date_crea', 'cr', 'n.nid = cr.entity_id');
+  $query->condition('cr.field_contenu_date_crea_value', time() - 2592000, '>='); // 2592000
 
-    $query->fields('n', array('nid'));
-    if (!empty($ids_use))
-        $query->condition('n.nid', $ids_use, 'NOT IN');
-    $query->condition('status', 1, '=')
-            ->orderBy('ncount', 'DESC')
-            ->groupBy('c.nid')
-            ->range(0, $nb);
+  $query->fields('n', array('nid'));
+  if (!empty($ids_use))
+    $query->condition('n.nid', $ids_use, 'NOT IN');
+  $query->condition('status', 1, '=')
+      ->orderBy('ncount', 'DESC')
+      ->groupBy('c.nid')
+      ->range(0, $nb);
 
-    $result = $query->execute();
+  $result = $query->execute();
 
-    $idsNode = array();
-    while (
-    $record = $result->fetchAssoc()) {
-        $idsNode[] = $record['nid'];
-    }
-    $nodes = node_load_multiple($idsNode);
-    return $nodes;
+  $idsNode = array();
+  while (
+  $record = $result->fetchAssoc()) {
+    $idsNode[] = $record['nid'];
+  }
+  $nodes = node_load_multiple($idsNode);
+  return $nodes;
 }
 
 function getLastArticle($ids_use, $format = null) {
 
-    $query = db_select('node', 'n');
+  $query = db_select('node', 'n');
 
-    $query->join('field_data_field_contenu_date_crea', 'c', 'n.nid = c.entity_id');
-    $query->leftJoin('field_data_field_contenu_date_modif', 'm', 'n.nid = m.entity_id');
-    $query->addExpression('GREATEST(ifnull(c.field_contenu_date_crea_value,0),ifnull(m.field_contenu_date_modif_value,0))', 'diff');
+  $query->join('field_data_field_contenu_date_crea', 'c', 'n.nid = c.entity_id');
+  $query->leftJoin('field_data_field_contenu_date_modif', 'm', 'n.nid = m.entity_id');
+  $query->addExpression('GREATEST(ifnull(c.field_contenu_date_crea_value,0),ifnull(m.field_contenu_date_modif_value,0))', 'diff');
 
-    $query->fields('n', array('nid'))
-            ->condition('status', 1, '=')
-            ->orderBy('diff', 'DESC')
-            ->range(0, 1);
-    if (!empty($ids_use))
-        $query->condition('n.nid', $ids_use, 'NOT IN');
-    if ($format !== null) {
-        $query->join('field_data_field_contenu_format', 'f', 'n.nid = f.entity_id');
-        $query->condition('f.field_contenu_format_tid', $format, '=');
-    }
-    $result = $query->execute();
-    while (
-    $record = $result->fetchAssoc()) {
-        return node_load($record['nid']);
-    }
+  $query->fields('n', array('nid'))
+      ->condition('status', 1, '=')
+      ->orderBy('diff', 'DESC')
+      ->range(0, 1);
+  if (!empty($ids_use))
+    $query->condition('n.nid', $ids_use, 'NOT IN');
+  if ($format !== null) {
+    $query->join('field_data_field_contenu_format', 'f', 'n.nid = f.entity_id');
+    $query->condition('f.field_contenu_format_tid', $format, '=');
+  }
+  $result = $query->execute();
+  while (
+  $record = $result->fetchAssoc()) {
+    return node_load($record['nid']);
+  }
 }
 
 /**
  * fonction remontant les articles attaché à une rubrique et a un format et datant de moins de $time et pas dans une liste d'ids
  */
 function getArticlesByRubAndFormatAndRecent($nb, $format, $rub, $time, $ids_use) {
-    $query = db_select('node', 'n');
+  $query = db_select('node', 'n');
 
-    $query->join('field_data_field_contenu_date_crea', 'c', 'n.nid = c.entity_id');
-    $query->leftJoin('field_data_field_contenu_date_modif', 'm', 'n.nid = m.entity_id');
-    $query->addExpression('GREATEST(ifnull(c.field_contenu_date_crea_value,0),ifnull(m.field_contenu_date_modif_value,0))', 'diff');
+  $query->join('field_data_field_contenu_date_crea', 'c', 'n.nid = c.entity_id');
+  $query->leftJoin('field_data_field_contenu_date_modif', 'm', 'n.nid = m.entity_id');
+  $query->addExpression('GREATEST(ifnull(c.field_contenu_date_crea_value,0),ifnull(m.field_contenu_date_modif_value,0))', 'diff');
 
-    $query->fields('n', array('nid'))
-            ->condition('n.nid', $ids_use, 'NOT IN')
-            ->condition('status', 1, '=')
-            //->condition('c.field_contenu_date_crea_value', time() - $time, '>=')
-            ->orderBy('diff', 'DESC');
+  $query->fields('n', array('nid'))
+      ->condition('n.nid', $ids_use, 'NOT IN')
+      ->condition('status', 1, '=')
+      //->condition('c.field_contenu_date_crea_value', time() - $time, '>=')
+      ->orderBy('diff', 'DESC');
 
-    if (!empty($format)) {
-        $query->join('field_data_field_contenu_format', 'f', 'n.nid = f.entity_id');
-        $query->condition('f.field_contenu_format_tid', $format, '=');
-    }
-    if (!empty($rub) && !is_array($rub)) {
-        $query->join('field_data_field_contenu_rubrique', 'r', 'n.nid = r.entity_id');
-        $query->condition('r.field_contenu_rubrique_tid', $rub, '=');
-    } elseif (!empty($rub) && is_array($rub)) {
-        $query->join('field_data_field_contenu_rubrique', 'r', 'n.nid = r.entity_id');
-        $query->condition('r.field_contenu_rubrique_tid', $rub, 'IN');
-    }
-    $query->range(0, $nb);
+  if (!empty($format)) {
+    $query->join('field_data_field_contenu_format', 'f', 'n.nid = f.entity_id');
+    $query->condition('f.field_contenu_format_tid', $format, '=');
+  }
+  if (!empty($rub) && !is_array($rub)) {
+    $query->join('field_data_field_contenu_rubrique', 'r', 'n.nid = r.entity_id');
+    $query->condition('r.field_contenu_rubrique_tid', $rub, '=');
+  } elseif (!empty($rub) && is_array($rub)) {
+    $query->join('field_data_field_contenu_rubrique', 'r', 'n.nid = r.entity_id');
+    $query->condition('r.field_contenu_rubrique_tid', $rub, 'IN');
+  }
+  $query->range(0, $nb);
 
-    $result = $query->execute();
-    $idsNode = array();
-    while (
-    $record = $result->fetchAssoc()) {
-        $idsNode[] = $record['nid'];
-    }
+  $result = $query->execute();
+  $idsNode = array();
+  while (
+  $record = $result->fetchAssoc()) {
+    $idsNode[] = $record['nid'];
+  }
 
-    $nodes = node_load_multiple($idsNode);
-    return $nodes;
+  $nodes = node_load_multiple($idsNode);
+  return $nodes;
 }
 
 function plusde_label($format, $type) {
 
-    $libelle[36] = array('titre' => 'Plus de dossiers', 'titre_lien' => 'Voir tous les dossiers', 'tous' => 'Tous les dossiers');
-    $libelle[37] = array('titre' => 'Plus de conseils de pro', 'titre_lien' => 'Voir tous les conseils de pro', 'tous' => 'Tous les conseils de pro');
-    $libelle[38] = array('titre' => 'Plus d\'actualités', 'titre_lien' => 'Voir toutes les actualités', 'tous' => 'Toutes les actualités');
-    $libelle[39] = array('titre' => 'Plus de guides d\'achat', 'titre_lien' => 'Voir tous les guides d\'achat', 'tous' => 'Tous les guides d\'achat');
-    $libelle[40] = array('titre' => 'Plus de tests', 'titre_lien' => 'Voir tous les tests', 'tous' => 'Tous les tests');
-    $libelle[41] = array('titre' => 'Plus de décryptages', 'titre_lien' => 'Voir tous les décryptages', 'tous' => 'Tous les décryptages');
-    $libelle[42] = array('titre' => 'Plus de shopping lists', 'titre_lien' => 'Voir toutes les shopping lists', 'tous' => 'Toutes les shopping lists');
-    $libelle[45] = array('titre' => 'Plus d\'actualités Darty', 'titre_lien' => 'Voir toutes les actualités Darty', 'tous' => 'Toutes les actualités Darty');
+  $libelle[36] = array('titre' => 'Plus de dossiers', 'titre_lien' => 'Voir tous les dossiers', 'tous' => 'Tous les dossiers');
+  $libelle[37] = array('titre' => 'Plus de conseils de pro', 'titre_lien' => 'Voir tous les conseils de pro', 'tous' => 'Tous les conseils de pro');
+  $libelle[38] = array('titre' => 'Plus d\'actualités', 'titre_lien' => 'Voir toutes les actualités', 'tous' => 'Toutes les actualités');
+  $libelle[39] = array('titre' => 'Plus de guides d\'achat', 'titre_lien' => 'Voir tous les guides d\'achat', 'tous' => 'Tous les guides d\'achat');
+  $libelle[40] = array('titre' => 'Plus de tests', 'titre_lien' => 'Voir tous les tests', 'tous' => 'Tous les tests');
+  $libelle[41] = array('titre' => 'Plus de décryptages', 'titre_lien' => 'Voir tous les décryptages', 'tous' => 'Tous les décryptages');
+  $libelle[42] = array('titre' => 'Plus de shopping lists', 'titre_lien' => 'Voir toutes les shopping lists', 'tous' => 'Toutes les shopping lists');
+  $libelle[45] = array('titre' => 'Plus d\'actualités Darty', 'titre_lien' => 'Voir toutes les actualités Darty', 'tous' => 'Toutes les actualités Darty');
 
-    if (isset($libelle[$format][$type]))
-        return $libelle[$format][$type];
-    return '';
+  if (isset($libelle[$format][$type]))
+    return $libelle[$format][$type];
+  return '';
 }
 
 function getAllTidsRubriqueWithArticles($format, $uid) {
-    $query = db_select('node', 'n');
-    $query->leftjoin('field_data_field_contenu_rubrique', 'r', 'n.nid = r.entity_id');
-    $query->leftjoin('field_data_field_contenu_rubrique_sec', 'rs', 'n.nid = rs.entity_id');
+  $query = db_select('node', 'n');
+  $query->leftjoin('field_data_field_contenu_rubrique', 'r', 'n.nid = r.entity_id');
+  $query->leftjoin('field_data_field_contenu_rubrique_sec', 'rs', 'n.nid = rs.entity_id');
 
-    if (!empty($uid) && $uid != 'null') {
-        $query->condition('n.uid', $uid, '=');
-    }
-    if (!empty($format) && $format != 'null') {
-        $query->join('field_data_field_contenu_format', 'f', 'n.nid = f.entity_id');
-        $query->condition('f.field_contenu_format_tid', $format, '=');
-    }
+  if (!empty($uid) && $uid != 'null') {
+    $query->condition('n.uid', $uid, '=');
+  }
+  if (!empty($format) && $format != 'null') {
+    $query->join('field_data_field_contenu_format', 'f', 'n.nid = f.entity_id');
+    $query->condition('f.field_contenu_format_tid', $format, '=');
+  }
 
-    $query->fields('r', array('field_contenu_rubrique_tid'))
-            ->fields('rs', array('field_contenu_rubrique_sec_tid'))
-            ->condition('status', 1, '=')
-            ->distinct();
+  $query->fields('r', array('field_contenu_rubrique_tid'))
+      ->fields('rs', array('field_contenu_rubrique_sec_tid'))
+      ->condition('status', 1, '=')
+      ->distinct();
 
 
-    $result = $query->execute();
-    $idsNode = array();
-    while (
-    $record = $result->fetchAssoc()) {
-        if (isset($record['field_contenu_rubrique_tid']) && $record['field_contenu_rubrique_tid'] != null)
-            $idsNode[] = $record['field_contenu_rubrique_tid'];
-        if (isset($record['field_contenu_rubrique_sec_tid']) && $record['field_contenu_rubrique_sec_tid'] != null)
-            $idsNode[] = $record['field_contenu_rubrique_sec_tid'];
-    }
+  $result = $query->execute();
+  $idsNode = array();
+  while (
+  $record = $result->fetchAssoc()) {
+    if (isset($record['field_contenu_rubrique_tid']) && $record['field_contenu_rubrique_tid'] != null)
+      $idsNode[] = $record['field_contenu_rubrique_tid'];
+    if (isset($record['field_contenu_rubrique_sec_tid']) && $record['field_contenu_rubrique_sec_tid'] != null)
+      $idsNode[] = $record['field_contenu_rubrique_sec_tid'];
+  }
 
-    return $idsNode;
+  return $idsNode;
 }
 
 function getAllTidsFormatWithArticles($rubTids, $uid, $ids_use = array()) {
-    $query = db_select('node', 'n');
-    $query->fields('f', array('field_contenu_format_tid'))
-            ->fields('td', array('name'))
-            ->condition('status', 1, '=')
-            ->distinct()
-            ->orderBy('td.weight', 'ASC');
+  $query = db_select('node', 'n');
+  $query->fields('f', array('field_contenu_format_tid'))
+      ->fields('td', array('name'))
+      ->condition('status', 1, '=')
+      ->distinct()
+      ->orderBy('td.weight', 'ASC');
 
-    $query->join('field_data_field_contenu_format', 'f', 'n.nid = f.entity_id');
-    $query->join('taxonomy_term_data', 'td', 'td.tid = f.field_contenu_format_tid');
-    if (!empty($uid) && $uid != 'null') {
-        $query->condition('n.uid', $uid, '=');
-    }
-    if (!empty($ids_use))
-        $query->condition('n.nid', $ids_use, 'NOT IN');
+  $query->join('field_data_field_contenu_format', 'f', 'n.nid = f.entity_id');
+  $query->join('taxonomy_term_data', 'td', 'td.tid = f.field_contenu_format_tid');
+  if (!empty($uid) && $uid != 'null') {
+    $query->condition('n.uid', $uid, '=');
+  }
+  if (!empty($ids_use))
+    $query->condition('n.nid', $ids_use, 'NOT IN');
 
-    //rubrique
-    if (!empty($rubTids)) {
-        $query->leftjoin('field_data_field_contenu_rubrique', 'r', 'n.nid = r.entity_id');
-        $query->leftjoin('field_data_field_contenu_rubrique_sec', 'rs', 'n.nid = rs.entity_id');
+  //rubrique
+  if (!empty($rubTids)) {
+    $query->leftjoin('field_data_field_contenu_rubrique', 'r', 'n.nid = r.entity_id');
+    $query->leftjoin('field_data_field_contenu_rubrique_sec', 'rs', 'n.nid = rs.entity_id');
 
-        $db_or = db_or();
-        $db_or->condition('r.field_contenu_rubrique_tid', $rubTids, 'IN');
-        $db_or->condition('rs.field_contenu_rubrique_sec_tid', $rubTids, 'IN');
-        $query->condition($db_or);
-    }
+    $db_or = db_or();
+    $db_or->condition('r.field_contenu_rubrique_tid', $rubTids, 'IN');
+    $db_or->condition('rs.field_contenu_rubrique_sec_tid', $rubTids, 'IN');
+    $query->condition($db_or);
+  }
 
-    $result = $query->execute();
-    $idsNode = array();
-    while (
-    $record = $result->fetchAssoc()) {
-        $idsNode[$record['field_contenu_format_tid']] = $record['name'];
-    }
-    return $idsNode;
+  $result = $query->execute();
+  $idsNode = array();
+  while (
+  $record = $result->fetchAssoc()) {
+    $idsNode[$record['field_contenu_format_tid']] = $record['name'];
+  }
+  return $idsNode;
 }
 
 function getArticlesCountForSommaire($rub, $format = null, $uid, $ids_use = array()) {
-    $query = db_select('node', 'n');
+  $query = db_select('node', 'n');
 
-    $query->join('field_data_field_contenu_date_crea', 'c', 'n.nid = c.entity_id');
-    $query->leftJoin('field_data_field_contenu_date_modif', 'm', 'n.nid = m.entity_id');
-    $query->addExpression('GREATEST(ifnull(c.field_contenu_date_crea_value,0),ifnull(m.field_contenu_date_modif_value,0))', 'diff');
+  $query->join('field_data_field_contenu_date_crea', 'c', 'n.nid = c.entity_id');
+  $query->leftJoin('field_data_field_contenu_date_modif', 'm', 'n.nid = m.entity_id');
+  $query->addExpression('GREATEST(ifnull(c.field_contenu_date_crea_value,0),ifnull(m.field_contenu_date_modif_value,0))', 'diff');
 
-    $query->fields('n', array('nid'))
-            ->condition('status', 1, '=')
-            ->orderBy('diff', 'DESC')->distinct();
+  $query->fields('n', array('nid'))
+      ->condition('status', 1, '=')
+      ->orderBy('diff', 'DESC')->distinct();
 
-    if (!empty($ids_use))
-        $query->condition('n.nid', $ids_use, 'NOT IN');
+  if (!empty($ids_use))
+    $query->condition('n.nid', $ids_use, 'NOT IN');
 
-    if (!empty($uid) && $uid != 'null') {
-        $query->condition('n.uid', $uid, '=');
-    }
-    if (!empty($format) && $format != 'null') {
-        $query->join('field_data_field_contenu_format', 'f', 'n.nid = f.entity_id');
-        $query->condition('f.field_contenu_format_tid', $format, '=');
-    }
-    if (!empty($rub)) {
-        $query->leftjoin('field_data_field_contenu_rubrique', 'r', 'n.nid = r.entity_id');
-        $query->leftjoin('field_data_field_contenu_rubrique_sec', 'rs', 'n.nid = rs.entity_id');
+  if (!empty($uid) && $uid != 'null') {
+    $query->condition('n.uid', $uid, '=');
+  }
+  if (!empty($format) && $format != 'null') {
+    $query->join('field_data_field_contenu_format', 'f', 'n.nid = f.entity_id');
+    $query->condition('f.field_contenu_format_tid', $format, '=');
+  }
+  if (!empty($rub)) {
+    $query->leftjoin('field_data_field_contenu_rubrique', 'r', 'n.nid = r.entity_id');
+    $query->leftjoin('field_data_field_contenu_rubrique_sec', 'rs', 'n.nid = rs.entity_id');
 
-        $db_or = db_or();
-        $db_or->condition('r.field_contenu_rubrique_tid', $rub, 'IN');
-        $db_or->condition('rs.field_contenu_rubrique_sec_tid', $rub, 'IN');
-        $query->condition($db_or);
-    }
+    $db_or = db_or();
+    $db_or->condition('r.field_contenu_rubrique_tid', $rub, 'IN');
+    $db_or->condition('rs.field_contenu_rubrique_sec_tid', $rub, 'IN');
+    $query->condition($db_or);
+  }
 
-    $result = $query->execute();
+  $result = $query->execute();
 
-    return $result->rowCount();
+  return $result->rowCount();
 }
 
 /**
  * fonction remontant les articles pour les pages sommaires avec un tableau de Tids rubrique, début, nombre, format, et ids a ne pas remonter
  */
 function getArticlesForSommaire($rub, $format = null, $uid = null, $deb = 0, $nb = 12, $ids_use = array()) {
-    $query = db_select('node', 'n');
+  $query = db_select('node', 'n');
 
-    $query->join('field_data_field_contenu_date_crea', 'c', 'n.nid = c.entity_id');
-    $query->leftJoin('field_data_field_contenu_date_modif', 'm', 'n.nid = m.entity_id');
-    $query->addExpression('GREATEST(ifnull(c.field_contenu_date_crea_value,0),ifnull(m.field_contenu_date_modif_value,0))', 'diff');
+  $query->join('field_data_field_contenu_date_crea', 'c', 'n.nid = c.entity_id');
+  $query->leftJoin('field_data_field_contenu_date_modif', 'm', 'n.nid = m.entity_id');
+  $query->addExpression('GREATEST(ifnull(c.field_contenu_date_crea_value,0),ifnull(m.field_contenu_date_modif_value,0))', 'diff');
 
-    $query->fields('n', array('nid'))
-            ->condition('status', 1, '=')
-            ->orderBy('diff', 'DESC')
-            ->range($deb, $nb)->distinct();
+  $query->fields('n', array('nid'))
+      ->condition('status', 1, '=')
+      ->orderBy('diff', 'DESC')
+      ->range($deb, $nb)->distinct();
 
-    if (!empty($ids_use))
-        $query->condition('n.nid', $ids_use, 'NOT IN');
-    if (!empty($uid) && $uid != 'null') {
-        $query->condition('n.uid', $uid, '=');
-    }
-    if (!empty($format) && $format != 'null') {
-        $query->join('field_data_field_contenu_format', 'f', 'n.nid = f.entity_id');
-        $query->condition('f.field_contenu_format_tid', $format, '=');
-    }
-    if (!empty($rub)) {
-        $query->leftjoin('field_data_field_contenu_rubrique', 'r', 'n.nid = r.entity_id');
-        $query->leftjoin('field_data_field_contenu_rubrique_sec', 'rs', 'n.nid = rs.entity_id');
+  if (!empty($ids_use))
+    $query->condition('n.nid', $ids_use, 'NOT IN');
+  if (!empty($uid) && $uid != 'null') {
+    $query->condition('n.uid', $uid, '=');
+  }
+  if (!empty($format) && $format != 'null') {
+    $query->join('field_data_field_contenu_format', 'f', 'n.nid = f.entity_id');
+    $query->condition('f.field_contenu_format_tid', $format, '=');
+  }
+  if (!empty($rub)) {
+    $query->leftjoin('field_data_field_contenu_rubrique', 'r', 'n.nid = r.entity_id');
+    $query->leftjoin('field_data_field_contenu_rubrique_sec', 'rs', 'n.nid = rs.entity_id');
 
-        $db_or = db_or();
-        $db_or->condition('r.field_contenu_rubrique_tid', $rub, 'IN');
-        $db_or->condition('rs.field_contenu_rubrique_sec_tid', $rub, 'IN');
-        $query->condition($db_or);
-    }
+    $db_or = db_or();
+    $db_or->condition('r.field_contenu_rubrique_tid', $rub, 'IN');
+    $db_or->condition('rs.field_contenu_rubrique_sec_tid', $rub, 'IN');
+    $query->condition($db_or);
+  }
 
-    $result = $query->execute();
-    $idsNode = array();
-    while (
-    $record = $result->fetchAssoc()) {
-        $idsNode[] = $record['nid'];
-    }
+  $result = $query->execute();
+  $idsNode = array();
+  while (
+  $record = $result->fetchAssoc()) {
+    $idsNode[] = $record['nid'];
+  }
 
-    $nodes = node_load_multiple($idsNode);
-    return $nodes;
+  $nodes = node_load_multiple($idsNode);
+  return $nodes;
 }
 
 function darty_article_revision_publish($node) {
-    if (isset($node->field_contenu_date_crea) && empty($node->field_contenu_date_crea)) {
-        $node->field_contenu_date_crea[LANGUAGE_NONE][0] =
-                array('value' => time(),
-                    'timezone' => 'Europe/Paris',
-                    'timezone_db' => 'Europe/Paris',
-                    'date_type' => 'timestamp');
-        node_save($node);
-    }
+  if (isset($node->field_contenu_date_crea) && empty($node->field_contenu_date_crea)) {
+    $node->field_contenu_date_crea[LANGUAGE_NONE][0] =
+        array('value' => time(),
+          'timezone' => 'Europe/Paris',
+          'timezone_db' => 'Europe/Paris',
+          'date_type' => 'timestamp');
+    node_save($node);
+  }
 }

@@ -1,0 +1,30 @@
+<?php
+
+/**
+ * @file
+ * darty_nodeviewcount.module
+ * Implement Hooks Drupal for darty node view count module
+ */
+
+require_once 'darty_nodeviewcount.inc';
+
+/**
+ * Implements hook_node_view().
+ */
+function darty_nodeviewcount_node_view($node, $view_mode, $langcode) {
+
+  // Content types to take account
+  $node_types = array('article_avec_sommaire', 'article_sans_sommaire', 'diaporama', 'dossier');
+
+  if ( $view_mode == 'full' && isset($node->type) && in_array($node->type, $node_types) ) {
+    $setting = array(
+      'darty_nodeviewcount' => 
+      	array(
+      	  'currentNid' => $node->nid,
+      	  'post_url'   => base_path() . drupal_get_path('module', 'darty_nodeviewcount') . '/external/view_add_one.php'
+      	)
+    );
+    drupal_add_js($setting, 'setting');
+    drupal_add_js(drupal_get_path('module', 'darty_nodeviewcount') . '/js/view_add_one.js');
+  }
+}

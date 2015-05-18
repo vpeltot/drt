@@ -2,5 +2,4 @@ name = Darty_sondage
 description = Module permettant de gérer les sondage
 core = 7.x
 package = Darty
-version = 7.x-1.0
 project = darty_sondage

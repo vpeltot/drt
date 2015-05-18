@@ -70,12 +70,26 @@ $conf['cache_prefix']['default'] = 'darty_et_vous';
 $conf['darty_header_protocol'] = 'http://';
 $conf['darty_header_htaccess'] = '';
 $conf['darty_header_url'] = 'darty.com';
-
-$conf['darty_ec_protocol'] = 'http://';
-$conf['darty_ec_htaccess'] = 'darty:darty';
-$conf['darty_ec_url'] = 'secure.darty.com';
 //URL à utiliser lors de l'intervention sur site
 // $conf['darty_header_url'] = 'catalogue.integration.intranet.darty.fr';
+
+$conf['darty_header'] = array(
+  'protocol' => 'http://',
+  'htaccess' => '',
+  'url' => 'darty.com',
+);
+
+$conf['darty_ec_protocol'] = 'https://';
+$conf['darty_ec_htaccess'] = 'darty:darty';
+$conf['darty_ec_url'] = 'secure.darty.com';
+
+$conf['darty_ec'] = array(
+  'protocol' => 'https://',
+  'htaccess' => 'darty:darty',
+  'url' => 'secure.darty.com',
+);
+
+$conf['darty_sso_ip'] = '127.0.0.1';
 
 /**
 * API key for Gygia
@@ -93,6 +107,7 @@ $conf['file_temporary_path'] = "/tmp";
 /**
  * Proxy configuration.
  */
+// $conf['proxy'] = TRUE;
 // $conf['proxy_server'] = '';
 // $form['proxy_port'] = '';
 // $form['proxy_username'] = '';

@@ -2,5 +2,4 @@ name = Darty_article
 description = Module permettant de gérer les articles (sommaire/sans sommaire/dossier/shopping list)
 core = 7.x
 package = Darty
-version = 7.x-1.0
 project = darty_article

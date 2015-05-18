@@ -5,236 +5,236 @@
  */
 function darty_home_preprocess_node(&$vars) {
 
-    $type = $vars['type'];
-    $view_mode = $vars['elements']['#view_mode'];
+  $type = $vars['type'];
+  $view_mode = $vars['elements']['#view_mode'];
 
-    if ($type == "homepage") {
-        darty_homepage_node_preprocess($vars);
+  if ($type == "homepage") {
+    darty_homepage_node_preprocess($vars);
 
-        $node = $vars['node'];
+    $node = $vars['node'];
 
-        $element = array(
-            '#tag' => 'meta',
-            '#attributes' => array(
-                'name' => 'description',
-                'content' => $node->field_meta_description[LANGUAGE_NONE][0]['value'],
-            ),
-        );
+    $element = array(
+      '#tag' => 'meta',
+      '#attributes' => array(
+        'name' => 'description',
+        'content' => $node->field_meta_description[LANGUAGE_NONE][0]['value'],
+      ),
+    );
 
-        drupal_add_html_head($element, 'metatags_quick_description');
-    }
+    drupal_add_html_head($element, 'metatags_quick_description');
+  }
 }
 
 function darty_homepage_node_preprocess(&$vars, $view_mode = 'teaser') {
-    $node = $vars['node'];
-    $ids_use = array();
-    drupal_add_js(
-            "s.pageName = 'www/darty_vous/accueil';
+  $node = $vars['node'];
+  $ids_use = array();
+  drupal_add_js(
+      "s.pageName = 'www/darty_vous/accueil';
 " . getCommonAnalyticsProperties() . "   
 s.t();"
-            , array('type' => 'inline', 'scope' => 'footer', 'weight' => 99)
-    );
+      , array('type' => 'inline', 'scope' => 'footer', 'weight' => 99)
+  );
 
-    if (!empty($node->field_home_sondage)) {
-        if (isset($node->field_home_sondage[LANGUAGE_NONE][0]['entity']))
-            $bloc_sondage = ($node->field_home_sondage[LANGUAGE_NONE][0]['entity']);
-        if (isset($bloc_sondage))
-            $vars['bloc_sondage'] = bean_view($bloc_sondage, 'home');
+  if (!empty($node->field_home_sondage)) {
+    if (isset($node->field_home_sondage[LANGUAGE_NONE][0]['entity']))
+      $bloc_sondage = ($node->field_home_sondage[LANGUAGE_NONE][0]['entity']);
+    if (isset($bloc_sondage))
+      $vars['bloc_sondage'] = bean_view($bloc_sondage, 'home');
+  }
+  //couleur du dossier
+  if (!empty($node->field_home_alaune_couleur))
+    $vars['couleur'] = $node->field_home_alaune_couleur[LANGUAGE_NONE][0]['value'];
+  else
+    $vars['couleur'] = 'orange';
+
+  //contenu a la une
+  if (!empty($node->field_home_alaune_articles)) {
+    $list_contenu = $node->field_home_alaune_articles[LANGUAGE_NONE];
+    foreach ($list_contenu as $elem) {
+      $vars['contenu_alaune'][] = $elem['entity'];
+      if (!in_array($elem['entity']->nid, $ids_use))
+        $ids_use[] = $elem['entity']->nid;
     }
-    //couleur du dossier
-    if (!empty($node->field_home_alaune_couleur))
-        $vars['couleur'] = $node->field_home_alaune_couleur[LANGUAGE_NONE][0]['value'];
-    else
-        $vars['couleur'] = 'orange';
+  }
+  lists_session('home_ids_use', $ids_use);
 
-    //contenu a la une
-    if (!empty($node->field_home_alaune_articles)) {
-        $list_contenu = $node->field_home_alaune_articles[LANGUAGE_NONE];
-        foreach ($list_contenu as $elem) {
-            $vars['contenu_alaune'][] = $elem['entity'];
-            if (!in_array($elem['entity']->nid, $ids_use))
-                $ids_use[] = $elem['entity']->nid;
-        }
+  //couleur du dossier
+  if (!empty($node->field_home_alaune_lien))
+    $vars['lien_alaune'] = $node->field_home_alaune_lien[LANGUAGE_NONE][0];
+
+
+  if (!empty($node->field_home_bloc_remonte_label)) {
+    $vars['remonte_label'] = $node->field_home_bloc_remonte_label[LANGUAGE_NONE][0]['value'];
+  }
+
+  //contenu remonté
+  if (!empty($node->field_home_remonte_contenus)) {
+    $list_contenu = $node->field_home_remonte_contenus[LANGUAGE_NONE];
+    $cptBandeau = 0;
+    $cptVign = 0;
+    foreach ($list_contenu as $elem) {
+      if ($elem['entity']->type == 'mise_en_avant') {
+        $cptBandeau++;
+        $elem['entity']->analytics['position'] = "bandeau" . $cptBandeau;
+      } else {
+        $cptVign++;
+        $elem['entity']->analytics['position'] = "vign" . $cptVign;
+      }
+      $elem['entity']->analytics['localisation'] = "bloc-bas";
+      $elem['entity']->analytics['type'] = "HDV";
+
+      $vars['contenu_remonte'][] = drupal_render(bean_view($elem['entity']));
     }
-    lists_session('home_ids_use', $ids_use);
+  }
+  drupal_add_js(
+      "jQuery(document).ready(function ($) { 
+        $('.mise-en-avant-home-wrapper').mouseenter(
+        function(){
+          $(this).find('.legende').filter(':not(:animated)').animate({'height':'130px'},'medium')
+        });
+        $('.mise-en-avant-home-wrapper').mouseleave(function() {
+          $(this).find('.legende').animate({'height':'70px'},'medium')
+        });
+      });", array('type' => 'inline', 'scope' => 'footer'));
 
-    //couleur du dossier
-    if (!empty($node->field_home_alaune_lien))
-        $vars['lien_alaune'] = $node->field_home_alaune_lien[LANGUAGE_NONE][0];
+  // bool display push profilés
+  $ids_use = lists_session('home_ids_use');
 
+  $vars['bool_profile'] = FALSE;
+  if (!empty($node->field_home_bloc_profile)) {
+    $vars['bool_profile'] = $node->field_home_bloc_profile[LANGUAGE_NONE][0]['value'];
+  }
+  if (!empty($node->field_home_bloc_profile_label)) {
+    $vars['profile_label'] = $node->field_home_bloc_profile_label[LANGUAGE_NONE][0]['value'];
+  }
+  else
+    $vars['profile_label'] = 'Ces contenus pourraient également vous intéresser...';
 
-    if (!empty($node->field_home_bloc_remonte_label)) {
-        $vars['remonte_label'] = $node->field_home_bloc_remonte_label[LANGUAGE_NONE][0]['value'];
+  //recupération du push profile (4 articles les plus vues et non présent sur la page)
+  //$ids_use = lists_session('home_ids_use');
+
+  if ($vars['bool_profile']) {
+    $cache = cache_get('moreviews_home');
+    //TODO : retirer false pour activer cache, a voir le niveau de réactivité nécessaire ??
+    if ($cache && $cache->expire > time()) {
+      $vars['contenu_profile'] = $cache->data;
+    } else {
+      $vars['contenu_profile'] = article_moreviews(4, $ids_use);
+      cache_set('moreviews_home', $vars['contenu_profile'], 'cache', time() + 60);
     }
-
-    //contenu remonté
-    if (!empty($node->field_home_remonte_contenus)) {
-        $list_contenu = $node->field_home_remonte_contenus[LANGUAGE_NONE];
-        $cptBandeau = 0;
-        $cptVign = 0;
-        foreach ($list_contenu as $elem) {
-            if ($elem['entity']->type == 'mise_en_avant') {
-                $cptBandeau++;
-                $elem['entity']->analytics['position'] = "bandeau" . $cptBandeau;
-            } else {
-                $cptVign++;
-                $elem['entity']->analytics['position'] = "vign" . $cptVign;
-            }
-            $elem['entity']->analytics['localisation'] = "bloc-bas";
-            $elem['entity']->analytics['type'] = "HDV";
-
-            $vars['contenu_remonte'][] = drupal_render(bean_view($elem['entity']));
-        }
+    foreach ($vars['contenu_profile'] as $key => $elem) {
+      if (!in_array($key, $ids_use))
+        $ids_use[] = $key;
     }
-    drupal_add_js(
-            "jQuery(document).ready(function ($) { 
-                $('.mise-en-avant-home-wrapper').mouseenter(
-                function(){
-                  $(this).find('.legende').filter(':not(:animated)').animate({'height':'130px'},'medium')
-                });
-                $('.mise-en-avant-home-wrapper').mouseleave(function() {
-                  $(this).find('.legende').animate({'height':'70px'},'medium')
-                });
-            });", array('type' => 'inline', 'scope' => 'footer'));
-
-    // bool display push profilés
-    $ids_use = lists_session('home_ids_use');
-
-    $vars['bool_profile'] = FALSE;
-    if (!empty($node->field_home_bloc_profile)) {
-        $vars['bool_profile'] = $node->field_home_bloc_profile[LANGUAGE_NONE][0]['value'];
-    }
-    if (!empty($node->field_home_bloc_profile_label)) {
-        $vars['profile_label'] = $node->field_home_bloc_profile_label[LANGUAGE_NONE][0]['value'];
-    }
-    else
-        $vars['profile_label'] = 'Ces contenus pourraient également vous intéresser...';
-
-    //recupération du push profile (4 articles les plus vues et non présent sur la page)
-    //$ids_use = lists_session('home_ids_use');
-
-    if ($vars['bool_profile']) {
-        $cache = cache_get('moreviews_home');
-        //TODO : retirer false pour activer cache, a voir le niveau de réactivité nécessaire ??
-        if ($cache && $cache->expire > time()) {
-            $vars['contenu_profile'] = $cache->data;
-        } else {
-            $vars['contenu_profile'] = article_moreviews(4, $ids_use);
-            cache_set('moreviews_home', $vars['contenu_profile'], 'cache', time() + 60);
-        }
-        foreach ($vars['contenu_profile'] as $key => $elem) {
-            if (!in_array($key, $ids_use))
-                $ids_use[] = $key;
-        }
-    }
+  }
 }
 
 function darty_home_preprocess_entity(&$vars) {
-    $entity_type = $vars['elements']['#entity_type'];
-    $type = $vars['elements']['#bundle'];
-    $view_mode = $vars['view_mode'];
+  $entity_type = $vars['elements']['#entity_type'];
+  $type = $vars['elements']['#bundle'];
+  $view_mode = $vars['view_mode'];
 
 //Define some preprocess functions for the field collection field_menu_items
-    if ($type == "contenu" ||
-            $type == "forum" ||
-            $type == "mise_en_avant"
-    ) {
-        if (isset($vars['elements']['#entity']->analytics)) {
-            $vars['analytics'] = $vars['elements']['#entity']->analytics;
-        }
-        $preprocess_type = 'darty_home_preprocess_' . $entity_type . '_' . $type;
-        $preprocess_type_view_mode = 'darty_home_preprocess_' . $entity_type . '_' . $type . '_' . $view_mode;
-        if (function_exists($preprocess_type)) {
-            $preprocess_type($vars);
-        }
-
-        if (function_exists($preprocess_type_view_mode)) {
-            $preprocess_type_view_mode($vars);
-        }
+  if ($type == "contenu" ||
+      $type == "forum" ||
+      $type == "mise_en_avant"
+  ) {
+    if (isset($vars['elements']['#entity']->analytics)) {
+      $vars['analytics'] = $vars['elements']['#entity']->analytics;
     }
+    $preprocess_type = 'darty_home_preprocess_' . $entity_type . '_' . $type;
+    $preprocess_type_view_mode = 'darty_home_preprocess_' . $entity_type . '_' . $type . '_' . $view_mode;
+    if (function_exists($preprocess_type)) {
+      $preprocess_type($vars);
+    }
+
+    if (function_exists($preprocess_type_view_mode)) {
+      $preprocess_type_view_mode($vars);
+    }
+  }
 }
 
 /**
  * Implements darty_bloc_preprocess_bean_chapitre_article().
  */
 function darty_home_preprocess_bean_forum(&$vars) {
-    $entity = $vars['elements']['#entity'];
-    $wrapper = entity_metadata_wrapper('bean', $entity);
+  $entity = $vars['elements']['#entity'];
+  $wrapper = entity_metadata_wrapper('bean', $entity);
 
-    $id = $vars['view_mode'];
+  $id = $vars['view_mode'];
 }
 
 /**
  * Implements darty_bloc_preprocess_bean_chapitre_article().
  */
 function darty_home_preprocess_bean_mise_en_avant(&$vars) {
-    $entity = $vars['elements']['#entity'];
-    $wrapper = entity_metadata_wrapper('bean', $entity);
+  $entity = $vars['elements']['#entity'];
+  $wrapper = entity_metadata_wrapper('bean', $entity);
 
-    $id = $vars['view_mode'];
+  $id = $vars['view_mode'];
 
-    if (is_object($wrapper)) {
-        $mode = $wrapper->field_contenu_mode->value();
-        if ($mode == 'manuel') {
-            $choix = $wrapper->field_contenu_choix_contenu->value();
-            $vars['contenu'] = $choix;
-            $home_ids_use = lists_session('home_ids_use');
-            $home_ids_use[] = $choix->nid;
-            lists_session('home_ids_use', $home_ids_use);
-        } else {
-            if ($mode == 'semi') {
-                $format = $wrapper->field_contenu_choix_format->value();
-                $format = $format->tid;
-            }
-            else
-                $format = null;
+  if (is_object($wrapper)) {
+    $mode = $wrapper->field_contenu_mode->value();
+    if ($mode == 'manuel') {
+      $choix = $wrapper->field_contenu_choix_contenu->value();
+      $vars['contenu'] = $choix;
+      $home_ids_use = lists_session('home_ids_use');
+      $home_ids_use[] = $choix->nid;
+      lists_session('home_ids_use', $home_ids_use);
+    } else {
+      if ($mode == 'semi') {
+        $format = $wrapper->field_contenu_choix_format->value();
+        $format = $format->tid;
+      }
+      else
+        $format = null;
 
-            $home_ids_use = lists_session('home_ids_use');
-            $LastArticle = getLastArticle($home_ids_use, $format);
-            if (isset($LastArticle->nid)) {
-                $home_ids_use[] = $LastArticle->nid;
-                lists_session('home_ids_use', $home_ids_use);
+      $home_ids_use = lists_session('home_ids_use');
+      $LastArticle = getLastArticle($home_ids_use, $format);
+      if (isset($LastArticle->nid)) {
+        $home_ids_use[] = $LastArticle->nid;
+        lists_session('home_ids_use', $home_ids_use);
 
-                $vars['contenu'] = $LastArticle;
-            } else {
-                $vars['contenu'] = null;
-            }
-        }
+        $vars['contenu'] = $LastArticle;
+      } else {
+        $vars['contenu'] = null;
+      }
     }
+  }
 }
 
 /**
  * Implements darty_bloc_preprocess_bean_chapitre_article().
  */
 function darty_home_preprocess_bean_contenu(&$vars) {
-    $entity = $vars['elements']['#entity'];
-    $wrapper = entity_metadata_wrapper('bean', $entity);
+  $entity = $vars['elements']['#entity'];
+  $wrapper = entity_metadata_wrapper('bean', $entity);
 
-    $id = $vars['view_mode'];
+  $id = $vars['view_mode'];
 
-    if (is_object($wrapper)) {
-        $mode = $wrapper->field_contenu_mode->value();
-        if ($mode == 'manuel') {
-            $choix = $wrapper->field_contenu_choix_contenu->value();
-            $vars['contenu'] = $choix;
-        } else {
-            if ($mode == 'semi') {
-                $format = $wrapper->field_contenu_choix_format->value();
-                $format = $format->tid;
-            }
-            else
-                $format = null;
+  if (is_object($wrapper)) {
+    $mode = $wrapper->field_contenu_mode->value();
+    if ($mode == 'manuel') {
+      $choix = $wrapper->field_contenu_choix_contenu->value();
+      $vars['contenu'] = $choix;
+    } else {
+      if ($mode == 'semi') {
+        $format = $wrapper->field_contenu_choix_format->value();
+        $format = $format->tid;
+      }
+      else
+        $format = null;
 
-            $home_ids_use = lists_session('home_ids_use');
-            $LastArticle = getLastArticle($home_ids_use, $format);
-            if (isset($LastArticle->nid)) {
-                $home_ids_use[] = $LastArticle->nid;
-                lists_session('home_ids_use', $home_ids_use);
+      $home_ids_use = lists_session('home_ids_use');
+      $LastArticle = getLastArticle($home_ids_use, $format);
+      if (isset($LastArticle->nid)) {
+        $home_ids_use[] = $LastArticle->nid;
+        lists_session('home_ids_use', $home_ids_use);
 
-                $vars['contenu'] = $LastArticle;
-            } else {
-                $vars['contenu'] = null;
-            }
-        }
+        $vars['contenu'] = $LastArticle;
+      } else {
+        $vars['contenu'] = null;
+      }
     }
+  }
 }

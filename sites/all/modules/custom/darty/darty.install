@@ -17,3 +17,16 @@ function darty_update_7001() {
 
     return $t('Redis module enabled.');
 }
+
+/**
+ * Implements hook_update_N().
+ *
+ * Enable darty_nodeviewcount module.
+ */
+function darty_update_7002() {
+  $t = get_t();
+
+  module_enable(array('darty_nodeviewcount'));
+
+  return $t('Darty Node View Count module enabled.');
+}
