@@ -30,13 +30,41 @@ class BeanInlineEntityFormController extends EntityInlineEntityFormController {
       'weight' => 1,
     );
 
-    $fields['title'] = array(
-      'type' => 'property',
-      'label' => t('Title'),
-      'weight' => 2,
+    return $fields;
+  }
+
+  /**
+   * Overrides EntityInlineEntityFormController::defaultSettings().
+   */
+  public function defaultSettings() {
+    $defaults = parent::defaultSettings();
+    $defaults['parent_sync_label'] = FALSE;
+    $defaults['parent_sync_title'] = FALSE;
+
+    return $defaults;
+  }
+
+  /**
+   * Overrides EntityInlineEntityFormController::settingsForm().
+   */
+  public function settingsForm($field, $instance) {
+    $form = parent::settingsForm($field, $instance);
+
+    $form['parent_sync_label'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Auto set the block label to the parent @entity entity label', array('@entity' => $instance['entity_type'])),
+      '#description' => t('This will hide the label input field and set the label to the @entity entity label.', array('@entity' => $instance['entity_type'])),
+      '#default_value' => $this->settings['parent_sync_label'],
     );
 
-    return $fields;
+    $form['parent_sync_title'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Auto set the block title to the parent @entity entity label', array('@entity' => $instance['entity_type'])),
+      '#description' => t('This will hide the title input field and set the title to the @entity entity label.', array('@entity' => $instance['entity_type'])),
+      '#default_value' => $this->settings['parent_sync_title'],
+    );
+
+    return $form;
   }
 
   /**
@@ -141,8 +169,32 @@ class BeanInlineEntityFormController extends EntityInlineEntityFormController {
       );
     }
 
-    // Get the Bean type form.
+    // Get the Bean type form
     $entity_form += $bean->getForm($entity_form, $form_state);
+
+    // Hide the title field if it is auto-generated.
+    if ($this->settings['parent_sync_label']) {
+      $entity_form['label']['#required'] = FALSE;
+      $entity_form['label']['#access'] = FALSE;
+    }
+
+    // Hide the title field if it is auto-generated.
+    if ($this->settings['parent_sync_title']) {
+      $entity_form['title']['#required'] = FALSE;
+      $entity_form['title']['#access'] = FALSE;
+      // Hide the replacement field added by the Title module as well.
+      if (module_exists('title')) {
+        $title_field = title_field_replacement_info('bean', 'title');
+        if ($title_field) {
+          $title_field_name = $title_field['field']['field_name'];
+          if (isset($entity_form[$title_field_name])) {
+            $entity_form[$title_field_name]['#access'] = FALSE;
+            $entity_form[$title_field_name]['#required'] = FALSE;
+          }
+        }
+      }
+    }
+
     return parent::entityForm($entity_form, $form_state);
   }
 
@@ -150,13 +202,68 @@ class BeanInlineEntityFormController extends EntityInlineEntityFormController {
    * Overrides EntityInlineEntityFormController::entityFormSubmit().
    */
   public function entityFormSubmit(&$entity_form, &$form_state) {
-    parent::entityFormSubmit($entity_form, $form_state);
+    if (isset($form_state['redirect'])) {
+      $before = $form_state['redirect'];
+    }
+
+    // The parents array tells us exactly what part of the form was
+    // submitted. We're going to mock out a subsection of $form_state to
+    // pass to bean_form_submit instead of the whole thing.
+    $parents = $entity_form['#parents'];
+    $ief_form_state['bean'] = $entity_form['#entity'];
+    $ief_form_state['values'] = $form_state['values'];
+    foreach ($parents as $parent) {
+      $ief_form_state['values'] = $ief_form_state['values'][$parent];
+    }
+
+    // Get lables to set temporary label and title.
+    $display_labels = $this->labels();
+
+    // Set label since it will be auto generated based on the parent entity.
+    if (empty($ief_form_state['bean']->label) && $this->settings['parent_sync_label']) {
+      $ief_form_state['values']['label'] = $display_labels['singular'];
+    }
+
+    // Set title since it will be auto generated based on the parent entity.
+    if (empty($ief_form_state['bean']->title) && $this->settings['parent_sync_title']) {
+      $ief_form_state['values']['title'] = $display_labels['singular'];
+    }
+
+    // Load bean.pages.inc so we can call bean_form_submit
+    module_load_include('inc', 'bean', 'includes/bean.pages');
+
+    // Saves initial bean via bean_form_submit().
+    bean_form_submit($entity_form, $ief_form_state);
+
+    // Undo the redirect set by bean_form_submit().
+    if (isset($form_state['redirect'])) {
+      if (isset($before)) {
+        $form_state['redirect'] = $before;
+      }
+      else {
+        unset($form_state['redirect']);
+      }
+    }
   }
 
   /**
    * Overrides EntityInlineEntityFormController::save().
    */
   public function save($entity, $context) {
+    if ($this->settings['parent_sync_label'] || $this->settings['parent_sync_title']) {
+      $parent_label = entity_label($context['parent_entity_type'], $context['parent_entity']);
+
+      // Set label to the parent label.
+      if ($this->settings['parent_sync_label']) {
+        $entity->label = $parent_label;
+      }
+
+      // Set title to the parent label.
+      if ($this->settings['parent_sync_title']) {
+        $entity->title = $parent_label;
+      }
+    }
+
     bean_save($entity);
   }
 }

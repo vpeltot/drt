@@ -11,14 +11,11 @@
 function link_field_diff_view($items, $context) {
   $diff_items = array();
   foreach ($items as $delta => $item) {
-    if (isset($item['url']) && isset($item['title'])) {
+    if ($item['url'] && $item['title']) {
       $diff_items[$delta] = $item['title'] . ' (' . $item['url'] . ')';
     }
-    elseif(isset($item['url'])) {
-      $diff_items[$delta] = $item['url'];
-    }
     else {
-      $diff_items[$delta] = $item['title'];
+      $diff_items[$delta] = $item['title'] . $item['url'];
     }
   }
   return $diff_items;
