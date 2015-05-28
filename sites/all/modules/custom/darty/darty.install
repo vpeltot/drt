@@ -67,3 +67,29 @@ function darty_update_7004() {
 
   return $t('File (Field) Paths module enabled.');
 }
+
+/**
+ * Implements hook_update_N().
+ *
+ * Enable darty_quizz module.
+ */
+function darty_update_7005() {
+  $t = get_t();
+
+  module_enable(array('darty_quizz'));
+
+  return $t('darty_quizz module enabled.');
+}
+
+/**
+ * Implements hook_update_N().
+ *
+ * Enable quizz_features module.
+ */
+function darty_update_7006() {
+  $t = get_t();
+
+  module_enable(array('quizz_features'));
+
+  return $t('quizz_features module enabled.');
+}

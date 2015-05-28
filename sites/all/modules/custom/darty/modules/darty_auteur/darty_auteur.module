@@ -1,51 +1,162 @@
 <?php
 
+function darty_auteur_menu() {
+    $items['auteur/%/%/%'] = array(
+        'title' => 'ajax callback content',
+        'page callback' => 'rss_auteur_view',
+        'page arguments' => array(1, 2, 3),
+        'access callback' => TRUE,
+        'delivery callback' => 'rss_auteur_deliver',
+        'type' => MENU_CALLBACK,
+    );
+
+    return $items;
+}
+
+function rss_auteur_view($uid, $page, $nb) {
+    drupal_add_http_header('Content-Type', 'text/xml; utf-8');
+    global $base_path;
+    $currentUser = user_load($uid);
+    if (!empty($currentUser->field_account_prenom))
+        $user_name = $currentUser->field_account_prenom[LANGUAGE_NONE][0]['value'];
+    else
+        $user_name = $currentUser->name;
+    $allnodes = getArticlesForSommaire(array(), null, $uid, ($page - 1) * $nb, $nb, array());
+    // echo '<pre>', print_r($allnodes, true), '</pre>';
+
+    $xml = "<?xml version='1.0' encoding='UTF-8'?>\n";
+    $xml .= "<rss version='2.0'>\n";
+    $xml .= "<channel>\n";
+    $xml .= "<title><![CDATA[Articles de " . $user_name . " - Darty&Vous]]></title>\n";
+    $xml .= "<link>" . url('users/' . $currentUser->name, array('absolute' => true)) . "</link>\n";
+    $xml .= "<description>Flux RSS des articles de l'éditeur " . $user_name . "</description>\n";
+//while($tab=mysql_fetch_array($res)){   
+//	$titre=$tab[titre];
+//	$lien=$tab[lien];
+//	$description=$tab[description];
+    /* 	<![CDATA[ <?php print xmlcleaner_fct(html_entity_decode($description)); ?> ]]> */
+//	$date=$tab[date];
+//	$date2=date("D, d M Y H:i:s", strtotime($date));
+// 
+    foreach ($allnodes as $node) {
+        if (!empty($node->field_contenu_titre))
+            $titre = $node->field_contenu_titre[LANGUAGE_NONE][0]['value'];
+        if (!empty($node->field_contenu_accroche))
+            $accroche = $node->field_contenu_accroche[LANGUAGE_NONE][0]['value'];
+
+        if (!empty($node->field_contenu_date_crea)) {
+            $date_crea = $node->field_contenu_date_crea[LANGUAGE_NONE][0]['value'];
+        } else {
+            $date_crea = $node->created;
+        }
+        if (!empty($node->field_contenu_date_modif)) {
+            $date_modif = $node->field_contenu_date_modif[LANGUAGE_NONE][0]['value'];
+            if ($date_modif > $date_crea)
+                $date_crea = $date_modif;
+        }
+        if (!empty($node->field_contenu_visuel)) {
+            $sid = $node->field_contenu_visuel[LANGUAGE_NONE][0]['sid'];
+            $obj_atom = scald_atom_load($sid);
+            if (isset($obj_atom) && isset($obj_atom->scald_thumbnail[LANGUAGE_NONE][0])) {
+                $image = file_create_url($obj_atom->scald_thumbnail[LANGUAGE_NONE][0]['uri']);
+            }
+        }
+
+        $xml .= "<item>\n";
+        $xml .= "<title><![CDATA[" . xmlcleaner_fct(html_entity_decode($titre)) . "]]></title>\n";
+        $xml .= "<link>" . url('node/' . $node->nid, array('absolute' => true)) . "</link>\n";
+        $xml .= "<pubDate>" . date("D, d M Y H:i:s", $date_crea) . " GMT</pubDate>\n";
+        $xml .= "<guid isPermaLink='false'><![CDATA[" . xmlcleaner_fct(html_entity_decode($titre)) . "]]></guid>";
+        $xml .= "<description><![CDATA[<div><img src='" . $image . "' height='306' width='464' /></div><div>"
+                . xmlcleaner_fct(html_entity_decode($accroche)) . "</div>]]></description>\n";
+        $xml .= "</item>\n";
+    }
+//}
+    $xml .= "</channel>\n";
+    $xml .= "</rss>\n";
+    print $xml;
+    exit;
+}
+
+function rss_auteur_deliver($page_callback_result) {
+
+    drupal_add_http_header('Cache-Control', 'public, max-age=' . variable_get('page_cache_maximum_age', 0));
+    $content = is_string($page_callback_result) ? $page_callback_result : drupal_render($page_callback_result);
+    print $content;
+    ajax_footer();
+}
+
 /**
  * Implementation of template_preprocess_
  */
 function darty_auteur_preprocess_user_profile(&$vars) {
-  global $base_path;
-  $currentUser = $vars['elements']['#account'];
+    global $base_path;
+    $currentUser = $vars['elements']['#account'];
 
-  $breadcrumb = drupal_get_breadcrumb();
+    $breadcrumb = drupal_get_breadcrumb();
+    $vars['uid_auteur'] = $currentUser->uid;
+    if (!empty($currentUser->field_account_prenom))
+        $vars['user_name'] = $currentUser->field_account_prenom[LANGUAGE_NONE][0]['value'];
+    else
+        $vars['user_name'] = $currentUser->name;
 
-  if (!empty($currentUser->field_account_prenom))
-    $vars['user_name'] = $currentUser->field_account_prenom[LANGUAGE_NONE][0]['value'];
-  else
-    $vars['user_name'] = $currentUser->name;
+    $breadcrumb[] = 'Profil de ' . $vars['user_name'];
 
-  $breadcrumb[] = 'Profil de ' . $vars['user_name'];
+    if (!empty($currentUser->field_account_pres))
+        $vars['pres'] = $currentUser->field_account_pres[LANGUAGE_NONE][0]['value'];
+    else
+        $vars['pres'] = "";
 
-  if (!empty($currentUser->field_account_pres))
-    $vars['pres'] = $currentUser->field_account_pres[LANGUAGE_NONE][0]['value'];
-  else
-    $vars['pres'] = "";
+    if (!empty($currentUser->field_account_photo))
+        $vars['photo'] = file_create_url($currentUser->field_account_photo[LANGUAGE_NONE][0]['uri']);
+    else
+        $vars['photo'] = "";
+    $vars['breadcrumb'] = theme('breadcrumb', array('breadcrumb' => $breadcrumb));
 
-  if (!empty($currentUser->field_account_photo))
-    $vars['photo'] = file_create_url($currentUser->field_account_photo[LANGUAGE_NONE][0]['uri']);
-  else
-    $vars['photo'] = "";
-  $vars['breadcrumb'] = theme('breadcrumb', array('breadcrumb' => $breadcrumb));
+    $uid = $currentUser->uid;
+    $tid = 'null';
+    $format = 'null';
 
-  $uid = $currentUser->uid;
-  $tid = 'null';
-  $format = 'null';
+    drupal_add_js(drupal_get_path('module', 'darty_sommaire') . '/sommaire.js', 'file');
 
-  drupal_add_js(drupal_get_path('module', 'darty_sommaire') . '/sommaire.js', 'file');
+    $vars['firstcontent'] = ajax_content_search($tid, 'null', 'null', $format, 1, $uid, 'html');
 
-  $vars['firstcontent'] = ajax_content_search($tid, 'null', 'null', $format, 1, $uid ,'html');
-  
-  drupal_add_js(
-      "jQuery(document).ready(function ($) { 
-        reaffectHandler('" . $base_path . "','user');    
-        //loadAjaxSommaire('" . $base_path . "','ajax/search/" . $tid . "/null/null/" . $format . "/1/" . $uid . "/html','no','user');
-        
-      });", array('type' => 'inline', 'scope' => 'footer'));
+    drupal_add_js(
+            "jQuery(document).ready(function ($) { 
+                reaffectHandler('" . $base_path . "','user');        
+                //loadAjaxSommaire('" . $base_path . "','ajax/search/" . $tid . "/null/null/" . $format . "/1/" . $uid . "/html','no','user');
+                
+            });", array('type' => 'inline', 'scope' => 'footer'));
 }
 
 function darty_auteur_form_user_profile_form_alter(&$form, $form_state, $form_id) {
-  global $user;
-  if (!in_array('Administrateur global', $user->roles)) {
-    $form['wysiwyg']['#access'] = false;
-  }
+    global $user;
+    if (!in_array('Administrateur global', $user->roles)) {
+        $form['wysiwyg']['#access'] = false;
+    }
+}
+
+function xmlcleaner_fct($value) {
+
+    $ret = "";
+    $current;
+    if (empty($value)) {
+        return $ret;
+    }
+
+    $length = strlen($value);
+    for ($i = 0; $i < $length; $i++) {
+        $current = ord($value{$i});
+        if (($current == 0x9) ||
+                ($current == 0xA) ||
+                ($current == 0xD) ||
+                (($current >= 0x20) && ($current <= 0xD7FF)) ||
+                (($current >= 0xE000) && ($current <= 0xFFFD)) ||
+                (($current >= 0x10000) && ($current <= 0x10FFFF))) {
+            $ret .= chr($current);
+        } else {
+            $ret .= " ";
+        }
+    }
+    return $ret;
 }

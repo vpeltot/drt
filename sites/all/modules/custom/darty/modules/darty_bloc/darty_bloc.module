@@ -41,7 +41,7 @@ function darty_bloc_inline_entity_form_entity_form_alter(&$entity_form, &$form_s
 
     if ($entity_form['#entity_type'] == 'bean' && in_array($entity_form['#bundle'], array('bloc_plus_moins', 'bloc_bio_express', 'bloc_edito', 'bloc_forum', 'bloc_lien_rubrique',
                 'bloc_remonte_produit', 'bloc_services_darty', 'bloc_sondage', 'chapitre_article', 'item_diapo',
-                'contenu', 'forum', 'mise_en_avant'))) {
+                'contenu', 'forum', 'mise_en_avant','question_quizz'))) {
         $entity_form['revision']['#access'] = false;
         $entity_form['default_revision']['#access'] = false;
 
@@ -111,17 +111,26 @@ function darty_bloc_preprocess_bean_bloc_lien_rubrique(&$vars) {
         $rub_avance = $wrapper->field_bloc_choix_rub_avance->value();
         $rub_url = $wrapper->field_bloc_choix_rub_url->value();
         $title = $wrapper->field_bloc_choix_rub_title->value();
+        $image = false;
+        if (isset($entity->field_bloc_choix_rub_image) && !empty($entity->field_bloc_choix_rub_image)) {
+            $sid = $entity->field_bloc_choix_rub_image[LANGUAGE_NONE][0]['sid'];
+            $obj_atom = scald_atom_load($sid);
+            if (isset($obj_atom) && isset($obj_atom->scald_thumbnail[LANGUAGE_NONE][0])){
+                $image = '<img src="'.  file_create_url($obj_atom->scald_thumbnail[LANGUAGE_NONE][0]['uri']).'" alt="'.$obj_atom->scald_thumbnail[LANGUAGE_NONE][0]['alt'].'"></img>';
+        }
+    }
         $rub_avance2 = $wrapper->field_bloc_choix_rub2_avance->value();
         $rub2_url = $wrapper->field_bloc_choix_rub2_url->value();
         $title2 = $wrapper->field_bloc_choix_rub2_title->value();
-        $rub_ids[] = array('rub' => $rub_avance, 'title' => $title, 'url' => $rub_url);
+        $rub_ids[] = array('rub' => $rub_avance, 'title' => $title, 'url' => $rub_url,'image'=>$image);
         if (!empty($rub_avance2))
-            $rub_ids[] = array('rub' => $rub_avance2, 'title' => $title2, 'url' => $rub2_url);
+            $rub_ids[] = array('rub' => $rub_avance2, 'title' => $title2, 'url' => $rub2_url,'image'=>false);
 
         foreach ($rub_ids as $item) {
             $rub = array();
 
             $rub['title'] = $item['title'];
+            $rub['image'] = $item['image'];
             $url_avance = pathinfo($item['rub']);
             preg_match('/.*[?](.*)/', $url_avance['basename'], $matches);
             if (isset($conf['darty_header_htaccess']) && !empty($conf['darty_header_htaccess']))
