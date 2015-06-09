@@ -4,323 +4,325 @@ include_once 'darty_sondage.inc';
 include_once 'darty_admin.inc';
 
 function darty_sondage_menu() {
-  $items['sondages'] = array(
-    'title' => 'Tous les sondages',
-    'page callback' => 'page_sondages',
-    'page arguments' => array(),
-    'access callback' => TRUE,
-  );
-  $items['sondages/view'] = array(
-    'title' => 'View',
-    'type' => MENU_DEFAULT_LOCAL_TASK,
-    'weight' => -10,
-  );
-  $items['sondages/edit'] = array(
-    'title' => 'Modifier',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('tous_les_sondages_admin'),
-    'access arguments' => array('admin tous sondages config'),
-    'type' => MENU_LOCAL_TASK,
-    'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
-  );
-  $items['ajax/sondages_encours'] = array(
-    'title' => 'Les sondages en cours',
-    'page callback' => 'ajax_sondages_encours',
-    'page arguments' => array(),
-    'access callback' => TRUE,
-    'delivery callback' => 'darty_sondage_deliver',
-    'type' => MENU_CALLBACK,
-  );
-  $items['ajax/sondage/%/%node'] = array(
-    'title' => 'Sondage',
-    'page callback' => 'ajax_sondage_view',
-    'page arguments' => array(3, 2),
-    'access callback' => TRUE,
-    'delivery callback' => 'darty_sondage_deliver',
-    'type' => MENU_CALLBACK,
-  );
-  $items['ajax/sondages_termines/%'] = array(
-    'title' => 'Les sondages terminés',
-    'page callback' => 'ajax_sondages_termines',
-    'page arguments' => array(2),
-    'access callback' => TRUE,
-    'delivery callback' => 'darty_sondage_deliver_cache',
-    'type' => MENU_CALLBACK,
-  );
+    $items['sondages'] = array(
+        'title' => 'Tous les sondages',
+        'page callback' => 'page_sondages',
+        'page arguments' => array(),
+        'access callback' => TRUE,
+    );
+    $items['sondages/view'] = array(
+        'title' => 'View',
+        'type' => MENU_DEFAULT_LOCAL_TASK,
+        'weight' => -10,
+    );
+    $items['sondages/edit'] = array(
+        'title' => 'Modifier',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('tous_les_sondages_admin'),
+        'access arguments' => array('admin tous sondages config'),
+        'type' => MENU_LOCAL_TASK,
+        'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
+    );
+    $items['ajax/sondages_encours'] = array(
+        'title' => 'Les sondages en cours',
+        'page callback' => 'ajax_sondages_encours',
+        'page arguments' => array(),
+        'access callback' => TRUE,
+        'delivery callback' => 'darty_sondage_deliver',
+        'type' => MENU_CALLBACK,
+    );
+    $items['ajax/sondage/%/%node'] = array(
+        'title' => 'Sondage',
+        'page callback' => 'ajax_sondage_view',
+        'page arguments' => array(3, 2),
+        'access callback' => TRUE,
+        'delivery callback' => 'darty_sondage_deliver',
+        'type' => MENU_CALLBACK,
+    );
+    $items['ajax/sondages_termines/%'] = array(
+        'title' => 'Les sondages terminés',
+        'page callback' => 'ajax_sondages_termines',
+        'page arguments' => array(2),
+        'access callback' => TRUE,
+        'delivery callback' => 'darty_sondage_deliver_cache',
+        'type' => MENU_CALLBACK,
+    );
 
-  return $items;
+    return $items;
 }
 
 function darty_sondage_permission() {
-  return array(
-    'admin tous sondages config' => array(
-      'title' => t('Configuration de la page "tous les sondages"')
-    ),
-  );
+    return array(
+        'admin tous sondages config' => array(
+            'title' => t('Configuration de la page "tous les sondages"')
+        ),
+    );
 }
 
 function ajax_sondage_view($node, $type) {
-  global $user;
-  $already = getAnswerSondageForUser($node->nid, $user->uid);
-  $sid = '';
-  if (isset($_COOKIE['sid_dv']))
-    $sid = $_COOKIE['sid_dv'];
-  if ($already == 0 && isset($_POST['val'])) {
-    $val = $_POST['val'];
+    global $user;
+    $already = getAnswerSondageForUser($node->nid, $user->uid);
+    $sid = '';
+    if (isset($_COOKIE['sid_dv']))
+        $sid = $_COOKIE['sid_dv'];
+    if ($already == 0 && isset($_POST['val'])) {
+        $val = $_POST['val'];
 
-    if (is_integer(intval($val))) {
-      //insert value
-      $result = db_insert('sondage')
-          ->fields(array(
-            'nid' => $node->nid,
-            'uid' => $user->uid,
-            'sid' => $sid,
-            'value' => $val,
-            'date' => time()
-          ))
-          ->execute();
-      $already = 1;
+        if (is_integer(intval($val))) {
+            //insert value
+            $result = db_insert('sondage')
+                    ->fields(array(
+                        'nid' => $node->nid,
+                        'uid' => $user->uid,
+                        'sid' => $sid,
+                        'value' => $val,
+                        'date' => time()
+                    ))
+                    ->execute();
+            $already = 1;
+        }
     }
-  }
-  $node->already = $already;
-  $status_sondage = isQuestionCurrent($node->nid);
-  $node->status_sondage = $status_sondage;
-  if ($node->already != 0 || $node->status_sondage == 0) {
-    $node->result = getResultSondage($node->nid);
-  }
-  $node_view = node_view($node, $type);
-  $output = render($node_view);
+    $node->already = $already;
+    $status_sondage = isQuestionCurrent($node->nid);
+    $node->status_sondage = $status_sondage;
+    if ($node->already != 0 || $node->status_sondage == 0) {
+        $node->result = getResultSondage($node->nid);
+    }
+    $node_view = node_view($node, $type);
+    $output = render($node_view);
 
-  $output .= '<div class="clear"></div>';
+    $output .= '<div class="clear"></div>';
 
-  //JS
-  drupal_add_js(
-      "jQuery(document).ready(function ($) { 
-        sondage_ajax_vote();
-        
-      });", array('type' => 'inline', 'scope' => 'footer'));
+    //JS
+    drupal_add_js(
+            "jQuery(document).ready(function ($) { 
+                sondage_ajax_vote();
+                
+            });", array('type' => 'inline', 'scope' => 'footer'));
 
-  return $output;
+    return $output;
 }
 
 function darty_sondage_theme($existing, $type, $theme, $path) {
-  $theme = array();
-  $theme['node__sondage'] = array(
-    'render element' => 'content',
-    'base hook' => 'node',
-    'template' => 'node--sondage',
-    'path' => drupal_get_path('module', 'darty_sondage') . '/templates',
-  );
-  $theme['node__sondage__tls'] = array(
-    'render element' => 'content',
-    'base hook' => 'node',
-    'template' => 'node--sondage--tls',
-    'path' => drupal_get_path('module', 'darty_sondage') . '/templates',
-  );
-  $theme['node__sondage__home'] = array(
-    'render element' => 'content',
-    'base hook' => 'node',
-    'template' => 'node--sondage--home',
-    'path' => drupal_get_path('module', 'darty_sondage') . '/templates',
-  );
-  $theme['node__sondage__bottom_article'] = array(
-    'render element' => 'content',
-    'base hook' => 'node',
-    'template' => 'node--sondage--bottom-article',
-    'path' => drupal_get_path('module', 'darty_sondage') . '/templates',
-  );
-  $theme['sondages_tls'] = array(
-    'variables' => array(),
-    'template' => 'sondages_tls',
-    'path' => drupal_get_path('module', 'darty_sondage') . "/templates"
-  );
-  $theme['bean__bloc_sondage'] = array(
-    'variables' => array(),
-    'template' => 'bean--bloc-sondage',
-    'path' => drupal_get_path('module', 'darty_sondage') . "/templates"
-  );
-  return $theme;
+    $theme = array();
+    $theme['node__sondage'] = array(
+        'render element' => 'content',
+        'base hook' => 'node',
+        'template' => 'node--sondage',
+        'path' => drupal_get_path('module', 'darty_sondage') . '/templates',
+    );
+    $theme['node__sondage__tls'] = array(
+        'render element' => 'content',
+        'base hook' => 'node',
+        'template' => 'node--sondage--tls',
+        'path' => drupal_get_path('module', 'darty_sondage') . '/templates',
+    );
+    $theme['node__sondage__home'] = array(
+        'render element' => 'content',
+        'base hook' => 'node',
+        'template' => 'node--sondage--home',
+        'path' => drupal_get_path('module', 'darty_sondage') . '/templates',
+    );
+    $theme['node__sondage__bottom_article'] = array(
+        'render element' => 'content',
+        'base hook' => 'node',
+        'template' => 'node--sondage--bottom-article',
+        'path' => drupal_get_path('module', 'darty_sondage') . '/templates',
+    );
+    $theme['sondages_tls'] = array(
+        'variables' => array(),
+        'template' => 'sondages_tls',
+        'path' => drupal_get_path('module', 'darty_sondage') . "/templates"
+    );
+    $theme['bean__bloc_sondage'] = array(
+        'variables' => array(),
+        'template' => 'bean--bloc-sondage',
+        'path' => drupal_get_path('module', 'darty_sondage') . "/templates"
+    );
+    return $theme;
 }
 
 function page_sondages() {
-  global $base_path;
+    global $base_path;
 
-  //meta  
-  drupal_set_title(variable_get('sondages_tls_titre_seo', 'Tous les sondages'));
-  $meta_desc = variable_get('sondages_tls_metadesc', '');
-  if ($meta_desc == '') {
-    $meta_desc = variable_get('sondages_tls_accroche', '');
-  }
-  $element = array(
-    '#tag' => 'meta',
-    '#attributes' => array(
-      'name' => 'description',
-      'content' => $meta_desc,
-    ),
-  );
-  drupal_add_html_head($element, 'metatags_quick_description');
+    //meta    
+    drupal_set_title(variable_get('sondages_tls_titre_seo', 'Tous les sondages'));
+    $meta_desc = variable_get('sondages_tls_metadesc', '');
+    if ($meta_desc == '') {
+        $meta_desc = variable_get('sondages_tls_accroche', '');
+    }
+    $element = array(
+        '#tag' => 'meta',
+        '#attributes' => array(
+            'name' => 'description',
+            'content' => $meta_desc,
+        ),
+    );
+    drupal_add_html_head($element, 'metatags_quick_description');
 
-  //breacrumb
-  $breadcrumb = drupal_get_breadcrumb();
-  $breadcrumb[] = variable_get('sondages_tls_titre_seo', 'Tous les sondages');
+    //breacrumb
+    $breadcrumb = drupal_get_breadcrumb();
+    $breadcrumb[] = variable_get('sondages_tls_titre_seo', 'Tous les sondages');
 
-  //texte
-  $theme_param['label_encours'] = variable_get('sondages_tls_encours', 'Sondage en cours');
-  $theme_param['label_termines'] = variable_get('sondages_tls_termines', 'Sondage terminés');
+    //texte
+    $theme_param['label_encours'] = variable_get('sondages_tls_encours', 'Sondage en cours');
+    $theme_param['label_termines'] = variable_get('sondages_tls_termines', 'Sondage terminés');
 
-  $theme_param['breacrumb'] = theme('breadcrumb', array('breadcrumb' => $breadcrumb));
+    $theme_param['breacrumb'] = theme('breadcrumb', array('breadcrumb' => $breadcrumb));
 
-  $theme_param['titre'] = variable_get('sondages_tls_titre', 'Tous les sondages');
-  $theme_param['accroche'] = variable_get('sondages_tls_accroche', '');
+    $theme_param['titre'] = variable_get('sondages_tls_titre', 'Tous les sondages');
+    $theme_param['accroche'] = variable_get('sondages_tls_accroche', '');
 
-  //css
-  drupal_add_css(drupal_get_path('module', 'darty_sondage') . '/css/sondages.css', 'file');
-  //JS
-  drupal_add_js(drupal_get_path('module', 'darty_sondage') . '/js/sondages_tls.js', 'file');
-  drupal_add_js(
-      "jQuery(document).ready(function ($) { 
-        $('#sondages_tls .zone-header .description').width($('#sondages_tls .zone-header').width() - $('#sondages_tls .zone-header .titre').width() - $('#sondages_tls .zone-header .separation').width());   
-        loadAjaxSondagesTls('" . $base_path . "');
-        
-      });", array('type' => 'inline', 'scope' => 'footer'));
+    //css
+    drupal_add_css(drupal_get_path('module', 'darty_sondage') . '/css/sondages.css', 'file');
+    //JS
+    drupal_add_js(drupal_get_path('module', 'darty_sondage') . '/js/sondages_tls.js', 'file');
+    drupal_add_js(
+            "jQuery(document).ready(function ($) { 
+                $('#sondages_tls .zone-header .description').width($('#sondages_tls .zone-header').width() - $('#sondages_tls .zone-header .titre').width() - $('#sondages_tls .zone-header .separation').width());   
+                loadAjaxSondagesTls('" . $base_path . "');
+                
+            });", array('type' => 'inline', 'scope' => 'footer'));
 
-  return theme('sondages_tls', $theme_param);
+    return theme('sondages_tls', $theme_param);
 }
 
 function ajax_sondages_encours() {
-  global $user;
+    global $user;
 
-  $nodes = list_sondage_encours();
-  $output = "";
-  $cpt = 0;
-  foreach ($nodes as $node) {
-    $cpt++;
-    $already = getAnswerSondageForUser($node->nid, $user->uid);
-    $status_sondage = isQuestionCurrent($node->nid);
-    $node->status_sondage = $status_sondage;
-    $node->already = $already;
+    $nodes = list_sondage_encours();
+    $output = "";
+    $cpt = 0;
+    foreach ($nodes as $node) {
+        $cpt++;
+        $already = getAnswerSondageForUser($node->nid, $user->uid);
+        $status_sondage = isQuestionCurrent($node->nid);
+        $node->status_sondage = $status_sondage;
+        $node->already = $already;
 
-    //test si calcul result est util
-    if ($node->already != 0 || $node->status_sondage == 0) {
-      $node->result = getResultSondage($node->nid);
+        //test si calcul result est util
+        if ($node->already != 0 || $node->status_sondage == 0) {
+            $node->result = getResultSondage($node->nid);
+        }
+        $output .= '<div class="sondage-wrapper pos' . $cpt . '">';
+        $node_view = node_view($node, 'tls');
+        $output .= render($node_view);
+        $output .= '</div>';
+        if ($cpt == 3)
+            $cpt = 0;
     }
-    $output .= '<div class="sondage-wrapper pos' . $cpt . '">';
-    $node_view = node_view($node, 'tls');
-    $output .= render($node_view);
-    $output .= '</div>';
-    if ($cpt == 3)
-      $cpt = 0;
-  }
-  $output .= '<div class="clear"></div>';
-  return $output;
+    $output .= '<div class="clear"></div>';
+    return $output;
 }
 
 function ajax_sondages_termines($page) {
-  global $user;
+    global $user;
 
-  $nodes = list_sondage_termines($page);
-  $output = "";
-  $cpt = 0;
-  foreach ($nodes as $node) {
-    $cpt++;
-    $already = getAnswerSondageForUser($node->nid, $user->uid);
-    $node->already = $already;
-    $status_sondage = isQuestionCurrent($node->nid);
-    $node->status_sondage = $status_sondage;
-    getResultSondage($node->nid);
-    $output .= '<div class="sondage-wrapper pos' . $cpt . '">';
-    $node_view = node_view($node, 'tls');
-    $output .= render($node_view);
-    $output .= '</div>';
-    if ($cpt == 3)
-      $cpt = 0;
-  }
-  $output .= '<div class="clear"></div>';
-  $output .= sondages_termines_paginate($page);
-  return $output;
+    $nodes = list_sondage_termines($page);
+    $output = "";
+    $cpt = 0;
+    foreach ($nodes as $node) {
+        $cpt++;
+        $already = getAnswerSondageForUser($node->nid, $user->uid);
+        $node->already = $already;
+        $status_sondage = isQuestionCurrent($node->nid);
+        $node->status_sondage = $status_sondage;
+        getResultSondage($node->nid);
+        $output .= '<div class="sondage-wrapper pos' . $cpt . '">';
+        $node_view = node_view($node, 'tls');
+        $output .= render($node_view);
+        $output .= '</div>';
+        if ($cpt == 3)
+            $cpt = 0;
+    }
+    $output .= '<div class="clear"></div>';
+    $output .= sondages_termines_paginate($page);
+    return $output;
 }
 
 function getInfoSondage($node_sondage) {
-  global $user;
+    global $user;
 
-  // check etat pour user actuel
-  // si pas repondu formulaire
-  // si repondu recuperation des statistiques de reponses
+    // check etat pour user actuel
+    // si pas repondu formulaire
+    // si repondu recuperation des statistiques de reponses
 
-  $vars = array();
-  $vars['nid'] = $node_sondage->nid;
-  if (isset($node_sondage->field_sondage_question[LANGUAGE_NONE][0]['value']) && $node_sondage->field_sondage_question[LANGUAGE_NONE][0]['value'] != "") {
-    $vars['question'] = $node_sondage->field_sondage_question[LANGUAGE_NONE][0]['value'];
-  }
-  if (isset($node_sondage->field_sondage_reponses[LANGUAGE_NONE])) {
-    $vars['reponses'] = $node_sondage->field_sondage_reponses[LANGUAGE_NONE];
-  }
-  if (isset($node_sondage->field_sondage_info[LANGUAGE_NONE][0]['value']) && $node_sondage->field_sondage_info[LANGUAGE_NONE][0]['value'] != "") {
-    $vars['info'] = $node_sondage->field_sondage_info[LANGUAGE_NONE][0]['value'];
-  }
-  if (isset($node_sondage->field_sondage_datedeb[LANGUAGE_NONE][0]['value']) && $node_sondage->field_sondage_datedeb[LANGUAGE_NONE][0]['value'] != "") {
-    $vars['datedeb'] = $node_sondage->field_sondage_datedeb[LANGUAGE_NONE][0]['value'];
-  }
-  if (isset($node_sondage->field_sondage_datefin[LANGUAGE_NONE][0]['value']) && $node_sondage->field_sondage_datefin[LANGUAGE_NONE][0]['value'] != "") {
-    $vars['datefin'] = $node_sondage->field_sondage_datefin[LANGUAGE_NONE][0]['value'];
-  }
-  if (isset($node_sondage->field_sondage_archive[LANGUAGE_NONE][0]['value']) && $node_sondage->field_sondage_archive[LANGUAGE_NONE][0]['value'] != "") {
-    $vars['archive'] = $node_sondage->field_sondage_archive[LANGUAGE_NONE][0]['value'];
-  }
-  return $vars;
+    $vars = array();
+    $vars['nid'] = $node_sondage->nid;
+    if (isset($node_sondage->field_sondage_question[LANGUAGE_NONE][0]['value']) && $node_sondage->field_sondage_question[LANGUAGE_NONE][0]['value'] != "") {
+        $vars['question'] = $node_sondage->field_sondage_question[LANGUAGE_NONE][0]['value'];
+    }
+    if (isset($node_sondage->field_sondage_reponses[LANGUAGE_NONE])) {
+        $vars['reponses'] = $node_sondage->field_sondage_reponses[LANGUAGE_NONE];
+    }
+    if (isset($node_sondage->field_sondage_info[LANGUAGE_NONE][0]['value']) && $node_sondage->field_sondage_info[LANGUAGE_NONE][0]['value'] != "") {
+        $vars['info'] = $node_sondage->field_sondage_info[LANGUAGE_NONE][0]['value'];
+    }
+    if (isset($node_sondage->field_sondage_datedeb[LANGUAGE_NONE][0]['value']) && $node_sondage->field_sondage_datedeb[LANGUAGE_NONE][0]['value'] != "") {
+        $vars['datedeb'] = $node_sondage->field_sondage_datedeb[LANGUAGE_NONE][0]['value'];
+    }
+    if (isset($node_sondage->field_sondage_datefin[LANGUAGE_NONE][0]['value']) && $node_sondage->field_sondage_datefin[LANGUAGE_NONE][0]['value'] != "") {
+        $vars['datefin'] = $node_sondage->field_sondage_datefin[LANGUAGE_NONE][0]['value'];
+    }
+    if (isset($node_sondage->field_sondage_archive[LANGUAGE_NONE][0]['value']) && $node_sondage->field_sondage_archive[LANGUAGE_NONE][0]['value'] != "") {
+        $vars['archive'] = $node_sondage->field_sondage_archive[LANGUAGE_NONE][0]['value'];
+    }
+    return $vars;
 }
 
 function darty_sondage_preprocess_page(&$variables) {
-  drupal_add_js(drupal_get_path('module', 'darty_sondage') . '/js/sondages_ajax.js', 'file');
+    drupal_add_js(drupal_get_path('module', 'darty_sondage') . '/js/sondages_ajax.js', 'file');
 
-  if (!isset($_COOKIE['sid_dv'])){
-    drupal_add_js(
-      "jQuery(document).ready(function ($) { 
-        createCookie('sid_dv','".uniqid().uniqid()."',365);\n
-      });", array('type' => 'inline', 'scope' => 'footer'));
-  }
+    if (!isset($_COOKIE['sid_dv'])){
+        $sid = uniqid().uniqid();
+        $_COOKIE['sid_dv'] = $sid;
+        drupal_add_js(
+            "jQuery(document).ready(function ($) { 
+                createCookie('sid_dv','".$sid."',365);\n
+            });", array('type' => 'inline', 'scope' => 'footer'));
+    }
 }
 
 function darty_sondage_preprocess_node(&$vars) {
-  global $user;
+    global $user;
 
-  $type = $vars['type'];
-  $view_mode = $vars['elements']['#view_mode'];
-  $vars['theme_hook_suggestion'] = 'node__sondage__' . $view_mode;
+    $type = $vars['type'];
+    $view_mode = $vars['elements']['#view_mode'];
+    $vars['theme_hook_suggestion'] = 'node__sondage__' . $view_mode;
 
-  if ($type == "sondage") {
-    $node_sondage = $vars['node'];
-    $already = getAnswerSondageForUser($node_sondage->nid, $user->uid);
-    $vars['node']->already = $already;
-    $status_sondage = isQuestionCurrent($node_sondage->nid);
-    $vars['node']->status_sondage = $status_sondage;
-    $vars['node']->result = getResultSondage($node_sondage->nid);
-    $tabInfos = getInfoSondage($node_sondage);
-    $vars = array_merge($vars, $tabInfos);
-  }
-  if ($type == 'sondage' || $type == 'homepage' || $type == 'article_avec_sommaire' || $type == 'article_sans_sommaire' || $type == 'diaporama' || $type == 'dossier') {
-    //css
-    drupal_add_css(drupal_get_path('module', 'darty_sondage') . '/css/sondages.css', 'file');
-  }
+    if ($type == "sondage") {
+        $node_sondage = $vars['node'];
+        $already = getAnswerSondageForUser($node_sondage->nid, $user->uid);
+        $vars['node']->already = $already;
+        $status_sondage = isQuestionCurrent($node_sondage->nid);
+        $vars['node']->status_sondage = $status_sondage;
+        $vars['node']->result = getResultSondage($node_sondage->nid);
+        $tabInfos = getInfoSondage($node_sondage);
+        $vars = array_merge($vars, $tabInfos);
+    }
+    if ($type == 'sondage' || $type == 'homepage' || $type == 'article_avec_sommaire' || $type == 'article_sans_sommaire' || $type == 'diaporama' || $type == 'dossier') {
+        //css
+        drupal_add_css(drupal_get_path('module', 'darty_sondage') . '/css/sondages.css', 'file');
+    }
 }
 
 function darty_sondage_preprocess_entity(&$vars) {
-  $entity_type = $vars['elements']['#entity_type'];
-  $type = $vars['elements']['#bundle'];
-  $view_mode = $vars['view_mode'];
+    $entity_type = $vars['elements']['#entity_type'];
+    $type = $vars['elements']['#bundle'];
+    $view_mode = $vars['view_mode'];
 
 //Define some preprocess functions for the field collection field_menu_items
-  if ($type == "bloc_sondage") {
-    $preprocess_type = 'darty_bloc_preprocess_' . $entity_type . '_' . $type;
-    $preprocess_type_view_mode = 'darty_bloc_preprocess_' . $entity_type . '_' . $type . '_' . $view_mode;
-    if (function_exists($preprocess_type)) {
-      $preprocess_type($vars);
-    }
+    if ($type == "bloc_sondage") {
+        $preprocess_type = 'darty_bloc_preprocess_' . $entity_type . '_' . $type;
+        $preprocess_type_view_mode = 'darty_bloc_preprocess_' . $entity_type . '_' . $type . '_' . $view_mode;
+        if (function_exists($preprocess_type)) {
+            $preprocess_type($vars);
+        }
 
-    if (function_exists($preprocess_type_view_mode)) {
-      $preprocess_type_view_mode($vars);
+        if (function_exists($preprocess_type_view_mode)) {
+            $preprocess_type_view_mode($vars);
+        }
     }
-  }
 }
 
 /**
@@ -328,23 +330,23 @@ function darty_sondage_preprocess_entity(&$vars) {
  */
 
 function darty_bloc_preprocess_bean_bloc_sondage(&$vars) {
-  global $base_path;
-  
-  $entity = $vars['elements']['#entity'];
-  $wrapper = entity_metadata_wrapper('bean', $entity);
+    global $base_path;
+    
+    $entity = $vars['elements']['#entity'];
+    $wrapper = entity_metadata_wrapper('bean', $entity);
 
-  if (is_object($wrapper)) {
-    $vars['rand_sondage'] = rand(100000, 999999);
-    $obj_sondage = $wrapper->field_bloc_choix_sondage->value();
+    if (is_object($wrapper)) {
+        $vars['rand_sondage'] = rand(100000, 999999);
+        $obj_sondage = $wrapper->field_bloc_choix_sondage->value();
 
-    drupal_add_js(
-        "jQuery(document).ready(function ($) { 
-        sondage_view('#sondage_" . $vars['rand_sondage'] . "','" . $base_path . "', '" . $obj_sondage->nid . "', '".$vars['view_mode']."');
-        
-      });", array('type' => 'inline', 'scope' => 'footer'));
+        drupal_add_js(
+                "jQuery(document).ready(function ($) { 
+                sondage_view('#sondage_" . $vars['rand_sondage'] . "','" . $base_path . "', '" . $obj_sondage->nid . "', '".$vars['view_mode']."');
+                
+            });", array('type' => 'inline', 'scope' => 'footer'));
 
 
 
-    $vars['base_path'] = $base_path;
-  }
+        $vars['base_path'] = $base_path;
+    }
 }

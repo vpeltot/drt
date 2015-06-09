@@ -1,7 +1,11 @@
 <?php
 ?><div class="<?php print $classes; ?> clearfix"<?php print $attributes; ?>>
     <div class="lien-rubrique-wrapper">
-        <?php foreach ($rubrique_info as $key => $item) { ?>
+        <?php foreach ($rubrique_info as $key => $item) {
+        if (isset($item['image']) && $item['image'] !== false){?>
+            <div class='image'><?php print $item['image'];?></div>
+        <?php }?>
+            <div class='separation'></div>
             <div class="item-rub<?php print ($key==0)?' first':'';?><?php print ($key == count($rubrique_info)-1)?' last':'';?>">
                 <div class="title"><?php print $item['title']; ?></div>
                 <div class="nb"><?php print $item['count'] . " " . format_plural($item['count'], 'modèle', 'modèles'); ?></div>

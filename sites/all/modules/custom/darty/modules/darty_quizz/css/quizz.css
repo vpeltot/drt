@@ -1,0 +1,376 @@
+
+/** CSS QUIZZ CONTENU **/
+
+.darty_content_drupal .node-quizz .zone-header{
+    width:100%;
+    height:326px;
+    overflow:hidden;
+    margin-left: 16px;
+}
+
+.darty_content_drupal .node-quizz .zone-header .format{
+    text-transform: uppercase;
+    color:#000000;
+    font-size:20px;
+    font-family: 'din', sans-serif;
+    margin: 30px 20px 0 20px;
+    background-color: white;
+    height: 25px;
+    padding: 0 10px;
+    display: inline-block;
+    line-height: 25px;
+}
+.darty_content_drupal .node-quizz.orange .zone-header .format{
+    color: #de5a07;
+}
+.darty_content_drupal .node-quizz.violet .zone-header .format{
+    color: #6d5cab;
+}
+.darty_content_drupal .node-quizz.rose .zone-header .format{
+    color: #b23387;
+}
+.darty_content_drupal .node-quizz.bleu .zone-header .format{
+    color: #13a0b2;
+}
+.darty_content_drupal .node-quizz .zone-header .visuel{
+    float:left;
+    width:475px;
+    height:313px;
+    overflow: hidden;
+}
+.darty_content_drupal .node-quizz .zone-header .visuel{
+    width:475px;
+    height:313px;
+}
+.darty_content_drupal .node-quizz .zone-header .texte{
+    float:left;
+    width: 475px;
+    height: 313px;
+    background: transparent url('./images/bg_dossier_orange.png') no-repeat center center;
+    color: #FFFFFF;
+}
+.darty_content_drupal .node-quizz.rose .zone-header .texte{
+    background-image: url('./images/bg_dossier_rose.png');
+}
+.darty_content_drupal .node-quizz.bleu .zone-header .texte{
+    background-image: url('./images/bg_dossier_bleu.png');
+}
+.darty_content_drupal .node-quizz.violet .zone-header .texte{
+    background-image: url('./images/bg_dossier_violet.png');
+}
+.darty_content_drupal .node-quizz.orange .zone-header .texte{
+    background-image: url('./images/bg_dossier_orange.png');
+}
+.darty_content_drupal .node-quizz .zone-header .titre{
+    font-family: 'arial', sans-serif;
+    font-weight: bold;
+    margin: 15px 20px 0 20px;
+    text-transform: none;
+    font-size:28px;
+    line-height: 33px;
+    overflow: hidden;
+    max-height: 100px;
+}
+.darty_content_drupal .node-quizz .zone-header .accroche{
+    font-weight: normal;
+    font-size:16px;
+    margin: 15px 20px 15px 20px;
+    overflow: hidden;
+    height: 145px;
+}
+.darty_content_drupal .node-quizz .zone-partage{
+    margin-top: 0px;
+}
+
+.darty_content_drupal .node-quizz .quizz-wrapper .nbquestion-wrapper{
+    width: 250px;
+    float: left;
+    padding-left: 10px;
+}
+.darty_content_drupal .node-quizz .quizz-wrapper .nbquestion-wrapper .nbquestion-div{
+
+}
+.darty_content_drupal .node-quizz .quizz-wrapper .nbquestion-wrapper .titre{
+    text-transform: uppercase;
+    font-size: 40px;
+    font-family: 'arial', sans-serif;
+    color: #13a0b2;
+    text-align: left;
+    font-weight: lighter;
+}
+.darty_content_drupal .node-quizz .quizz-wrapper .nbquestion-wrapper .step-question{
+    font-size: 30px;
+    font-weight: normal;
+    color: #4c403d;
+    text-align:left;
+    font-family: 'arial', sans-serif;
+}
+.darty_content_drupal .node-quizz .quizz-wrapper .nbquestion-wrapper .step-question .current{
+    font-size: 80px;
+    color: #13a0b2;
+    font-weight: bold;
+}
+.darty_content_drupal .node-quizz .quizz-wrapper .question-wrapper{
+    float: left;
+    width: 655px;
+    height: 100%;
+    background-color: #f1efee;
+    padding-left: 40px;
+    border: 0px solid black;
+    border-left: 15px solid #13a0b2;
+}
+.darty_content_drupal .node-quizz .quizz-wrapper .question-wrapper .btn-message-wrapper{
+    margin-top: 15px;
+}
+.darty_content_drupal .node-quizz .quizz-wrapper .question-wrapper.image .image-wrapper{
+    float: left;
+    width: 230px;
+    height: 150px;
+    padding-top: 35px;
+}
+.darty_content_drupal .node-quizz .quizz-wrapper .question-wrapper.images .answer-wrapper .reponse-div{
+    width: 210px;
+    float: left;
+}
+.darty_content_drupal .node-quizz .quizz-wrapper .question-wrapper.images .reponse label{
+    width: 157px;
+}
+.darty_content_drupal .node-quizz .quizz-wrapper .question-wrapper.images .answer-wrapper .image img{
+    width: 190px;
+    cursor: pointer;
+    height: 125px;
+    border: 1px solid #ccc;
+}
+.darty_content_drupal .node-quizz .quizz-wrapper .question-wrapper.image .textequestion-wrapper{
+    float: left;
+    width: 390px;
+    margin-left: 30px;
+
+}
+.darty_content_drupal .node-quizz .quizz-wrapper .question-wrapper .image-wrapper img{
+    width: 230px;
+    height: 150px;
+    border: 1px solid #ccc;
+}
+.darty_content_drupal .node-quizz .quizz-wrapper .question-wrapper .label_question{
+    padding: 35px 30px 15px 0;
+    color: #000;
+    font-weight: normal;
+    font-family: 'arial', sans-serif;
+    font-size: 17px;
+    font-weight: bold;
+}
+.darty_content_drupal .node-quizz .quizz-wrapper .question-wrapper.image .reponse label{
+    width: 340px;
+}
+.darty_content_drupal .node-quizz .quizz-wrapper .question-wrapper .reponse{
+    font-family: 'arial', sans-serif;
+    color: #000;
+    line-height: 25px;
+}
+.darty_content_drupal .node-quizz .zone_plusde{
+    display: none;
+}
+.darty_content_drupal .node-quizz .quizz-wrapper .question-wrapper.images .reponse{
+    margin-top: 7px;
+}
+.darty_content_drupal .node-quizz .quizz-wrapper .question-wrapper .reponse input{
+    display: inline;
+    margin-right: 15px;
+    margin-top: 5px;
+    vertical-align: top;
+    font-size: 20px;
+}
+.darty_content_drupal .node-quizz .quizz-wrapper .question-wrapper .reponse label{
+    display: inline-block;
+    width: 590px;
+    font-size: 16px;
+    font-weight: normal;
+    cursor: pointer;
+}
+.darty_content_drupal .node-quizz .quizz-wrapper .question-wrapper .message{
+    width: 420px;
+    height: 40px;
+    float: left;
+    margin: 10px 0 15px 0;
+    color: #d20729;
+    font-size: 13px;
+    line-height: 40px;
+    font-weight: bold;
+    font-family: 'arial', sans-serif;
+}
+.darty_content_drupal .node-quizz .quizz-wrapper .question-wrapper .btn-wrapper{
+    float: left;
+    text-align: right;
+    width: 162px;
+    margin: 10px 0 15px 0;
+}
+.darty_content_drupal .node-quizz .quizz-wrapper .question-wrapper .btn-wrapper .btn-vote{
+    width: 162px;
+    height: 40px;
+    line-height: 40px;
+    color: white;
+    font-size: 13px;
+    font-family: 'arial',sans-serif;
+    text-align: center;
+    text-transform: uppercase;
+    padding-left: 49px;
+    cursor: pointer;
+    display: inline-block;
+    background: transparent url(./images/btn_suivant.png) no-repeat left center;
+}
+
+
+/** PAGE DE RESULTAT **/
+
+.darty_content_drupal .node-quizz .quizz-wrapper .resultpage-wrapper{
+
+}
+.darty_content_drupal .node-quizz .quizz-wrapper .resultpage-wrapper .result-wrapper{
+    float: left;
+    width: 205px;
+    margin: 0 25px;
+    background-color: #edeceb;
+    padding: 35px;
+}
+.darty_content_drupal .node-quizz .quizz-wrapper .resultpage-wrapper .nbresult-wrapper{
+    float: left;
+    width:190px;
+    height: 79px;
+    text-transform: uppercase;
+    font-family: 'arial', sans-serif;
+}
+.darty_content_drupal .node-quizz .quizz-wrapper .resultpage-wrapper .nbresult-wrapper .youhave{
+    font-size: 32px;
+    color: #4c403d;
+}
+.darty_content_drupal .node-quizz .quizz-wrapper .resultpage-wrapper .nbgoodanswer{
+    color: #13a0b2;
+}
+.darty_content_drupal .node-quizz .quizz-wrapper .resultpage-wrapper .nbgoodanswer .nb{
+    float: left;
+    width: 60px;
+    margin: 0;
+    font-size: 55px;
+    padding: 0;
+    line-height: 45px;
+    text-align: right;
+    margin-right: 5px;
+}
+.darty_content_drupal .node-quizz .quizz-wrapper .resultpage-wrapper .nbgoodanswer .goodanswer{
+    font-size: 22px;
+    line-height: 23px;
+    float: left;
+    width: 123px;
+}
+.darty_content_drupal .node-quizz .quizz-wrapper .resultpage-wrapper .result-wrapper .titre{
+    color: #4c403d;
+    font-size: 24px;
+    font-family: 'arial', sans-serif;
+    text-align: left;
+    margin-top: 20px;
+    font-weight: bold;
+    line-height: 32px;
+}
+.darty_content_drupal .node-quizz .quizz-wrapper .resultpage-wrapper .result-wrapper .text{
+    font-size: 16px;
+    color: #4c403d;
+}
+.darty_content_drupal .node-quizz .quizz-wrapper .resultpage-wrapper .result-wrapper .excla{
+    background: transparent url(./images/exclamation.png) no-repeat left center;
+    width: 13px;
+    height: 79px;
+    float: left;
+}
+
+.darty_content_drupal .node-quizz .quizz-wrapper .resultpage-wrapper .questions-wrapper{
+    float: left;
+    width: 655px;
+}
+.darty_content_drupal .node-quizz .quizz-wrapper .resultpage-wrapper .question-wrapper {
+    float: left;
+    width: 600px;
+    height: 100%;
+    padding-left: 14px;
+    background-color: transparent;
+    border-left-width: 8px;
+    margin-bottom: 50px;
+}
+.darty_content_drupal .node-quizz .quizz-wrapper .resultpage-wrapper .question-wrapper .titre{
+    font-family: 'arial', sans-serif;
+    font-size: 18px;
+    color: #000;
+    margin-bottom: 10px;
+}
+.darty_content_drupal .node-quizz .quizz-wrapper .resultpage-wrapper .question-wrapper .reponse{
+    color: #000;
+    font-family: 'arial',sans-serif;
+    font-size: 15px;
+    line-height: 20px;
+    background: transparent url(./images/radio.png) no-repeat left top;
+    padding-left: 40px;
+    margin-bottom: 12px;
+}
+.darty_content_drupal .node-quizz .quizz-wrapper .resultpage-wrapper .question-wrapper .reponse.rouge{
+    background: transparent url(./images/croix_rouge.png) no-repeat left top;
+    color: #d20729;
+}
+.darty_content_drupal .node-quizz .quizz-wrapper .resultpage-wrapper .question-wrapper .reponse.vert{
+    background: transparent url(./images/coche_verte.png) no-repeat left top;
+    color: #6da304;
+}
+.darty_content_drupal .node-quizz .quizz-wrapper .resultpage-wrapper .question-wrapper .label-question{
+    color: #13a0b2;
+    font-size: 26px;
+    font-family: 'arial', sans-serif;
+    text-transform: uppercase;
+    margin-bottom: 18px;
+}
+.darty_content_drupal .node-quizz .quizz-wrapper .resultpage-wrapper .question-wrapper .explication{
+    font-family: 'arial', sans-serif;
+    font-size: 12px;
+    line-height: 12px;
+    margin-top: 25px;
+    padding-left: 20px;
+    margin-left: 20px;
+}
+.darty_content_drupal .node-quizz .quizz-wrapper .resultpage-wrapper .question-wrapper .explication.vert{
+    background: transparent url(./images/fleche_verte.png) no-repeat left top;
+    color: #6da303;
+}
+.darty_content_drupal .node-quizz .quizz-wrapper .resultpage-wrapper .question-wrapper .explication.rouge{
+    background: transparent url(./images/fleche_rouge.png) no-repeat left top;
+    color: #d20729;
+}
+.darty_content_drupal .node-quizz .quizz-wrapper .resultpage-wrapper .question-wrapper .label-question .nb{
+    font-weight: bold;
+}
+.darty_content_drupal .node-quizz .quizz-wrapper .resultpage-wrapper .question-wrapper.last{
+    margin-bottom: 0;
+}
+.darty_content_drupal .node-quizz .quizz-wrapper .resultpage-wrapper .question-wrapper.images .answer-wrapper{
+    width: 200px;
+    float: left;
+}
+.darty_content_drupal .node-quizz .quizz-wrapper .resultpage-wrapper .question-wrapper.images .answer-wrapper .image{
+    width: 190px;
+    height: 125px;
+        border: 1px solid #cccccc;
+}
+.darty_content_drupal .node-quizz .quizz-wrapper .resultpage-wrapper .question-wrapper.images .answer-wrapper .image img{
+    width: 190px;
+    cursor: pointer;
+    height: 125px;
+}
+.darty_content_drupal .node-quizz .quizz-wrapper .resultpage-wrapper .question-wrapper.image .question-div{
+    float: left;
+    width: 330px;
+}
+.darty_content_drupal .node-quizz .quizz-wrapper .resultpage-wrapper .question-wrapper.image .image-wrapper{
+    float: left;
+    width: 230px;
+    height: 150px;
+    margin-right: 35px;
+    padding-top: 0;
+    border: 1px solid #cccccc;
+}

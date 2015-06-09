@@ -6,6 +6,7 @@ jQuery(document).ready(function($) {
     $('.diaporama-wrapper .photos-wrapper .arrow_left').on('click', function() {
         item_diapo_to_show('left');
     });
+    
     $('.diaporama-wrapper .liste-vignette-wrapper .arrow_right').on('click',function(){
 
         item_active_group = $('.diaporama-wrapper .liste-vignette-wrapper .group.active');
@@ -13,8 +14,8 @@ jQuery(document).ready(function($) {
         $(item_active_group).next().addClass('active');
         index_group = $('.diaporama-wrapper .liste-vignette-wrapper .group').index($('.diaporama-wrapper .liste-vignette-wrapper .group.active'));
         
-         $('.diaporama-wrapper .photos .photo').removeClass('active');
-        $($('.diaporama-wrapper .photos .photo').get(index_group*5)).addClass('active');
+//         $('.diaporama-wrapper .photos .photo').removeClass('active');
+//        $($('.diaporama-wrapper .photos .photo').get(index_group*5)).addClass('active');
         
         intialise_btn();
     });
@@ -25,8 +26,8 @@ jQuery(document).ready(function($) {
         $(item_active_group).prev().addClass('active');
         index_group = $('.diaporama-wrapper .liste-vignette-wrapper .group').index($('.diaporama-wrapper .liste-vignette-wrapper .group.active'));
         
-         $('.diaporama-wrapper .photos .photo').removeClass('active');
-        $($('.diaporama-wrapper .photos .photo').get(index_group*5+4)).addClass('active');
+//         $('.diaporama-wrapper .photos .photo').removeClass('active');
+//        $($('.diaporama-wrapper .photos .photo').get(index_group*5+4)).addClass('active');
         
         intialise_btn();
     });
