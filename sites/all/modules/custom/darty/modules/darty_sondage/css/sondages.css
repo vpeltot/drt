@@ -379,7 +379,7 @@
 }
 #sondages_tls .sondage-wrapper .result .reponses .reponse .reponse_label, 
 .node-type-sondage .sondage-wrapper .result .reponses .reponse .reponse_label{
-    max-height: 37px;
+    max-height: 40px;
     margin-bottom: 4px;
     overflow: hidden;
     color: #675f5c;
