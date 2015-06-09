@@ -829,7 +829,7 @@ body {
 .darty_content_drupal .node-diaporama .diaporama-wrapper .contenus-wrapper .contenus .contenu .titre{
     font-size: 20px;
     max-height: 25px;
-    padding-bottom: 20px;
+    padding-bottom: 28px;
     width: 300px;
     overflow: hidden;
     font-weight: bold;
@@ -1917,6 +1917,48 @@ body {
     max-height: 47px;
     overflow: hidden;
 }
+.darty_content_drupal .node .bean-bloc-remonte-produit .titre a, 
+.darty_content_drupal .node .choixdarty-wrapper .product .titre a{
+    color: #333;
+    font-weight: bold;
+    font-size: 19px;
+    text-transform: uppercase;
+    overflow: hidden;
+    text-decoration: none;
+}
+
+.push-products-prix-barre {
+    margin-left: 10px;
+}
+.push-products-prix-barre span{
+    
+}
+.push-products-prix-barre .prix_init{
+    font-size: 16px;
+    color: #000;
+    font-weight: bold;
+    text-decoration: line-through;
+    vertical-align: middle;
+}
+.push-products-prix-barre .discount{
+    background-color: #ffff00;
+  color: #000;
+  padding: 1px 5px;
+  text-align: center;
+  display: inline-block;
+  width: auto;
+  font-weight: normal;
+  vertical-align: middle;
+  font-weight: bold;
+}
+
+.push-products-precommande {
+    margin-left: 10px;
+    color: #FE741B;
+    font-size:12px;
+    font-weight:bold;
+}
+
 .darty_content_drupal .node .bean-bloc-remonte-produit .nonstock, 
 .darty_content_drupal .node .bean-bloc-remonte-produit .montant, 
 .darty_content_drupal .node .choixdarty-wrapper .product .nonstock, 
@@ -2086,6 +2128,13 @@ body {
     font-weight: bold;
     text-transform: uppercase;
     color: #333;
+}
+.darty_content_drupal .node .bean-bloc-lien-rubrique .lien-rubrique-wrapper .item-rub .title a{
+    font-size: 21px;
+    font-weight: bold;
+    text-transform: uppercase;
+    color: #333;
+    text-decoration: none;
 }
 .darty_content_drupal .node .bean-bloc-lien-rubrique .lien-rubrique-wrapper .item-rub .nb{
     font-size: 17px;
@@ -3111,6 +3160,7 @@ body {
 .darty_content_drupal .node .col_left .diaporama-wrapper .diaporama{
     background-color: #413733;
     padding-bottom: 30px;
+    margin-bottom: 15px;
 }
 .darty_content_drupal .node .col_left .diaporama-wrapper .diaporama .titre_diapo{
     text-align: center;
