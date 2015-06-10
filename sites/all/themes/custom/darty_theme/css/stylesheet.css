@@ -730,8 +730,9 @@ body {
     height:51px;
     line-height: 51px;
     color: #FFFFFF;
-    font-size: 20px;
-    font-family: 'din', sans-serif;
+    font-size: 18px;
+    font-family: arial, sans-serif;
+    font-weight: normal;
 }
 .darty_content_drupal .node-article-avec-sommaire #sommaire-wrapper.close .barre_sommaire.second .title{
     width:455px;
@@ -925,9 +926,9 @@ body {
     border-radius: 5px;
     height: 33px;
     color: #FFF;
-    font-family: 'din', sans-serif;
+    font-family: Arial, sans-serif;
     font-weight: bold;
-    font-size: 16px;
+    font-size: 15px;
     line-height: 35px;
     text-decoration: none;
     display:inline-block;
@@ -2025,9 +2026,9 @@ body {
     border-radius: 5px;
     height: 33px;
     color: #FFF;
-    font-family: 'din', sans-serif;
+    font-family: Arial, sans-serif;
     font-weight: bold;
-    font-size: 16px;
+    font-size: 15px;
     line-height: 38px;
     text-decoration: none;
     display: inline-block;
@@ -2163,9 +2164,9 @@ body {
     border-radius: 5px;
     height: 33px;
     color: #FFF;
-    font-family: 'din', sans-serif;
+    font-family: Arial, sans-serif;
     font-weight: bold;
-    font-size: 16px;
+    font-size: 15px;
     line-height: 38px;
     text-decoration: none;
     display: inline-block;
@@ -2335,9 +2336,9 @@ body {
     border-radius: 5px;
     height: 33px;
     color: #FFF;
-    font-family: 'din', sans-serif;
+    font-family: Arial, sans-serif;
     font-weight: bold;
-    font-size: 16px;
+    font-size: 15px;
     line-height: 35px;
     text-decoration: none;
     display:inline-block;
