@@ -28,8 +28,8 @@ function darty_bloc_inline_entity_form_entity_form_submit($entity_form, &$form_s
         $form_state['inline_entity_form'][$ief_id]['entities'][$delta]['needs_save'] = TRUE;
     }
 
-    if ($entity_form['#entity']->label != '')
-        $entity_form['#entity']->title = $entity_form['#entity']->label;
+    // if ($entity_form['#entity']->label != '')
+    //    $entity_form['#entity']->title = $entity_form['#entity']->label;
 }
 
 /**
